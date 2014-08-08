@@ -53,8 +53,6 @@ class PoeditFrame;
 class AttentionBar;
 class ErrorBar;
 
-WX_DECLARE_LIST(PoeditFrame, PoeditFramesList);
-
 /** This class provides main editing frame. It handles user's input
     and provides frontend to catalog editing engine. Nothing fancy.
  */
@@ -95,6 +93,9 @@ class PoeditFrame : public wxFrame
 
         /// Returns true if at least one one window has unsaved changes
         static bool AnyWindowIsModified();
+
+        /// Returns true if any windows (with documents) are open
+        static bool HasAnyWindow() { return !ms_instances.empty(); }
 
         ~PoeditFrame();
 
@@ -152,6 +153,7 @@ class PoeditFrame : public wxFrame
         wxWindow* CreateContentViewEmptyPO();
         void DestroyContentView();
 
+        typedef std::set<PoeditFrame*> PoeditFramesList;
         static PoeditFramesList ms_instances;
 
     private:
@@ -247,6 +249,7 @@ private:
         void OnSortByFileOrder(wxCommandEvent&);
         void OnSortBySource(wxCommandEvent&);
         void OnSortByTranslation(wxCommandEvent&);
+        void OnSortGroupByContext(wxCommandEvent&);
         void OnSortUntranslatedFirst(wxCommandEvent&);
 
 #if defined(__WXMSW__) || defined(__WXGTK__)

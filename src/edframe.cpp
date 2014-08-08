@@ -97,12 +97,10 @@
 #include "welcomescreen.h"
 #include "errors.h"
 
-#include <wx/listimpl.cpp>
-WX_DEFINE_LIST(PoeditFramesList);
-PoeditFramesList PoeditFrame::ms_instances;
-
 
 // this should be high enough to not conflict with any wxNewId-allocated value,
+PoeditFrame::PoeditFramesList PoeditFrame::ms_instances;
+
 // but there's a check for this in the PoeditFrame ctor, too
 const wxWindowID ID_POEDIT_FIRST = wxID_HIGHEST + 10000;
 const unsigned   ID_POEDIT_STEP  = 1000;
@@ -477,6 +475,7 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
    EVT_MENU           (XRCID("sort_by_order"),    PoeditFrame::OnSortByFileOrder)
    EVT_MENU           (XRCID("sort_by_source"),    PoeditFrame::OnSortBySource)
    EVT_MENU           (XRCID("sort_by_translation"), PoeditFrame::OnSortByTranslation)
+   EVT_MENU           (XRCID("sort_group_by_context"), PoeditFrame::OnSortGroupByContext)
    EVT_MENU           (XRCID("sort_untrans_first"), PoeditFrame::OnSortUntranslatedFirst)
    EVT_MENU           (XRCID("menu_copy_from_src"), PoeditFrame::OnCopyFromSource)
    EVT_MENU           (XRCID("menu_clear"),       PoeditFrame::OnClearTranslation)
@@ -679,7 +678,7 @@ PoeditFrame::PoeditFrame() :
 
     UpdateMenu();
 
-    ms_instances.Append(this);
+    ms_instances.insert(this);
 
     SetDropTarget(new PoeditDropTarget(this));
 
@@ -881,6 +880,7 @@ wxWindow* PoeditFrame::CreateContentViewPO()
             GetMenuBar()->Check(XRCID("sort_by_translation"), true);
             break;
     }
+    GetMenuBar()->Check(XRCID("sort_group_by_context"), m_list->sortOrder.groupByContext);
     GetMenuBar()->Check(XRCID("sort_untrans_first"), m_list->sortOrder.untransFirst);
 
     // Call splitter splitting later, when the window is layed out, otherwise
@@ -961,7 +961,7 @@ void PoeditFrame::DestroyContentView()
 
 PoeditFrame::~PoeditFrame()
 {
-    ms_instances.DeleteObject(this);
+    ms_instances.erase(this);
 
     FindFrame::NotifyParentDestroyed(m_list, m_catalog);
 
@@ -1338,7 +1338,8 @@ void PoeditFrame::OnOpen(wxCommandEvent&)
 
         wxString name = wxFileSelector(_("Open catalog"),
                         path, wxEmptyString, wxEmptyString,
-                        _("GNU gettext catalogs (*.po)|*.po|All files (*.*)|*.*"),
+                        wxString::Format("%s (*.po)|*.po|%s (*.*)|*.*",
+                            _("PO Translation Files"), _("All Files")),
                         wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
 
         if (!name.empty())
@@ -1407,7 +1408,8 @@ wxString PoeditFrame::GetSaveAsFilename(Catalog *cat, const wxString& current)
     }
 
     name = wxFileSelector(_("Save as..."), path, name, wxEmptyString,
-                          _("GNU gettext catalogs (*.po)|*.po|All files (*.*)|*.*"),
+	                      wxString::Format("%s (*.po)|*.po|%s (*.*)|*.*",
+                              _("PO Translation Files"), _("All Files")),
                           wxFD_SAVE | wxFD_OVERWRITE_PROMPT, this);
     if (!name.empty())
     {
@@ -1446,7 +1448,7 @@ void PoeditFrame::OnExport(wxCommandEvent&)
 
     name = wxFileSelector(_("Export as..."),
                           wxPathOnly(m_fileName), name, wxEmptyString,
-                          _("HTML file (*.html)|*.html"),
+                          wxString::Format("%s (*.html)|*.html", _("HTML Files")),
                           wxFD_SAVE | wxFD_OVERWRITE_PROMPT, this);
     if (!name.empty())
     {
@@ -1486,7 +1488,13 @@ void PoeditFrame::NewFromPOT()
     wxString pot_file =
         wxFileSelector(_("Open catalog template"),
              path, wxEmptyString, wxEmptyString,
-             _("GNU gettext templates (*.pot)|*.pot|GNU gettext catalogs (*.po)|*.po|All files (*.*)|*.*"),
+             wxString::Format
+             (
+                 "%s (*.pot)|*.pot|%s (*.po)|*.po|%s (*.*)|*.*",
+                 _("POT Translation Templates"),
+                 _("PO Translation Files"),
+                 _("All Files")
+             ),
              wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
     bool ok = false;
     if (!pot_file.empty())
@@ -1731,7 +1739,13 @@ void PoeditFrame::OnUpdate(wxCommandEvent& event)
             pot_file =
                 wxFileSelector(_("Open catalog template"),
                      path, wxEmptyString, wxEmptyString,
-                     _("GNU gettext templates (*.pot)|*.pot|All files (*.*)|*.*"),
+                     wxString::Format
+                     (
+                         "%s (*.pot)|*.pot|%s (*.po)|*.po|%s (*.*)|*.*",
+                         _("POT Translation Templates"),
+                         _("PO Translation Files"),
+                         _("All Files")
+                     ),
                      wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
             if (pot_file.empty())
                 return;
@@ -2755,6 +2769,7 @@ void PoeditFrame::UpdateMenu()
     menubar->Enable(XRCID("sort_by_order"), editable);
     menubar->Enable(XRCID("sort_by_source"), editable);
     menubar->Enable(XRCID("sort_by_translation"), editable);
+    menubar->Enable(XRCID("sort_group_by_context"), editable);
     menubar->Enable(XRCID("sort_untrans_first"), editable);
 
     if (m_textTrans)
@@ -3011,7 +3026,7 @@ bool PoeditFrame::AutoTranslateCatalog(int *matchesCount)
                     dt.SetAutomatic(true);
                     dt.SetFuzzy(true);
                     matches++;
-                    msg.Printf(_("Translated %u strings"), matches);
+                    msg.Printf(wxPLURAL("Translated %u string", "Translated %u strings", matches), matches);
                     progress.UpdateMessage(msg);
 
                     if (m_modified == false)
@@ -3576,6 +3591,13 @@ void PoeditFrame::OnSortBySource(wxCommandEvent&)
 void PoeditFrame::OnSortByTranslation(wxCommandEvent&)
 {
     m_list->sortOrder.by = SortOrder::By_Translation;
+    m_list->Sort();
+}
+
+
+void PoeditFrame::OnSortGroupByContext(wxCommandEvent& event)
+{
+    m_list->sortOrder.groupByContext = event.IsChecked();
     m_list->Sort();
 }
 

@@ -171,13 +171,13 @@
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="go_prev">
-        <label platform="win">_Previous message</label>
-        <label platform="unix|mac">_Previous Message</label>
+        <label platform="win">_Previous translation</label>
+        <label platform="unix|mac">_Previous Translation</label>
         <accel>Ctrl+Up</accel>
       </object>
       <object class="wxMenuItem" name="go_next">
-        <label platform="win">_Next message</label>
-        <label platform="unix|mac">_Next Message</label>
+        <label platform="win">_Next translation</label>
+        <label platform="unix|mac">_Next Translation</label>
         <accel>Ctrl+Down</accel>
       </object>
       <object class="wxMenuItem" name="go_prev_unfinished">
@@ -229,6 +229,12 @@
         <label platform="win">Sort by _translation</label>
         <label platform="unix|mac">Sort by _Translation</label>
         <radio>1</radio>
+      </object>
+      <object class="separator"/>
+      <object class="wxMenuItem" name="sort_group_by_context">
+        <label platform="win">_Group by context</label>
+        <label platform="unix|mac">_Group By Context</label>
+        <checkable>1</checkable>
       </object>
       <object class="separator"/>
       <object class="wxMenuItem" name="sort_untrans_first">
