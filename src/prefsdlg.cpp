@@ -50,6 +50,7 @@
 #include "tm/transmem.h"
 #include "chooselang.h"
 #include "errors.h"
+#include "spellchecking.h"
 
 #ifdef __WXMSW__
 #include <winsparkle.h>
@@ -232,10 +233,15 @@ PreferencesDialog::PreferencesDialog(wxWindow *parent)
     m_pageTM = new TMPage(nb);
     nb->InsertPage(2, m_pageTM, _("Translation Memory"));
 
-#if !USE_SPELLCHECKING
-    // remove "Automatic spellchecking" checkbox:
-    wxWindow *spellcheck = XRCCTRL(*this, "enable_spellchecking", wxCheckBox);
-    spellcheck->GetContainingSizer()->Show(spellcheck, false);
+#ifdef __WXMSW__
+    if (!IsSpellcheckingAvailable())
+    {
+        auto spellcheck = XRCCTRL(*this, "enable_spellchecking", wxCheckBox);
+        spellcheck->Disable();
+        spellcheck->SetValue(false);
+        // TRANSLATORS: This is a note appended to "Check spelling" when running on older Windows versions
+        spellcheck->SetLabel(spellcheck->GetLabel() + " " + _("(requires Windows 8 or newer)"));
+    }
 #endif
 
 #if !NEED_CHOOSELANG_UI
@@ -265,10 +271,11 @@ void PreferencesDialog::TransferTo(wxConfigBase *cfg)
                 cfg->ReadBool("comment_window_editable", false));
     XRCCTRL(*this, "keep_crlf", wxCheckBox)->SetValue(
                 cfg->ReadBool("keep_crlf", true));
-#ifdef USE_SPELLCHECKING
-    XRCCTRL(*this, "enable_spellchecking", wxCheckBox)->SetValue(
-                cfg->ReadBool("enable_spellchecking", true));
-#endif
+    if (IsSpellcheckingAvailable())
+    {
+        XRCCTRL(*this, "enable_spellchecking", wxCheckBox)->SetValue(
+                    cfg->ReadBool("enable_spellchecking", true));
+    }
 
     XRCCTRL(*this, "use_font_list", wxCheckBox)->SetValue(
                 cfg->ReadBool("custom_font_list_use", false));
@@ -340,10 +347,11 @@ void PreferencesDialog::TransferFrom(wxConfigBase *cfg)
                 XRCCTRL(*this, "comment_window_editable", wxCheckBox)->GetValue());
     cfg->Write("keep_crlf", 
                 XRCCTRL(*this, "keep_crlf", wxCheckBox)->GetValue());
-#ifdef USE_SPELLCHECKING
-    cfg->Write("enable_spellchecking", 
-                XRCCTRL(*this, "enable_spellchecking", wxCheckBox)->GetValue());
-#endif
+    if (IsSpellcheckingAvailable())
+    {
+        cfg->Write("enable_spellchecking",
+                    XRCCTRL(*this, "enable_spellchecking", wxCheckBox)->GetValue());
+    }
    
     wxFont listFont = XRCCTRL(*this, "font_list", wxFontPickerCtrl)->GetSelectedFont();
     wxFont textFont = XRCCTRL(*this, "font_text", wxFontPickerCtrl)->GetSelectedFont();

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2007-2014 Vaclav Slavik
+ *  Copyright (C) 2014 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -19,39 +19,48 @@
  *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- *  DEALINGS IN THE SOFTWARE. 
+ *  DEALINGS IN THE SOFTWARE.
  *
  */
 
-#ifndef _OSX_HELPERS_H_
-#define _OSX_HELPERS_H_
+#ifndef Poedit_spellchecking_h
+#define Poedit_spellchecking_h
 
-// FIXME: This is a hack to work around Automake's lack of support for ObjC++.
-//        Remove it after switching build system to Bakefile.
+#include <wx/defs.h>
 
-#ifdef __cplusplus
-extern "C" {
+#ifdef __WXMSW__
+    #include <wx/platinfo.h>
 #endif
 
-#ifdef USE_SPARKLE
-// Sparkle helpers
-void Sparkle_Initialize(bool checkForBeta);
-void Sparkle_AddMenuItem(NSMenu *appmenu, const char *title);
-void Sparkle_Cleanup();
-#endif // USE_SPARKLE
+#include <wx/textctrl.h>
 
-// Native preferences
-void UserDefaults_SetBoolValue(const char *key, int value);
-int  UserDefaults_GetBoolValue(const char *key);
-void UserDefaults_RemoveValue(const char *key);
+#include "language.h"
 
-// Misc UI helpers
-void MakeButtonRounded(void *button);
-
-void MoveToApplicationsFolderIfNecessary();
-
-#ifdef __cplusplus
+inline bool IsSpellcheckingAvailable()
+{
+#ifdef __WXMSW__
+    return wxPlatformInfo::Get().CheckOSVersion(6,2);
+#else
+    return true;
+#endif
 }
+
+#ifdef __WXOSX__
+// Set the global spellchecking language
+bool SetSpellcheckerLang(const wxString& lang);
 #endif
 
-#endif // _OSX_HELPERS_H_
+// Does any initialization needed to be able to use spellchecker with the control later.
+#ifdef __WXMSW__
+void PrepareTextCtrlForSpellchecker(wxTextCtrl *text);
+#endif
+
+// Init given text control to do (or not) spellchecking for given language
+bool InitTextCtrlSpellchecker(wxTextCtrl *text, bool enable, const Language& lang);
+
+#ifndef __WXMSW__
+// Show help about how to add more dictionaries for spellchecking.
+void ShowSpellcheckerHelp();
+#endif
+
+#endif // Poedit_spellchecking_h

@@ -235,7 +235,6 @@ private:
         void ShowReference(int num);
         void OnRightClick(wxCommandEvent& event);
         void OnFuzzyFlag(wxCommandEvent& event);
-        void OnQuotesFlag(wxCommandEvent& event);
         void OnIDsFlag(wxCommandEvent& event);
         void OnCommentWinFlag(wxCommandEvent& event);
         void OnAutoCommentsWinFlag(wxCommandEvent& event);
@@ -251,6 +250,9 @@ private:
         void OnSortByTranslation(wxCommandEvent&);
         void OnSortGroupByContext(wxCommandEvent&);
         void OnSortUntranslatedFirst(wxCommandEvent&);
+
+        void OnSelectionUpdate(wxUpdateUIEvent& event);
+        void OnSingleSelectionUpdate(wxUpdateUIEvent& event);
 
 #if defined(__WXMSW__) || defined(__WXGTK__)
         void OnTextEditingCommand(wxCommandEvent& event);
@@ -271,7 +273,6 @@ private:
         void OnExport(wxCommandEvent& event);
         bool ExportCatalog(const wxString& filename);
 
-        void OnIdle(wxIdleEvent& event);
         void OnSize(wxSizeEvent& event);
 
         // updates the status of both comment windows: Automatic and Translator's
@@ -280,8 +281,6 @@ private:
         void ShowPluralFormUI(bool show = true);
 
         void RecreatePluralTextCtrls();
-
-        void RefreshSelectedItem();
 
         template<typename TFunctor>
         void ReportValidationErrors(int errors, Catalog::CompilationStatus mo_compilation_status,
@@ -295,8 +294,6 @@ private:
         DECLARE_EVENT_TABLE()
 
     private:
-        std::set<int> m_itemsRefreshQueue;
-
         bool m_commentWindowEditable;
         Catalog *m_catalog;
         wxString m_fileName;
@@ -326,7 +323,6 @@ private:
 
         bool m_modified;
         bool m_hasObsoleteItems;
-        bool m_displayQuotes;
         bool m_displayIDs;
         bool m_displayCommentWin;
         bool m_displayAutoCommentsWin;

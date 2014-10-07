@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2007-2014 Vaclav Slavik
+ *  Copyright (C) 2014 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -19,39 +19,43 @@
  *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- *  DEALINGS IN THE SOFTWARE. 
+ *  DEALINGS IN THE SOFTWARE.
  *
  */
 
-#ifndef _OSX_HELPERS_H_
-#define _OSX_HELPERS_H_
+#ifndef Poedit_syntaxhighlighter_h
+#define Poedit_syntaxhighlighter_h
 
-// FIXME: This is a hack to work around Automake's lack of support for ObjC++.
-//        Remove it after switching build system to Bakefile.
+#include <string>
+#include <functional>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/**
+    Highlights parts of translation (or source) text that have special meaning.
+    
+    Highlighted parts include e.g. C-style escape sequences (\n etc.),
+    leading/trailing whitespace or format string parts.
+ */
+class SyntaxHighlighter
+{
+public:
+    // Kind of the element to highlight
+    enum TextKind
+    {
+        LeadingWhitespace,
+        Escape
+    };
 
-#ifdef USE_SPARKLE
-// Sparkle helpers
-void Sparkle_Initialize(bool checkForBeta);
-void Sparkle_AddMenuItem(NSMenu *appmenu, const char *title);
-void Sparkle_Cleanup();
-#endif // USE_SPARKLE
+    typedef std::function<void(int,int,TextKind)> CallbackType;
 
-// Native preferences
-void UserDefaults_SetBoolValue(const char *key, int value);
-int  UserDefaults_GetBoolValue(const char *key);
-void UserDefaults_RemoveValue(const char *key);
+    /**
+        Perform highlighting in given text.
+        
+        The @a highlight function is called once for every range that should
+        be highlighted, with the range boundaries and highlight kind as its
+        arguments.
+     */
+    void Highlight(const std::wstring& s, CallbackType highlight);
+};
 
-// Misc UI helpers
-void MakeButtonRounded(void *button);
 
-void MoveToApplicationsFolderIfNecessary();
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // _OSX_HELPERS_H_
+#endif // Poedit_syntaxhighlighter_h

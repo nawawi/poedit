@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  This file is part of Poedit (http://poedit.net)
  *
  *  Copyright (C) 1999-2014 Vaclav Slavik
@@ -46,30 +46,7 @@
 #include <wx/windowptr.h>
 
 #ifdef __WXOSX__
-#include "osx_helpers.h"
 #include <wx/cocoa/string.h>
-#endif
-
-#ifdef __WXMSW__
-  #include <wx/msw/wrapwin.h>
-  #include <Richedit.h>
-  #ifndef IMF_SPELLCHECKING
-    #define IMF_SPELLCHECKING 0x0800
-  #endif
-#endif
-
-#ifdef USE_SPELLCHECKING
-
-#ifdef __WXGTK__
-    #include <gtk/gtk.h>
-    extern "C" {
-    #include <gtkspell/gtkspell.h>
-    }
-#endif // __WXGTK__
-
-#endif // USE_SPELLCHECKING
-
-#ifdef __WXMAC__
 #import <AppKit/NSDocumentController.h>
 #endif
 
@@ -96,6 +73,8 @@
 #include "languagectrl.h"
 #include "welcomescreen.h"
 #include "errors.h"
+#include "spellchecking.h"
+#include "syntaxhighlighter.h"
 
 
 // this should be high enough to not conflict with any wxNewId-allocated value,
@@ -428,19 +407,106 @@ class UnfocusableTextCtrl : public CustomizedTextCtrl
 };
 
 
-class TranslationTextCtrl : public CustomizedTextCtrl
+class AnyTranslatableTextCtrl : public CustomizedTextCtrl
+{
+    public:
+        AnyTranslatableTextCtrl(wxWindow *parent, wxWindowID winid, int style = 0)
+           : CustomizedTextCtrl(parent, winid, wxEmptyString,
+                                wxDefaultPosition, wxDefaultSize,
+                                wxTE_MULTILINE | wxTE_RICH2 | style)
+        {
+            InitColors();
+            Bind(wxEVT_TEXT, [=](wxCommandEvent& e){
+                e.Skip();
+                HighlightText();
+            });
+        }
+
+    private:
+#ifdef __WXOSX__
+        void InitColors()
+        {
+            m_attrSpace  = @{NSBackgroundColorAttributeName: [NSColor colorWithSRGBRed:0.89 green:0.96 blue:0.68 alpha:1]};
+            m_attrEscape = @{NSBackgroundColorAttributeName: [NSColor colorWithSRGBRed:1 green:0.95 blue:1 alpha:1],
+                             NSForegroundColorAttributeName: [NSColor colorWithSRGBRed:0.46 green:0 blue:0.01 alpha:1]};
+        }
+
+        void HighlightText()
+        {
+            auto text = GetValue().ToStdWstring();
+
+            NSRange fullRange = NSMakeRange(0, text.length());
+            NSLayoutManager *layout = [TextView() layoutManager];
+            [layout removeTemporaryAttribute:NSForegroundColorAttributeName forCharacterRange:fullRange];
+            [layout removeTemporaryAttribute:NSBackgroundColorAttributeName forCharacterRange:fullRange];
+
+            m_syntax.Highlight(text, [=](int a, int b, SyntaxHighlighter::TextKind kind){
+                [layout addTemporaryAttributes:AttrFor(kind) forCharacterRange:NSMakeRange(a, b-a)];
+            });
+        }
+
+        typedef NSDictionary* AttrType;
+        NSDictionary *m_attrSpace, *m_attrEscape;
+
+#else // !__WXOSX__
+
+        void InitColors()
+        {
+            m_attrDefault.SetBackgroundColour(*wxWHITE);
+            m_attrDefault.SetTextColour(*wxBLACK);
+
+            m_attrSpace.SetBackgroundColour("#E4F6AE");
+
+            m_attrEscape.SetBackgroundColour("#FFF1FF");
+            m_attrEscape.SetTextColour("#760003");
+        }
+
+        void HighlightText()
+        {
+            auto text = GetValue().ToStdWstring();
+
+            wxWindowUpdateLocker noupd(this);
+            wxEventBlocker block(this, wxEVT_TEXT);
+            SetStyle(-1, -1, m_attrDefault);
+
+            m_syntax.Highlight(text, [=](int a, int b, SyntaxHighlighter::TextKind kind){
+                SetStyle(a, b, AttrFor(kind));
+            });
+        }
+
+        typedef wxTextAttr AttrType;
+        wxTextAttr m_attrDefault, m_attrSpace, m_attrEscape;
+#endif // __WXOSX__/!__WXOSX__
+
+        const AttrType& AttrFor(SyntaxHighlighter::TextKind kind) const
+        {
+            switch (kind)
+            {
+                case SyntaxHighlighter::LeadingWhitespace:  return m_attrSpace;
+                case SyntaxHighlighter::Escape:             return m_attrEscape;
+            }
+        }
+
+        SyntaxHighlighter m_syntax;
+};
+
+class SourceTextCtrl : public AnyTranslatableTextCtrl
+{
+    public:
+        SourceTextCtrl(wxWindow *parent, wxWindowID winid)
+            : AnyTranslatableTextCtrl(parent, winid, wxTE_READONLY)
+        {
+        }
+};
+
+class TranslationTextCtrl : public AnyTranslatableTextCtrl
 {
     public:
         TranslationTextCtrl(wxWindow *parent, wxWindowID winid)
-           : CustomizedTextCtrl(parent, winid, wxEmptyString,
-                                wxDefaultPosition, wxDefaultSize,
-                                wxTE_MULTILINE | wxTE_RICH2)
+            : AnyTranslatableTextCtrl(parent, winid)
         {
 #ifdef __WXMSW__
-          HWND hwnd = (HWND)GetHWND();
-          auto editStyle = SES_USECTF | SES_CTFALLOWEMBED | SES_CTFALLOWSMARTTAG | SES_CTFALLOWPROOFING;
-          ::SendMessage(hwnd, EM_SETEDITSTYLE, editStyle, editStyle);
-          ::SendMessage(hwnd, EM_SETLANGOPTIONS, 0, IMF_SPELLCHECKING);
+            PrepareTextCtrlForSpellchecker(this);
 #endif
         }
 };
@@ -468,7 +534,6 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
    EVT_MENU           (XRCID("menu_validate"),    PoeditFrame::OnValidate)
    EVT_MENU           (XRCID("menu_purge_deleted"), PoeditFrame::OnPurgeDeleted)
    EVT_MENU           (XRCID("menu_fuzzy"),       PoeditFrame::OnFuzzyFlag)
-   EVT_MENU           (XRCID("menu_quotes"),      PoeditFrame::OnQuotesFlag)
    EVT_MENU           (XRCID("menu_ids"),         PoeditFrame::OnIDsFlag)
    EVT_MENU           (XRCID("menu_comment_win"), PoeditFrame::OnCommentWinFlag)
    EVT_MENU           (XRCID("menu_auto_comments_win"), PoeditFrame::OnAutoCommentsWinFlag)
@@ -501,8 +566,16 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
                        PoeditFrame::OnSetBookmark)
    EVT_CLOSE          (                PoeditFrame::OnCloseWindow)
    EVT_TEXT           (ID_TEXTCOMMENT,PoeditFrame::OnCommentWindowText)
-   EVT_IDLE           (PoeditFrame::OnIdle)
    EVT_SIZE           (PoeditFrame::OnSize)
+
+   // handling of selection:
+   EVT_UPDATE_UI(XRCID("menu_references"), PoeditFrame::OnSingleSelectionUpdate)
+   EVT_UPDATE_UI_RANGE(ID_BOOKMARK_SET, ID_BOOKMARK_SET + 9, PoeditFrame::OnSingleSelectionUpdate)
+
+   EVT_UPDATE_UI(XRCID("menu_fuzzy"), PoeditFrame::OnSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("menu_copy_from_src"), PoeditFrame::OnSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("menu_clear"), PoeditFrame::OnSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("menu_comment"), PoeditFrame::OnSelectionUpdate)
 
 #if defined(__WXMSW__) || defined(__WXGTK__)
    EVT_MENU(wxID_UNDO,      PoeditFrame::OnTextEditingCommand)
@@ -610,7 +683,6 @@ PoeditFrame::PoeditFrame() :
 
     wxConfigBase *cfg = wxConfig::Get();
 
-    m_displayQuotes = (bool)cfg->Read("display_quotes", (long)false);
     m_displayIDs = (bool)cfg->Read("display_lines", (long)false);
     m_displayCommentWin =
         (bool)cfg->Read("display_comment_win", (long)false);
@@ -660,7 +732,6 @@ PoeditFrame::PoeditFrame() :
 
     wxXmlResource::Get()->LoadToolBar(this, "toolbar");
 
-    GetMenuBar()->Check(XRCID("menu_quotes"), m_displayQuotes);
     GetMenuBar()->Check(XRCID("menu_ids"), m_displayIDs);
     GetMenuBar()->Check(XRCID("menu_comment_win"), m_displayCommentWin);
     GetMenuBar()->Check(XRCID("menu_auto_comments_win"), m_displayAutoCommentsWin);
@@ -757,7 +828,7 @@ wxWindow* PoeditFrame::CreateContentViewPO()
     m_list = new PoeditListCtrl(topPanel,
                                 ID_LIST,
                                 wxDefaultPosition, wxDefaultSize,
-                                wxLC_REPORT | wxLC_SINGLE_SEL,
+                                wxLC_REPORT,
                                 m_displayIDs);
 
     wxSizer *topSizer = new wxBoxSizer(wxVERTICAL);
@@ -769,6 +840,7 @@ wxWindow* PoeditFrame::CreateContentViewPO()
                                             SPLITTER_FLAGS);
     // left part (translation) should grow, not comments one:
     m_bottomSplitter->SetSashGravity(1.0);
+    m_bottomSplitter->Bind(wxEVT_UPDATE_UI, &PoeditFrame::OnSingleSelectionUpdate, this);
 
     m_bottomLeftPanel = new wxPanel(m_bottomSplitter);
     m_bottomRightPanel = new wxPanel(m_bottomSplitter);
@@ -783,17 +855,11 @@ wxWindow* PoeditFrame::CreateContentViewPO()
 
     m_labelSingular = new wxStaticText(m_bottomLeftPanel, -1, _("Singular:"));
     m_labelSingular->SetFont(m_normalGuiFont);
-    m_textOrig = new UnfocusableTextCtrl(m_bottomLeftPanel,
-                                ID_TEXTORIG, wxEmptyString,
-                                wxDefaultPosition, wxDefaultSize,
-                                wxTE_MULTILINE | wxTE_RICH2 | wxTE_READONLY);
+    m_textOrig = new SourceTextCtrl(m_bottomLeftPanel, ID_TEXTORIG);
 
     m_labelPlural = new wxStaticText(m_bottomLeftPanel, -1, _("Plural:"));
     m_labelPlural->SetFont(m_normalGuiFont);
-    m_textOrigPlural = new UnfocusableTextCtrl(m_bottomLeftPanel,
-                                ID_TEXTORIGPLURAL, wxEmptyString,
-                                wxDefaultPosition, wxDefaultSize,
-                                wxTE_MULTILINE | wxTE_RICH2 | wxTE_READONLY);
+    m_textOrigPlural = new SourceTextCtrl(m_bottomLeftPanel, ID_TEXTORIGPLURAL);
 
     wxStaticText *labelTrans =
         new wxStaticText(m_bottomLeftPanel, -1, _("Translation:"));
@@ -970,7 +1036,6 @@ PoeditFrame::~PoeditFrame()
     wxConfigBase *cfg = wxConfig::Get();
     cfg->SetPath("/");
 
-    cfg->Write("display_quotes", m_displayQuotes);
     cfg->Write("display_lines", m_displayIDs);
     cfg->Write("display_comment_win", m_displayCommentWin);
     cfg->Write("display_auto_comments_win", m_displayAutoCommentsWin);
@@ -1020,140 +1085,21 @@ void PoeditFrame::SetAccelerators()
 }
 
 
-#ifdef USE_SPELLCHECKING
-
-#ifdef __WXGTK__
-// helper functions that finds GtkTextView of wxTextCtrl:
-static GtkTextView *GetTextView(wxTextCtrl *ctrl)
-{
-    GtkWidget *parent = ctrl->m_widget;
-    GList *child = gtk_container_get_children(GTK_CONTAINER(parent));
-    while (child)
-    {
-        if (GTK_IS_TEXT_VIEW(child->data))
-        {
-            return GTK_TEXT_VIEW(child->data);
-        }
-        child = child->next;
-    }
-
-    wxFAIL_MSG( "couldn't find GtkTextView for text control" );
-    return NULL;
-}
-
-#if GTK_CHECK_VERSION(3,0,0)
-
-static bool DoInitSpellchecker(wxTextCtrl *text,
-                               bool enable, const Language& lang)
-{
-    GtkTextView *textview = GetTextView(text);
-    wxASSERT_MSG( textview, "wxTextCtrl is supposed to use GtkTextView" );
-
-    GtkSpellChecker *spell = gtk_spell_checker_get_from_text_view(textview);
-
-    if (enable)
-    {
-        if (!spell)
-        {
-            spell = gtk_spell_checker_new();
-            gtk_spell_checker_attach(spell, textview);
-        }
-
-        return gtk_spell_checker_set_language(spell, lang.Code().c_str(), nullptr);
-    }
-    else
-    {
-        if (spell)
-            gtk_spell_checker_detach(spell);
-        return true;
-    }
-}
-
-#else // GTK+ 2.x
-
-static bool DoInitSpellchecker(wxTextCtrl *text,
-                               bool enable, const Language& lang)
-{
-    GtkTextView *textview = GetTextView(text);
-    wxASSERT_MSG( textview, "wxTextCtrl is supposed to use GtkTextView" );
-    GtkSpell *spell = gtkspell_get_from_text_view(textview);
-
-    GError *err = NULL;
-
-    if (enable)
-    {
-        if (spell)
-            gtkspell_set_language(spell, lang.Code().c_str(), &err);
-        else
-            gtkspell_new_attach(textview, lang.Code().c_str(), &err);
-    }
-    else // !enable
-    {
-        // GtkSpell when used with Zemberek Enchant module doesn't work
-        // correctly if you repeatedly attach and detach a speller to text
-        // view. See http://poedit.net/trac/ticket/276 for details.
-        //
-        // To work around this, we set the language to a non-existent one
-        // instead of detaching GtkSpell -- this has the same effect as
-        // detaching the speller as far as the UI is concerned.
-        if (spell)
-            gtkspell_set_language(spell, "unknown_language", &err);
-    }
-
-    if (err)
-        g_error_free(err);
-
-    return err == NULL;
-}
-
-#endif // GTK+ 2.x
-
-#endif // __WXGTK__
-
-#ifdef __WXOSX__
-
-static bool SetSpellcheckerLang(const wxString& lang)
-{
-    return SpellChecker_SetLang(lang.mb_str(wxConvUTF8));
-}
-
-static bool DoInitSpellchecker(wxTextCtrl *text,
-                               bool enable, const Language& /*lang*/)
-{
-    NSScrollView *scroll = (NSScrollView*)text->GetHandle();
-    NSTextView *view = [scroll documentView];
-
-    [view setContinuousSpellCheckingEnabled:enable];
-    [view setGrammarCheckingEnabled:enable];
-
-    return true;
-}
-#endif // __WXOSX__
-
-static void ShowSpellcheckerHelp()
-{
-#if defined(__WXOSX__)
-    #define SPELL_HELP_PAGE   "SpellcheckerMac"
-#elif defined(__UNIX__)
-    #define SPELL_HELP_PAGE   "SpellcheckerLinux"
-#else
-    #error "missing spellchecker instructions for platform"
-#endif
-    wxGetApp().OpenPoeditWeb("/trac/wiki/Doc/" SPELL_HELP_PAGE);
-}
-
-#endif // USE_SPELLCHECKING
-
 void PoeditFrame::InitSpellchecker()
 {
+    if (!IsSpellcheckingAvailable())
+        return;
+
     if (!m_catalog || !m_textTrans)
         return;
 
-#ifdef USE_SPELLCHECKING
     Language lang = m_catalog->GetLanguage();
 
     bool report_problem = false;
-    bool enabled = m_catalog && lang.IsValid() &&
+    bool enabled = m_catalog &&
+                #ifndef __WXMSW__ // language choice is automatic, per-keyboard on Windows
+                   lang.IsValid() &&
+                #endif
                    wxConfig::Get()->Read("enable_spellchecking",
                                          (long)true);
     const bool enabledInitially = enabled;
@@ -1169,15 +1115,16 @@ void PoeditFrame::InitSpellchecker()
     }
 #endif
 
-    if ( !DoInitSpellchecker(m_textTrans, enabled, lang) )
+    if ( !InitTextCtrlSpellchecker(m_textTrans, enabled, lang) )
         report_problem = true;
 
     for (size_t i = 0; i < m_textTransPlural.size(); i++)
     {
-        if ( !DoInitSpellchecker(m_textTransPlural[i], enabled, lang) )
+        if ( !InitTextCtrlSpellchecker(m_textTransPlural[i], enabled, lang) )
             report_problem = true;
     }
 
+#ifndef __WXMSW__ // language choice is automatic, per-keyboard on Windows, can't fail
     if ( enabledInitially && report_problem )
     {
         AttentionMessage msg
@@ -1197,7 +1144,7 @@ void PoeditFrame::InitSpellchecker()
         msg.AddDontShowAgain();
         m_attentionBar->ShowMessage(msg);
     }
-#endif // USE_SPELLCHECKING
+#endif // !__WXMSW__
 }
 
 
@@ -1974,23 +1921,37 @@ void PoeditFrame::OnFuzzyFlag(wxCommandEvent& event)
                                  GetMenuBar()->IsChecked(XRCID("menu_fuzzy")));
     }
 
-    // The user explicitly changed fuzzy status (e.g. to on). Normally, if the
-    // user edits an entry, it's fuzzy flag is cleared, but if the user sets
-    // fuzzy on to indicate the translation is problematic and then continues
-    // editing the entry, we do not want to annoy him by changing fuzzy back on
-    // every keystroke.
-    m_dontAutoclearFuzzyStatus = true;
+    bool setFuzzy = !GetCurrentItem()->IsFuzzy();
 
-    UpdateFromTextCtrl();
-}
+    bool modified = false;
 
+    m_list->ForSelectedCatalogItemsDo([=,&modified](CatalogItem& item){
+        if (item.IsFuzzy() != setFuzzy)
+        {
+            item.SetFuzzy(setFuzzy);
+            item.SetModified(true);
+            modified = true;
+        }
+    });
 
+    if (modified && !IsModified())
+    {
+        m_modified = true;
+        UpdateTitle();
+    }
+    UpdateStatusBar();
 
-void PoeditFrame::OnQuotesFlag(wxCommandEvent&)
-{
-    UpdateFromTextCtrl();
-    m_displayQuotes = GetMenuBar()->IsChecked(XRCID("menu_quotes"));
     UpdateToTextCtrl();
+
+    if (m_list->HasSingleSelection())
+    {
+        // The user explicitly changed fuzzy status (e.g. to on). Normally, if the
+        // user edits an entry, it's fuzzy flag is cleared, but if the user sets
+        // fuzzy on to indicate the translation is problematic and then continues
+        // editing the entry, we do not want to annoy him by changing fuzzy back on
+        // every keystroke.
+        m_dontAutoclearFuzzyStatus = true;
+    }
 }
 
 
@@ -2016,39 +1977,42 @@ void PoeditFrame::OnAutoCommentsWinFlag(wxCommandEvent&)
 
 void PoeditFrame::OnCopyFromSource(wxCommandEvent&)
 {
-    if (!m_textTrans->IsShown())
-    {
-        // plural form entry:
-        wxString orig = m_textOrigPlural->GetValue();
-        for (size_t i = 0; i < m_textTransPlural.size(); i++)
-            m_textTransPlural[i]->SetValue(orig);
+    bool modified = false;
 
-        if (m_textTransSingularForm)
-            m_textTransSingularForm->SetValue(m_textOrig->GetValue());
-    }
-    else
+    m_list->ForSelectedCatalogItemsDo([&modified](CatalogItem& item){
+        item.SetTranslationFromSource();
+        if (item.IsModified())
+            modified = true;
+    });
+
+    if (modified && !IsModified())
     {
-        // singular form entry:
-        m_textTrans->SetValue(m_textOrig->GetValue());
+        m_modified = true;
+        UpdateTitle();
     }
+    UpdateStatusBar();
+
+    UpdateToTextCtrl();
 }
 
 void PoeditFrame::OnClearTranslation(wxCommandEvent&)
 {
-    if (!m_textTrans->IsShown())
-    {
-        // plural form entry:
-        for (size_t i=0; i < m_textTransPlural.size(); i++)
-            m_textTransPlural[i]->Clear();
+    bool modified = false;
 
-        if (m_textTransSingularForm)
-            m_textTransSingularForm->Clear();
-    }
-    else
+    m_list->ForSelectedCatalogItemsDo([&modified](CatalogItem& item){
+        item.ClearTranslation();
+        if (item.IsModified())
+            modified = true;
+    });
+
+    if (modified && !IsModified())
     {
-        // singular form entry:
-        m_textTrans->Clear();
+        m_modified = true;
+        UpdateTitle();
     }
+    UpdateStatusBar();
+
+    UpdateToTextCtrl();
 }
 
 
@@ -2083,7 +2047,7 @@ CatalogItem *PoeditFrame::GetCurrentItem() const
     if ( !m_catalog || !m_list )
         return NULL;
 
-    int item = m_list->GetSelectedCatalogItem();
+    int item = m_list->GetFirstSelectedCatalogItem();
     if ( item == -1 )
         return NULL;
 
@@ -2110,7 +2074,7 @@ static inline bool IsAnyQuote(wchar_t c)
     }
 }
 
-static wxString TransformNewval(const wxString& val, bool displayQuotes)
+static wxString TransformNewval(const wxString& val)
 {
     wxString newval(val);
 
@@ -2133,13 +2097,6 @@ static wxString TransformNewval(const wxString& val, bool displayQuotes)
 #endif // __WXOSX__
 
     newval.Replace("\n", "");
-    if (displayQuotes)
-    {
-        if (newval.Len() > 0 && IsAnyQuote(newval[0u]))
-            newval.Remove(0, 1);
-        if (newval.Len() > 0 && IsAnyQuote(newval[newval.Length()-1]))
-            newval.RemoveLast();
-    }
 
     if (!newval.empty() && newval[0u] == _T('"'))
         newval.Prepend("\\");
@@ -2179,8 +2136,7 @@ void PoeditFrame::UpdateFromTextCtrl()
         wxArrayString str;
         for (unsigned i = 0; i < m_textTransPlural.size(); i++)
         {
-            wxString val = TransformNewval(m_textTransPlural[i]->GetValue(),
-                                           m_displayQuotes);
+            wxString val = TransformNewval(m_textTransPlural[i]->GetValue());
             str.Add(val);
             if ( val.empty() )
                 allTranslated = false;
@@ -2195,7 +2151,7 @@ void PoeditFrame::UpdateFromTextCtrl()
     else
     {
         wxString newval =
-            TransformNewval(m_textTrans->GetValue(), m_displayQuotes);
+            TransformNewval(m_textTrans->GetValue());
 
         if ( newval.empty() )
             allTranslated = false;
@@ -2235,7 +2191,7 @@ void PoeditFrame::UpdateFromTextCtrl()
     entry->SetModified(true);
     entry->SetAutomatic(false);
 
-    RefreshSelectedItem();
+    m_list->RefreshSelectedItems();
 
     if ( statisticsChanged )
     {
@@ -2280,11 +2236,8 @@ void PoeditFrame::UpdateToTextCtrl()
     if ( !entry )
         return;
 
-    wxString quote;
     wxString t_o, t_t, t_c, t_ac;
-    if (m_displayQuotes)
-        quote = _T("\"");
-    t_o = quote + entry->GetString() + quote;
+    t_o = entry->GetString();
     t_o.Replace("\\n", "\\n\n");
     t_c = entry->GetComment();
     t_c.Replace("\\n", "\\n\n");
@@ -2300,7 +2253,7 @@ void PoeditFrame::UpdateToTextCtrl()
 
     if (entry->HasPlural())
     {
-        wxString t_op = quote + entry->GetPluralString() + quote;
+        wxString t_op = entry->GetPluralString();
         t_op.Replace("\\n", "\\n\n");
         m_textOrigPlural->SetValue(t_op);
 
@@ -2311,20 +2264,16 @@ void PoeditFrame::UpdateToTextCtrl()
         unsigned i = 0;
         for (i = 0; i < std::min(formsCnt, entry->GetNumberOfTranslations()); i++)
         {
-            t_t = quote + entry->GetTranslation(i) + quote;
+            t_t = entry->GetTranslation(i);
             t_t.Replace("\\n", "\\n\n");
             SetTranslationValue(m_textTransPlural[i], t_t);
-            if (m_displayQuotes)
-                m_textTransPlural[i]->SetInsertionPoint(1);
         }
     }
     else
     {
-        t_t = quote + entry->GetTranslation() + quote;
+        t_t = entry->GetTranslation();
         t_t.Replace("\\n", "\\n\n");
         SetTranslationValue(m_textTrans, t_t);
-        if (m_displayQuotes)
-            m_textTrans->SetInsertionPoint(1);
     }
 
     if ( entry->HasContext() )
@@ -2577,8 +2526,6 @@ void PoeditFrame::NoteAsRecentFile()
 
 void PoeditFrame::RefreshControls()
 {
-    m_itemsRefreshQueue.clear();
-
     if (!m_catalog)
         return;
 
@@ -2602,15 +2549,8 @@ void PoeditFrame::RefreshControls()
 
     if (m_list)
     {
-        // remember currently selected item:
-        int selectedItem = m_list->GetSelectedCatalogItem();
-
         // update catalog view, this may involve reordering the items...
         m_list->CatalogChanged(m_catalog);
-
-        // ...and so we need to restore selection now:
-        if (selectedItem != -1)
-            m_list->SelectCatalogItem(selectedItem);
 
         FindFrame *f = FindFrame::Get(m_list, m_catalog);
         if (f)
@@ -2761,7 +2701,6 @@ void PoeditFrame::UpdateMenu()
     menubar->Enable(XRCID("menu_validate"), editable);
     menubar->Enable(XRCID("menu_catproperties"), hasCatalog);
 
-    menubar->Enable(XRCID("menu_quotes"), editable);
     menubar->Enable(XRCID("menu_ids"), editable);
     menubar->Enable(XRCID("menu_comment_win"), editable);
     menubar->Enable(XRCID("menu_auto_comments_win"), editable);
@@ -2890,10 +2829,10 @@ void PoeditFrame::WriteCatalog(const wxString& catalog, TFunctor completionHandl
 
 void PoeditFrame::OnEditComment(wxCommandEvent&)
 {
-    CatalogItem *entry = GetCurrentItem();
-    wxCHECK_RET( entry, "no entry selected" );
+    CatalogItem *firstItem = GetCurrentItem();
+    wxCHECK_RET( firstItem, "no entry selected" );
 
-    wxWindowPtr<CommentDialog> dlg(new CommentDialog(this, entry->GetComment()));
+    wxWindowPtr<CommentDialog> dlg(new CommentDialog(this, firstItem->GetComment()));
 
     dlg->ShowWindowModalThenDo([=](int retcode){
         if (retcode == wxID_OK)
@@ -2901,9 +2840,21 @@ void PoeditFrame::OnEditComment(wxCommandEvent&)
             m_modified = true;
             UpdateTitle();
             wxString comment = dlg->GetComment();
-            entry->SetComment(comment);
 
-            RefreshSelectedItem();
+            bool modified = false;
+            m_list->ForSelectedCatalogItemsDo([&modified,comment](CatalogItem& item){
+                if (item.GetComment() != comment)
+                {
+                    item.SetComment(comment);
+                    item.SetModified(true);
+                    modified = true;
+                }
+            });
+            if (modified && !IsModified())
+            {
+                m_modified = true;
+                UpdateTitle();
+            }
 
             // update comment window
             m_textComment->SetValue(CommentDialog::RemoveStartHash(comment));
@@ -2949,7 +2900,7 @@ void PoeditFrame::OnAutoTranslate(wxCommandEvent& event)
     UpdateTitle();
 
     UpdateToTextCtrl();
-    RefreshSelectedItem();
+    m_list->RefreshSelectedItems();
 }
 
 void PoeditFrame::OnAutoTranslateAll(wxCommandEvent&)
@@ -3304,31 +3255,13 @@ void PoeditFrame::OnCommentWindowText(wxCommandEvent&)
         return;
 
     entry->SetComment(comment);
-    RefreshSelectedItem();
+    m_list->RefreshSelectedItems();
 
     if (m_modified == false)
     {
         m_modified = true;
         UpdateTitle();
     }
-}
-
-
-void PoeditFrame::RefreshSelectedItem()
-{
-    m_itemsRefreshQueue.insert(m_list->GetSelection());
-}
-
-void PoeditFrame::OnIdle(wxIdleEvent& event)
-{
-    event.Skip();
-
-    for ( std::set<int>::const_iterator i = m_itemsRefreshQueue.begin();
-          i != m_itemsRefreshQueue.end(); ++i )
-    {
-        m_list->RefreshItem(*i);
-    }
-    m_itemsRefreshQueue.clear();
 }
 
 void PoeditFrame::OnSize(wxSizeEvent& event)
@@ -3462,14 +3395,15 @@ void PoeditFrame::OnListRightClick(wxMouseEvent& event)
 {
     long item;
     int flags = wxLIST_HITTEST_ONITEM;
-    wxListCtrl *list = (wxListCtrl*)event.GetEventObject();
+    auto list = static_cast<PoeditListCtrl*>(event.GetEventObject());
 
     item = list->HitTest(event.GetPosition(), flags);
     if (item != -1 && (flags & wxLIST_HITTEST_ONITEM))
-        list->SetItemState(item, wxLIST_STATE_SELECTED,
-                                 wxLIST_STATE_SELECTED);
+    {
+        list->SelectAndFocus(item);
+    }
 
-    wxMenu *menu = GetPopupMenu(m_list->GetSelectedCatalogItem());
+    wxMenu *menu = GetPopupMenu(m_list->ListIndexToCatalog(int(item)));
     if (menu)
     {
         list->PopupMenu(menu, event.GetPosition());
@@ -3537,8 +3471,7 @@ void PoeditFrame::OnGoToBookmark(wxCommandEvent& event)
         if (listIndex >= 0 && listIndex < m_list->GetItemCount())
         {
             m_list->EnsureVisible(listIndex);
-            m_list->SetItemState(listIndex,
-                                 wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+            m_list->SelectOnly(listIndex);
         }
     }
 }
@@ -3548,7 +3481,7 @@ void PoeditFrame::OnSetBookmark(wxCommandEvent& event)
     // Set bookmark if different from the current value for the item,
     // else unset it
     int bkIndex = -1;
-    int selItemIndex = m_list->GetSelectedCatalogItem();
+    int selItemIndex = m_list->GetFirstSelectedCatalogItem();
     if (selItemIndex == -1)
         return;
 
@@ -3563,7 +3496,7 @@ void PoeditFrame::OnSetBookmark(wxCommandEvent& event)
     }
 
     // Refresh items
-    RefreshSelectedItem();
+    m_list->RefreshSelectedItems();
     if (bkIndex != -1)
         m_list->RefreshItem(m_list->CatalogIndexToList(bkIndex));
 
@@ -3606,6 +3539,16 @@ void PoeditFrame::OnSortUntranslatedFirst(wxCommandEvent& event)
 {
     m_list->sortOrder.untransFirst = event.IsChecked();
     m_list->Sort();
+}
+
+void PoeditFrame::OnSelectionUpdate(wxUpdateUIEvent& event)
+{
+    event.Enable(m_list && m_list->HasSelection());
+}
+
+void PoeditFrame::OnSingleSelectionUpdate(wxUpdateUIEvent& event)
+{
+    event.Enable(m_list && m_list->HasSingleSelection());
 }
 
 #if defined(__WXMSW__) || defined(__WXGTK__)
@@ -3652,9 +3595,9 @@ void PoeditFrame::Navigate(int step, NavigatePredicate predicate, bool wrap)
     if ( !count )
         return;
 
-    const int start = m_list->GetSelection();
+    const long start = m_list->GetFirstSelected();
 
-    int i = start;
+    long i = start;
 
     for ( ;; )
     {
@@ -3681,7 +3624,7 @@ void PoeditFrame::Navigate(int step, NavigatePredicate predicate, bool wrap)
         const CatalogItem& item = m_list->ListIndexToCatalogItem(i);
         if ( predicate(item) )
         {
-            m_list->Select(i);
+            m_list->SelectOnly(i);
             return;
         }
     }
@@ -3717,14 +3660,14 @@ void PoeditFrame::OnPrevPage(wxCommandEvent&)
 {
     if (!m_list)
         return;
-    int pos = std::max(m_list->GetSelection()-10, 0);
-    m_list->Select(pos);
+    auto pos = std::max(m_list->GetFirstSelected()-10, 0L);
+    m_list->SelectOnly(pos);
 }
 
 void PoeditFrame::OnNextPage(wxCommandEvent&)
 {
     if (!m_list)
         return;
-    int pos = std::min(m_list->GetSelection()+10, m_list->GetItemCount()-1);
-    m_list->Select(pos);
+    auto pos = std::min(m_list->GetFirstSelected()+10, long(m_list->GetItemCount())-1);
+    m_list->SelectOnly(pos);
 }
