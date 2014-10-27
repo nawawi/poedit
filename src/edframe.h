@@ -34,6 +34,7 @@
 #include <wx/windowptr.h>
 
 class WXDLLIMPEXP_FWD_CORE wxSplitterWindow;
+class WXDLLIMPEXP_FWD_CORE wxSplitterEvent;
 class WXDLLIMPEXP_FWD_CORE wxTextCtrl;
 class WXDLLIMPEXP_FWD_CORE wxGauge;
 class WXDLLIMPEXP_FWD_CORE wxNotebook;
@@ -43,15 +44,17 @@ class WXDLLIMPEXP_FWD_CORE wxStaticText;
 #include "gexecute.h"
 #include "edlistctrl.h"
 #include "edapp.h"
-#include "tm/transmem.h"
 
 class ListHandler;
 class TextctrlHandler;
 class TransTextctrlHandler;
+class SourceTextCtrl;
+class TranslationTextCtrl;
 
 class PoeditFrame;
 class AttentionBar;
 class ErrorBar;
+class Sidebar;
 
 /** This class provides main editing frame. It handles user's input
     and provides frontend to catalog editing engine. Nothing fancy.
@@ -158,7 +161,9 @@ class PoeditFrame : public wxFrame
 
     private:
         /// Refreshes controls.
-        void RefreshControls();
+        enum { Refresh_NoCatalogChanged = 1 };
+        void RefreshControls(int flags = 0);
+
         /// Sets controls custom fonts.
         void SetCustomFonts();
         void SetAccelerators();
@@ -187,8 +192,8 @@ class PoeditFrame : public wxFrame
         /// Updates menu -- disables and enables items.
         void UpdateMenu();
 
-        /// Updates the editable nature of the comment window
-        void UpdateCommentWindowEditable();
+        // Called when catalog's language possibly changed
+        void UpdateTextLanguage();
 
         /// Returns popup menu for given catalog entry.
         wxMenu *GetPopupMenu(int item);
@@ -216,9 +221,9 @@ public: // for PoeditApp
         void OnOpen(wxCommandEvent& event);
 #ifndef __WXOSX__
         void OnOpenHist(wxCommandEvent& event);
+        void OnCloseCmd(wxCommandEvent& event);
 #endif
 private:
-        void OnCloseCmd(wxCommandEvent& event);
         void OnSave(wxCommandEvent& event);
         void OnSaveAs(wxCommandEvent& event);
         wxString GetSaveAsFilename(Catalog *cat, const wxString& current);
@@ -229,6 +234,8 @@ private:
         void OnListSel(wxListEvent& event);
         void OnListRightClick(wxMouseEvent& event);
         void OnListFocus(wxFocusEvent& event);
+        void OnSplitterSashMoving(wxSplitterEvent& event);
+        void OnSidebarSplitterSashMoving(wxSplitterEvent& event);
         void OnCloseWindow(wxCloseEvent& event);
         void OnReference(wxCommandEvent& event);
         void OnReferencesMenu(wxCommandEvent& event);
@@ -236,20 +243,20 @@ private:
         void OnRightClick(wxCommandEvent& event);
         void OnFuzzyFlag(wxCommandEvent& event);
         void OnIDsFlag(wxCommandEvent& event);
-        void OnCommentWinFlag(wxCommandEvent& event);
-        void OnAutoCommentsWinFlag(wxCommandEvent& event);
         void OnCopyFromSource(wxCommandEvent& event);
         void OnClearTranslation(wxCommandEvent& event);
         void OnFind(wxCommandEvent& event);
         void OnFindNext(wxCommandEvent& event);
         void OnFindPrev(wxCommandEvent& event);
         void OnEditComment(wxCommandEvent& event);
-        void OnCommentWindowText(wxCommandEvent& event);
         void OnSortByFileOrder(wxCommandEvent&);
         void OnSortBySource(wxCommandEvent&);
         void OnSortByTranslation(wxCommandEvent&);
         void OnSortGroupByContext(wxCommandEvent&);
         void OnSortUntranslatedFirst(wxCommandEvent&);
+
+        void OnShowHideSidebar(wxCommandEvent& event);
+        void OnUpdateShowHideSidebar(wxUpdateUIEvent& event);
 
         void OnSelectionUpdate(wxUpdateUIEvent& event);
         void OnSingleSelectionUpdate(wxUpdateUIEvent& event);
@@ -259,7 +266,7 @@ private:
         void OnTextEditingCommandUpdate(wxUpdateUIEvent& event);
 #endif
 
-        void OnAutoTranslate(wxCommandEvent& event);
+        void OnSuggestion(wxCommandEvent& event);
         void OnAutoTranslateAll(wxCommandEvent& event);
         bool AutoTranslateCatalog(int *matchesCount = nullptr);
 
@@ -270,13 +277,11 @@ private:
 
         void AddBookmarksMenu(wxMenu *menu);
 
+        void OnCompileMO(wxCommandEvent& event);
         void OnExport(wxCommandEvent& event);
         bool ExportCatalog(const wxString& filename);
 
         void OnSize(wxSizeEvent& event);
-
-        // updates the status of both comment windows: Automatic and Translator's
-        void UpdateDisplayCommentWin();
 
         void ShowPluralFormUI(bool show = true);
 
@@ -284,7 +289,8 @@ private:
 
         template<typename TFunctor>
         void ReportValidationErrors(int errors, Catalog::CompilationStatus mo_compilation_status,
-                                    bool from_save, TFunctor completionHandler);
+                                    bool from_save, bool other_file_saved,
+                                    TFunctor completionHandler);
 
 #ifndef __WXOSX__
         wxFileHistory& FileHistory() { return wxGetApp().FileHistory(); }
@@ -294,23 +300,20 @@ private:
         DECLARE_EVENT_TABLE()
 
     private:
-        bool m_commentWindowEditable;
         Catalog *m_catalog;
         wxString m_fileName;
         bool m_fileExistsOnDisk;
 
-        TranslationMemory::Results m_autoTranslations;
-
-        wxPanel *m_bottomLeftPanel;
-        wxPanel *m_bottomRightPanel;
-        wxSplitterWindow *m_splitter, *m_bottomSplitter;
+        wxPanel *m_bottomPanel;
+        wxSplitterWindow *m_splitter;
+        wxSplitterWindow *m_sidebarSplitter;
         PoeditListCtrl *m_list;
-        wxStaticText *m_labelComment, *m_labelAutoComments;
         wxStaticText *m_labelContext;
         ErrorBar *m_errorBar;
-        wxTextCtrl *m_textOrig, *m_textOrigPlural, *m_textTrans, *m_textComment, *m_textAutoComments;
-        std::vector<wxTextCtrl*> m_textTransPlural;
-        wxTextCtrl *m_textTransSingularForm;
+        SourceTextCtrl *m_textOrig, *m_textOrigPlural;
+        TranslationTextCtrl *m_textTrans;
+        std::vector<TranslationTextCtrl*> m_textTransPlural;
+        TranslationTextCtrl *m_textTransSingularForm;
         wxNotebook *m_pluralNotebook;
         wxStaticText *m_labelSingular, *m_labelPlural;
 #ifndef __WXOSX__
@@ -320,12 +323,11 @@ private:
         wxFont m_normalGuiFont, m_boldGuiFont;
 
         AttentionBar *m_attentionBar;
+        Sidebar *m_sidebar;
 
         bool m_modified;
         bool m_hasObsoleteItems;
         bool m_displayIDs;
-        bool m_displayCommentWin;
-        bool m_displayAutoCommentsWin;
         bool m_dontAutoclearFuzzyStatus;
         bool m_setSashPositionsWhenMaximized;
 

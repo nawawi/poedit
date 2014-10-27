@@ -216,7 +216,7 @@ class CatalogItem
         wxString GetFlags() const;
 
         /// Sets fuzzy flag.
-        void SetFuzzy(bool fuzzy) { m_isFuzzy = fuzzy; }
+        void SetFuzzy(bool fuzzy);
         /// Gets value of fuzzy flag.
         bool IsFuzzy() const { return m_isFuzzy; }
         /// Sets translated flag.
@@ -254,6 +254,7 @@ class CatalogItem
 
         void SetOldMsgid(const wxArrayString& data) { m_oldMsgid = data; }
         const wxArrayString& GetOldMsgid() const { return m_oldMsgid; }
+        bool HasOldMsgid() const { return !m_oldMsgid.empty(); }
 
         // Validity (syntax-checking) status of the entry:
         enum Validity
@@ -526,6 +527,11 @@ class Catalog
         bool Save(const wxString& po_file, bool save_mo,
                   int& validation_errors,
                   CompilationStatus& mo_compilation_status);
+
+        /// Compiles the catalog into binary MO file.
+        bool CompileToMO(const wxString& mo_file,
+                         int& validation_errors,
+                         CompilationStatus& mo_compilation_status);
 
         /// Exports the catalog to HTML format
         bool ExportToHTML(const wxString& filename);

@@ -26,12 +26,13 @@
 #ifndef _FINDFRAME_H_
 #define _FINDFRAME_H_
 
+#include "edlistctrl.h"
+
 #include <wx/dialog.h>
 #include <wx/weakref.h>
 
 class WXDLLIMPEXP_FWD_CORE wxButton;
 
-class PoeditListCtrl;
 class Catalog;
 
 /** FindFrame is small dialog frame that contains controls for searching
@@ -50,8 +51,7 @@ class FindFrame : public wxDialog
             \param catalog Catalog to search in
          */
         FindFrame(wxWindow *parent, PoeditListCtrl *list, Catalog *c,
-                  wxTextCtrl *textCtrlOrig, wxTextCtrl *textCtrlTrans,
-                  wxTextCtrl *textCtrlComments, wxTextCtrl *textCtrlAutoComments);
+                  wxTextCtrl *textCtrlOrig, wxTextCtrl *textCtrlTrans);
         ~FindFrame();
 
         /// Returns singleton instance if it exists. Updates the catalog
@@ -87,7 +87,6 @@ class FindFrame : public wxDialog
         int m_position;
         wxButton *m_btnPrev, *m_btnNext;
         wxTextCtrl *m_textCtrlOrig, *m_textCtrlTrans;
-        wxTextCtrl *m_textCtrlComments, *m_textCtrlAutoComments;
 
         // NB: this is static so that last search term is remembered
         static wxString ms_text;

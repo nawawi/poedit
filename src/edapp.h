@@ -32,6 +32,8 @@
 #include <wx/intl.h>
 #include <wx/docview.h>
 
+#include "prefsdlg.h"
+
 class WXDLLIMPEXP_FWD_BASE wxConfigBase;
 class WXDLLIMPEXP_FWD_CORE wxMenuBar;
 
@@ -65,7 +67,7 @@ class PoeditApp : public wxApp
         wxFileHistory& FileHistory() { return m_history; }
 #endif
 
-#ifdef __WXMAC__
+#ifdef __WXOSX__
         virtual void MacOpenFiles(const wxArrayString& names) { OpenFiles(names); }
         virtual void MacNewFile() { OpenNewFile(); }
 #endif
@@ -85,6 +87,7 @@ class PoeditApp : public wxApp
         void InstallOpenRecentMenu(wxMenuBar *bar);
         void OnIdleInstallOpenRecentMenu(wxIdleEvent& event);
         virtual void OSXOnWillFinishLaunching();
+        void OnCloseWindowCommand(wxCommandEvent& event);
 #endif
 
     protected:
@@ -115,6 +118,7 @@ class PoeditApp : public wxApp
         void OnGettextManual(wxCommandEvent& event);
 
 #ifdef __WXMSW__
+        void AssociateFileTypeIfNeeded();
         void OnWinsparkleCheck(wxCommandEvent& event);
         static int WinSparkle_CanShutdown();
         static void WinSparkle_Shutdown();
@@ -128,6 +132,8 @@ class PoeditApp : public wxApp
 #else
         wxFileHistory m_history;
 #endif
+
+        std::unique_ptr<PoeditPreferencesEditor> m_preferences;
 };
 
 DECLARE_APP(PoeditApp);

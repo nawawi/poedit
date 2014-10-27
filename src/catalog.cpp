@@ -133,7 +133,7 @@ bool VerifyFileCharset(const wxTextFile& f, const wxString& filename,
     if (f.GetLineCount() != f2.GetLineCount())
     {
         int linesCount = (int)f2.GetLineCount() - (int)f.GetLineCount();
-        wxLogError(wxPLURAL("%i line of file '%s' were not loaded correctly.",
+        wxLogError(wxPLURAL("%i line of file '%s' was not loaded correctly.",
                             "%i lines of file '%s' were not loaded correctly.",
                             linesCount),
                    linesCount,
@@ -691,7 +691,7 @@ bool CatalogParser::Parse()
             }
             mtranslations.Add(str);
 
-            bool shouldIgnore = m_ignoreHeader && mstr.empty();
+            bool shouldIgnore = m_ignoreHeader && (mstr.empty() && !has_context);
             if ( shouldIgnore )
             {
                 OnIgnoredEntry();
@@ -844,7 +844,7 @@ class CharsetInfoFinder : public CatalogParser
         virtual bool OnEntry(const wxString& msgid,
                              const wxString& /*msgid_plural*/,
                              bool /*has_plural*/,
-                             bool /*has_context*/,
+                             bool has_context,
                              const wxString& /*context*/,
                              const wxArrayString& mtranslations,
                              const wxString& /*flags*/,
@@ -854,7 +854,7 @@ class CharsetInfoFinder : public CatalogParser
                              const wxArrayString& /*msgid_old*/,
                              unsigned /*lineNumber*/)
         {
-            if (msgid.empty())
+            if (msgid.empty() && !has_context)
             {
                 // gettext header:
                 Catalog::HeaderData hdr;
@@ -875,7 +875,8 @@ class LoadParser : public CatalogParser
     public:
         LoadParser(Catalog *c, wxTextFile *f)
               : CatalogParser(f),
-                FileIsValid(false), m_catalog(c), m_nextId(1) {}
+                FileIsValid(false),
+                m_catalog(c), m_nextId(1), m_seenHeaderAlready(false) {}
 
         // true if the file is valid, i.e. has at least some data
         bool FileIsValid;
@@ -907,6 +908,7 @@ class LoadParser : public CatalogParser
 
     private:
         int m_nextId;
+        bool m_seenHeaderAlready;
 };
 
 
@@ -927,11 +929,16 @@ bool LoadParser::OnEntry(const wxString& msgid,
 
     static const wxString MSGCAT_CONFLICT_MARKER("#-#-#-#-#");
 
-    if (msgid.empty())
+    if (msgid.empty() && !has_context)
     {
-        // gettext header:
-        m_catalog->m_header.FromString(mtranslations[0]);
-        m_catalog->m_header.Comment = comment;
+        if (!m_seenHeaderAlready)
+        {
+            // gettext header:
+            m_catalog->m_header.FromString(mtranslations[0]);
+            m_catalog->m_header.Comment = comment;
+            m_seenHeaderAlready = true;
+        }
+        // else: ignore duplicate header in malformed files
     }
     else
     {
@@ -1059,8 +1066,10 @@ void Catalog::CreateNewHeader(const Catalog::HeaderData& pot_header)
 
     // clear the fields that are translation-specific:
     dt.Lang = Language();
-    //dt.Team.clear();
-    //dt.TeamEmail.clear();
+    if (dt.Team == "LANGUAGE")
+        dt.Team.clear();
+    if (dt.TeamEmail == "LL@li.org")
+        dt.TeamEmail.clear();
 
     // translator should be pre-filled
     dt.Translator = wxConfig::Get()->Read("translator_name", wxEmptyString);
@@ -1378,8 +1387,8 @@ wxString FormatStringForFile(const wxString& text)
 #ifdef __WXOSX__
 
 @interface CompiledMOFilePresenter : NSObject<NSFilePresenter>
-@property (atomic, strong) NSURL *presentedItemURL;
-@property (atomic, strong) NSURL *primaryPresentedItemURL;
+@property (atomic, copy) NSURL *presentedItemURL;
+@property (atomic, copy) NSURL *primaryPresentedItemURL;
 @end
 
 @implementation CompiledMOFilePresenter
@@ -1436,9 +1445,9 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
         msgcat_ok =
               ExecuteGettext
               (
-                  wxString::Format(_T("msgcat --force-po -o \"%s\" \"%s\""),
-                                   po_file.c_str(),
-                                   po_file_temp.c_str())
+                  wxString::Format("msgcat --force-po -o %s %s",
+                                   QuoteCmdlineArg(po_file),
+                                   QuoteCmdlineArg(po_file_temp))
               )
               && wxFileExists(po_file);
     }
@@ -1480,9 +1489,9 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
 
             if ( ExecuteGettext
                   (
-                      wxString::Format(_T("msgfmt -o \"%s\" \"%s\""),
-                                       mo_file_temp.c_str(),
-                                       po_file.c_str())
+                      wxString::Format("msgfmt -o %s %s",
+                                       QuoteCmdlineArg(mo_file_temp),
+                                       QuoteCmdlineArg(po_file))
                   ) )
             {
                 mo_compilation_status = CompilationStatus::Success;
@@ -1545,6 +1554,62 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
 
     return true;
 }
+
+bool Catalog::CompileToMO(const wxString& mo_file,
+                          int& validation_errors,
+                          CompilationStatus& mo_compilation_status)
+{
+    mo_compilation_status = CompilationStatus::NotDone;
+
+    TempDirectory tmpdir;
+    if ( !tmpdir.IsOk() )
+        return false;
+    wxString po_file_temp = tmpdir.CreateFileName("output.po");
+
+    if ( !DoSaveOnly(po_file_temp) )
+    {
+        wxLogError(_("Couldn't save file %s."), po_file_temp.c_str());
+        return false;
+    }
+
+    validation_errors = DoValidate(po_file_temp);
+
+    TempOutputFileFor mo_file_temp_obj(mo_file);
+    const wxString mo_file_temp = mo_file_temp_obj.FileName();
+
+    {
+        // Ignore msgfmt errors output (but not exit code), because it
+        // complains about things DoValidate() already complained above.
+        wxLogNull null;
+        ExecuteGettext(wxString::Format("msgfmt -o %s %s",
+                                        QuoteCmdlineArg(mo_file_temp),
+                                        QuoteCmdlineArg(po_file_temp)));
+    }
+
+    // Don't check return code:
+    // msgfmt has the ugly habit of sometimes returning non-zero
+    // exit code, reporting "fatal errors" and *still* producing a usable
+    // .mo file. If this happens, don't pretend the file wasn't created.
+    if (!wxFileName::FileExists(mo_file_temp))
+    {
+        mo_compilation_status = CompilationStatus::Error;
+        return false;
+    }
+    else
+    {
+        mo_compilation_status = CompilationStatus::Success;
+    }
+
+    if ( !wxRenameFile(mo_file_temp, mo_file, /*overwrite=*/true) )
+    {
+        wxLogError(_("Couldn't save file %s."), mo_file.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+
 
 
 bool Catalog::DoSaveOnly(const wxString& po_file)
@@ -1675,7 +1740,7 @@ int Catalog::DoValidate(const wxString& po_file)
     GettextErrors err;
     ExecuteGettextAndParseOutput
     (
-        wxString::Format(_T("msgfmt -o /dev/null -c \"%s\""), po_file.c_str()),
+        wxString::Format("msgfmt -o /dev/null -c %s", QuoteCmdlineArg(po_file)),
         err
     );
 
@@ -1817,8 +1882,10 @@ bool Catalog::Merge(Catalog *refcat)
                 (
                     wxString::Format
                     (
-                        _T("msgmerge -q --force-po -o \"%s\" \"%s\" \"%s\""),
-                        tmp3.c_str(), tmp2.c_str(), tmp1.c_str()
+                        "msgmerge -q --force-po -o %s %s %s",
+                        QuoteCmdlineArg(tmp3),
+                        QuoteCmdlineArg(tmp2),
+                        QuoteCmdlineArg(tmp1)
                     )
                 );
 
@@ -1846,7 +1913,7 @@ static inline wxString ItemMergeSummary(const CatalogItem& item)
     if ( item.HasPlural() )
         s += "|" + item.GetPluralString();
     if ( item.HasContext() )
-        s += wxString::Format("%s [%s]", s.c_str(), item.GetContext().c_str());
+        s += wxString::Format(" [%s]", item.GetContext());
 
     return s;
 }
@@ -2033,6 +2100,13 @@ wxString CatalogItem::GetFlags() const
         return wxEmptyString;
 }
 
+void CatalogItem::SetFuzzy(bool fuzzy)
+{
+    if (!fuzzy && m_isFuzzy)
+        m_oldMsgid.clear();
+    m_isFuzzy = fuzzy;
+}
+
 bool CatalogItem::IsInFormat(const wxString& format)
 {
     wxString lookingFor;
@@ -2093,6 +2167,8 @@ void CatalogItem::SetTranslations(const wxArrayString &t)
 void CatalogItem::SetTranslationFromSource()
 {
     m_validity = Val_Unknown;
+    m_isFuzzy = false;
+    m_isAutomatic = false;
     m_isTranslated = true;
 
     auto iter = m_translations.begin();
@@ -2118,6 +2194,8 @@ void CatalogItem::SetTranslationFromSource()
 
 void CatalogItem::ClearTranslation()
 {
+    m_isFuzzy = false;
+    m_isAutomatic = false;
     m_isTranslated = false;
     for (auto& t: m_translations)
     {

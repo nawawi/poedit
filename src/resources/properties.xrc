@@ -72,16 +72,42 @@
                 </object>
                 <object class="spacer"></object>
                 <object class="sizeritem">
-                  <object class="wxHyperlinkCtrl" name="plural_forms_help">
+                  <object class="LearnMoreLink" name="plural_forms_help">
                     <label>Learn about plural forms</label>
                     <url>http://poedit.net/trac/wiki/Doc/PluralForms</url>
-                    <font platform="mac">
-                      <size>11</size>
-                      <underlined>1</underlined>
-                    </font>
                   </object>
                   <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
                   <border>5d</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Charset:</label>
+                  </object>
+                  <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
+                  <border>5d</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxComboBox" name="charset"/>
+                  <border>5d</border>
+                  <flag>wxEXPAND|wxRIGHT|wxBOTTOM</flag>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxStaticText">
+                    <label>Source code charset:</label>
+                  </object>
+                  <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
+                  <border>5d</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxComboBox" name="source_code_charset"/>
+                  <border>5d</border>
+                  <flag>wxEXPAND|wxRIGHT|wxBOTTOM</flag>
+                </object>
+                <object class="spacer">
+                    <size>10,20</size>
+                </object>
+                <object class="spacer">
+                    <size>10,20</size>
                 </object>
                 <object class="sizeritem">
                   <object class="wxStaticText">
@@ -108,30 +134,6 @@
                   <object class="wxTextCtrl" name="team_email">
                     <size>100,-1d</size>
                   </object>
-                  <border>5d</border>
-                  <flag>wxEXPAND|wxRIGHT|wxBOTTOM</flag>
-                </object>
-                <object class="sizeritem">
-                  <object class="wxStaticText">
-                    <label>Charset:</label>
-                  </object>
-                  <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
-                  <border>5d</border>
-                </object>
-                <object class="sizeritem">
-                  <object class="wxComboBox" name="charset"/>
-                  <border>5d</border>
-                  <flag>wxEXPAND|wxRIGHT|wxBOTTOM</flag>
-                </object>
-                <object class="sizeritem">
-                  <object class="wxStaticText">
-                    <label>Source code charset:</label>
-                  </object>
-                  <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
-                  <border>5d</border>
-                </object>
-                <object class="sizeritem">
-                  <object class="wxComboBox" name="source_code_charset"/>
                   <border>5d</border>
                   <flag>wxEXPAND|wxRIGHT|wxBOTTOM</flag>
                 </object>
@@ -206,13 +208,9 @@
                     <size>0,4</size>
                 </object>
                 <object class="sizeritem">
-                  <object class="wxHyperlinkCtrl" name="keywords_help">
+                  <object class="LearnMoreLink" name="keywords_help">
                     <label>Learn about gettext keywords</label>
                     <url>http://poedit.net/trac/wiki/Doc/Keywords</url>
-                    <font platform="mac">
-                      <size>11</size>
-                      <underlined>1</underlined>
-                    </font>
                   </object>
                   <flag>wxLEFT|wxRIGHT|wxBOTTOM|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL</flag>
                   <border>5d</border>
