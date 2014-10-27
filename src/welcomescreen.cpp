@@ -50,29 +50,65 @@ namespace
 
 #ifdef __WXOSX__
 
-class ActionButton : public wxButton
+class ActionButton : public wxWindow
 {
 public:
     ActionButton(wxWindow *parent, wxWindowID winid, const wxString& label, const wxString& note)
-        : wxButton(parent, winid, "", wxDefaultPosition, wxSize(500, 50))
+        : wxWindow(parent, wxID_ANY, wxDefaultPosition, wxSize(500, 65))
     {
-        NSButton *btn = (NSButton*)GetHandle();
+        m_button = new wxButton(this, winid, "");
+        auto sizer = new wxBoxSizer(wxHORIZONTAL);
+        sizer->Add(m_button, wxSizerFlags(1).Expand());
+        SetSizer(sizer);
+
+        NSButton *btn = (NSButton*)m_button->GetHandle();
 
         NSString *str = wxNSStringWithWxString(label + "\n" + note);
+        NSRange topLine = NSMakeRange(0, label.length() + 1);
+        NSRange bottomLine = NSMakeRange(label.length() + 1, note.length());
+
         NSMutableAttributedString *s = [[NSMutableAttributedString alloc] initWithString:str];
         [s addAttribute:NSFontAttributeName
-                  value:[NSFont boldSystemFontOfSize:0]
-                  range:NSMakeRange(0, label.length())];
+                  value:[NSFont systemFontOfSize:[NSFont systemFontSize]+1]
+                  range:topLine];
         [s addAttribute:NSFontAttributeName
-                  value:[NSFont systemFontOfSize:[NSFont systemFontSize]-1.5]
-                  range:NSMakeRange(label.length()+1, note.length())];
+                  value:[NSFont systemFontOfSize:[NSFont systemFontSizeForControlSize:NSSmallControlSize]]
+                  range:bottomLine];
+        [s addAttribute:NSForegroundColorAttributeName
+                  value:[NSColor grayColor]
+                  range:bottomLine];
+
+        NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+        paragraphStyle.headIndent = 10.0;
+        paragraphStyle.firstLineHeadIndent = 10.0;
+        paragraphStyle.tailIndent = -10.0;
+        paragraphStyle.lineSpacing = 2.0;
+        [s addAttribute:NSParagraphStyleAttributeName
+                  value:paragraphStyle
+                  range:NSMakeRange(0, [s length])];
+
         [btn setAttributedTitle:s];
         [btn setShowsBorderOnlyWhileMouseInside:YES];
         [btn setBezelStyle:NSSmallSquareBezelStyle];
         [btn setButtonType:NSMomentaryPushInButton];
 
-        SetBackgroundColour(wxColour("#e8fcdb"));
+        SetBackgroundColour(wxColour("#F2FCE2"));
+        Bind(wxEVT_PAINT, &ActionButton::OnPaint, this);
     }
+
+private:
+    void OnPaint(wxPaintEvent&)
+    {
+        wxPaintDC dc(this);
+        wxRect rect(dc.GetSize());
+        auto bg = GetBackgroundColour();
+        dc.SetBrush(bg);
+        dc.SetPen(bg.ChangeLightness(90));
+        dc.DrawRoundedRectangle(rect, 2);
+        dc.DrawRectangle(rect.x+1, rect.y+rect.height-2, rect.width-2, 2);
+    }
+
+    wxButton *m_button;
 };
 
 #elif defined(__WXGTK__)
@@ -121,16 +157,11 @@ typedef wxStaticText HeaderStaticText;
 
 WelcomeScreenBase::WelcomeScreenBase(wxWindow *parent)
     : wxPanel(parent, wxID_ANY),
-      m_clrHeader("#444444"),
+      m_clrHeader("#555555"),
       m_clrNorm("#444444"),
       m_clrSub("#aaaaaa")
 {
-#ifdef  __WXMSW__
     SetBackgroundColour(wxColour("#fffcf5"));
-#else
-    SetBackgroundStyle(wxBG_STYLE_PAINT);
-    Bind(wxEVT_PAINT, &WelcomeScreenPanel::OnPaint, this);
-#endif
 
 #if defined(__WXOSX__)
     #define HEADER_FACE "Helvetica Neue"
@@ -139,7 +170,7 @@ WelcomeScreenBase::WelcomeScreenBase(wxWindow *parent)
     m_fntSub = wxFont(wxFontInfo(11).FaceName(HEADER_FACE).Light());
 #elif defined(__WXMSW__)
     #define HEADER_FACE "Segoe UI"
-    m_fntHeader = wxFont(wxFontInfo(24).FaceName("Segoe UI Light"));
+    m_fntHeader = wxFont(wxFontInfo(20).FaceName("Segoe UI Light").AntiAliased());
     m_fntNorm = wxFont(wxFontInfo(10).FaceName(HEADER_FACE));
     m_fntSub = wxFont(wxFontInfo(9).FaceName(HEADER_FACE));
 #else
@@ -156,17 +187,6 @@ WelcomeScreenBase::WelcomeScreenBase(wxWindow *parent)
         GetParent()->GetEventHandler()->AddPendingEvent(event);
     });
 }
-
-
-void WelcomeScreenBase::OnPaint(wxPaintEvent&)
-{
-    wxAutoBufferedPaintDC dc(this);
-    wxRect rect(dc.GetSize());
-
-    dc.GradientFillLinear(rect, wxColour("#ffffff"), wxColour("#fffceb"), wxBOTTOM);
-}
-
-
 
 
 WelcomeScreenPanel::WelcomeScreenPanel(wxWindow *parent)
