@@ -54,19 +54,15 @@ public:
         
         @param lang    Language of the desired translation.
         @param source  Source text.
-        @param maxHits Maximum number of requested hits; -1 leaves the
-                       decision to the function.
-                       
+
         @return List of hits that were found, possibly empty.
      */
-    SuggestionsList Search(const std::string& lang,
-                           const std::wstring& source,
-                           int maxHits = -1);
+    SuggestionsList Search(const Language& lang,
+                           const std::wstring& source);
 
     /// SuggestionsBackend API implementation:
-    void SuggestTranslation(const std::string& lang,
+    void SuggestTranslation(const Language& lang,
                             const std::wstring& source,
-                            int maxHits,
                             success_func_type onSuccess,
                             error_func_type onError) override;
 
@@ -89,7 +85,7 @@ public:
             @param source  Source text.
             @param trans   Translation text.
          */
-        virtual void Insert(const std::wstring& lang,
+        virtual void Insert(const Language& lang,
                             const std::wstring& source,
                             const std::wstring& trans) = 0;
 

@@ -26,10 +26,14 @@
 #ifndef Poedit_suggestions_h
 #define Poedit_suggestions_h
 
+#include <cmath>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "language.h"
 
 class SuggestionsBackend;
 class SuggestionsProviderImpl;
@@ -38,6 +42,21 @@ class SuggestionsProviderImpl;
 /// A single translation suggestion
 struct Suggestion
 {
+    /// Possible types of suggestion sources
+    enum class Source
+    {
+        LocalTM
+    };
+
+    /// Ctor
+    Suggestion() : score(0.), timestamp(0), source(Source::LocalTM) {}
+    Suggestion(const std::wstring& text_,
+               double score_,
+               time_t timestamp_ = 0,
+               Source source_ = Source::LocalTM)
+        : text(text_), score(score_), timestamp(timestamp_), source(source_)
+    {}
+
     /// Text of the suggested translation
     std::wstring text;
 
@@ -47,9 +66,20 @@ struct Suggestion
     /// Time when the suggestion was stored
     time_t timestamp;
 
+    /// Source of the suggestion
+    Source source;
+
     bool HasScore() const { return score != 0.0; }
     bool IsExactMatch() const { return score == 1.0; }
 };
+
+inline bool operator<(const Suggestion& a, const Suggestion& b)
+{
+    if (std::fabs(a.score - b.score) <= std::numeric_limits<double>::epsilon())
+        return a.timestamp > b.timestamp;
+    else
+        return a.score > b.score;
+}
 
 typedef std::vector<Suggestion> SuggestionsList;
 
@@ -85,14 +115,12 @@ public:
                           TranslationMemory::Get().
         @param lang       Language of the desired translation.
         @param source     Source text.
-        @param maxHits    Maximum number of requested hits.
         @param onSuccess  Called with suggestions.
         @param onError    Called in case of error.
      */
     void SuggestTranslation(SuggestionsBackend& backend,
-                            const std::string& lang,
+                            const Language& lang,
                             const std::wstring& source,
-                            int maxHits,
                             success_func_type onSuccess,
                             error_func_type onError);
 
@@ -135,13 +163,11 @@ public:
         
         @param lang       Language of the desired translation.
         @param source     Source text.
-        @param maxHits    Maximum number of requested hits.
         @param onSuccess  Called with suggestions.
         @param onError    Called in case of error.
      */
-    virtual void SuggestTranslation(const std::string& lang,
+    virtual void SuggestTranslation(const Language& lang,
                                     const std::wstring& source,
-                                    int maxHits,
                                     success_func_type onSuccess,
                                     error_func_type onError) = 0;
 };

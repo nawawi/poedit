@@ -32,9 +32,11 @@
 #include <map>
 #include <functional>
 
+class WXDLLIMPEXP_FWD_CORE wxCheckBox;
 class WXDLLIMPEXP_FWD_CORE wxStaticText;
 class WXDLLIMPEXP_FWD_CORE wxStaticBitmap;
 class WXDLLIMPEXP_FWD_CORE wxSizer;
+class AutoWrappingText;
 
 /// Message to be displayed in AttentionBar
 class AttentionMessage
@@ -47,6 +49,13 @@ public:
         Warning,
         Question,
         Error
+    };
+
+    /// Information passed to the action callback
+    struct ActionInfo
+    {
+        /// State of the (optional) checkbox
+        bool checkbox;
     };
 
     /**
@@ -64,7 +73,8 @@ public:
     AttentionMessage(const wxString& id, Kind kind, const wxString& text)
         : m_id(id), m_kind(kind), m_text(text), m_explanation("") {}
 
-    typedef std::function<void()> Callback;
+    typedef std::function<void(ActionInfo info)> Callback;
+    typedef std::function<void()> CallbackNoArgs;
 
     /**
         Adds an action button to the bar. By default, a close button is shown,
@@ -73,7 +83,11 @@ public:
         @param label    Short label for the action.
         @param callback Function to call when the button is clicked.
      */
-    void AddAction(const wxString& label, Callback callback)
+    void AddAction(const wxString& label, CallbackNoArgs callback)
+        { AddActionWithInfo(label, [=](ActionInfo){ callback(); }); }
+
+    /// Similarly to AddAction(), but uses callback that is passed ActionInfo
+    void AddActionWithInfo(const wxString& label, Callback callback)
         { m_actions.push_back(std::make_pair(label, callback)); }
 
     /// Adds "Don't show again" action.
@@ -82,10 +96,14 @@ public:
     /// Set additional explanatory text
     void SetExplanation(const wxString& txt) { m_explanation = txt; }
 
+    /// Add checkbox to the message
+    void AddCheckbox(const wxString& label) { m_checkbox = label; }
+
     wxString m_id;
     Kind m_kind;
     wxString m_text;
     wxString m_explanation;
+    wxString m_checkbox;
 
     typedef std::pair<wxString, Callback> Action;
     typedef std::vector<Action> Actions;
@@ -133,7 +151,8 @@ private:
     wxStaticBitmap *m_icon;
 #endif
     wxStaticText *m_label;
-    wxStaticText *m_explanation;
+    AutoWrappingText *m_explanation;
+    wxCheckBox *m_checkbox;
     wxSizer *m_buttons;
     typedef std::map<wxObject*, AttentionMessage::Callback> ActionsMap;
     ActionsMap m_actions;

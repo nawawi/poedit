@@ -42,6 +42,7 @@
 #include <wx/windowptr.h>
 #include <wx/sizer.h>
 #include <wx/settings.h>
+#include <wx/spinctrl.h>
 #include <wx/textwrapper.h>
 #include <wx/progdlg.h>
 #include <wx/xrc/xmlres.h>
@@ -56,6 +57,7 @@
 #include "errors.h"
 #include "extractor.h"
 #include "spellchecking.h"
+#include "utility.h"
 #include "customcontrols.h"
 
 #ifdef __WXMSW__
@@ -76,33 +78,51 @@ namespace
 class PrefsPanel : public wxPanel
 {
 public:
-    PrefsPanel(wxWindow *parent) : wxPanel(parent), m_inTransfer(false) {}
-    PrefsPanel() : wxPanel(), m_inTransfer(false) {}
+    PrefsPanel(wxWindow *parent)
+        : wxPanel(parent), m_supressDataTransfer(0)
+    {
+#ifdef __WXOSX__
+        // Refresh the content of prefs panels when re-opening it.
+        // TODO: Use proper config settings notifications or user defaults bindings instead
+        parent->Bind(wxEVT_ACTIVATE, [=](wxActivateEvent& e){
+            e.Skip();
+            if (e.GetActive())
+                TransferDataToWindow();
+        });
+        Bind(wxEVT_SHOW, [=](wxShowEvent& e){
+            e.Skip();
+            if (e.IsShown())
+                TransferDataToWindow();
+        });
+#endif // __WXOSX__
+    }
 
     bool TransferDataToWindow() override
     {
-        if (m_inTransfer)
+        if (m_supressDataTransfer)
             return false;
-        m_inTransfer = true;
+        m_supressDataTransfer++;
         InitValues(*wxConfig::Get());
-        m_inTransfer = false;
+        m_supressDataTransfer--;
 
         // This is a "bit" of a hack: we take advantage of being in the last point before
         // showing the window and re-layout it on the off chance that some data transfered
         // into the window affected its size. And, currently more importantly, to reflect
         // ExplanationLabel instances' rewrapping.
         Fit();
-
+#ifndef __WXOSX__
+        GetParent()->GetParent()->Fit();
+#endif
         return true;
     }
 
     bool TransferDataFromWindow() override
     {
-        if (m_inTransfer)
+        if (m_supressDataTransfer)
             return false;
-        m_inTransfer = true;
+        m_supressDataTransfer++;
         SaveValues(*wxConfig::Get());
-        m_inTransfer = false;
+        m_supressDataTransfer--;
         return true;
     }
 
@@ -116,8 +136,7 @@ protected:
     virtual void InitValues(const wxConfigBase& cfg) = 0;
     virtual void SaveValues(wxConfigBase& cfg) = 0;
 
-private:
-    bool m_inTransfer;
+    int m_supressDataTransfer;
 };
 
 
@@ -136,6 +155,7 @@ public:
     GeneralPageWindow(wxWindow *parent) : PrefsPanel(parent)
     {
         wxSizer *topsizer = new wxBoxSizer(wxVERTICAL);
+        topsizer->SetMinSize(400, -1);
 
         wxSizer *sizer = new wxBoxSizer(wxVERTICAL);
         topsizer->Add(sizer, wxSizerFlags(1).Expand().DoubleBorder());
@@ -187,21 +207,7 @@ public:
         explainFocus.Replace("Ctrl", "Cmd");
 #endif
         sizer->AddSpacer(5);
-        sizer->Add(new ExplanationLabel(this, explainFocus), wxSizerFlags().Expand().Border(wxLEFT|wxRIGHT, ExplanationLabel::CHECKBOX_INDENT));
-
-        sizer->AddSpacer(10);
-
-        auto crlfbox = new wxFlexGridSizer(2, wxSize(5,5));
-        crlfbox->AddGrowableCol(1);
-        sizer->Add(crlfbox, wxSizerFlags().Expand().Border(wxTOP));
-        crlfbox->Add(new wxStaticText(this, wxID_ANY, _("Line endings:")), wxSizerFlags().Center().BORDER_WIN(wxTOP, 1));
-        m_crlf = new wxChoice(this, wxID_ANY);
-        m_crlf->Append(_("Unix (recommended)"));
-        m_crlf->Append(_("Windows"));
-        crlfbox->Add(m_crlf, wxSizerFlags(1).Center().Expand().BORDER_OSX(wxLEFT, 3));
-        m_keepCrlf = new wxCheckBox(this, wxID_ANY, _("Preserve line endings of existing files"));
-        crlfbox->AddSpacer(1);
-        crlfbox->Add(m_keepCrlf);
+        sizer->Add(new ExplanationLabel(this, explainFocus), wxSizerFlags().Expand().Border(wxLEFT, ExplanationLabel::CHECKBOX_INDENT));
 
         sizer->AddSpacer(10);
         sizer->Add(new HeadingLabel(this, _("Appearance")));
@@ -213,10 +219,10 @@ public:
 
         m_useFontList = new wxCheckBox(this, wxID_ANY, _("Use custom list font:"));
         m_fontList = new wxFontPickerCtrl(this, wxID_ANY);
-        m_fontList->SetMinSize(wxSize(210, -1));
+        m_fontList->SetMinSize(wxSize(120, -1));
         m_useFontText = new wxCheckBox(this, wxID_ANY, _("Use custom text fields font:"));
         m_fontText = new wxFontPickerCtrl(this, wxID_ANY);
-        m_fontText->SetMinSize(wxSize(210, -1));
+        m_fontText->SetMinSize(wxSize(120, -1));
 
         appearance->Add(m_useFontList, wxSizerFlags().Center().Left());
         appearance->Add(m_fontList, wxSizerFlags().Center().Expand());
@@ -243,7 +249,6 @@ public:
         if (wxPreferencesEditor::ShouldApplyChangesImmediately())
         {
             Bind(wxEVT_CHECKBOX, [=](wxCommandEvent&){ TransferDataFromWindow(); });
-            Bind(wxEVT_CHOICE, [=](wxCommandEvent&){ TransferDataFromWindow(); });
             Bind(wxEVT_TEXT, [=](wxCommandEvent&){ TransferDataFromWindow(); });
 
             // Some settings directly affect the UI, so need a more expensive handler:
@@ -270,7 +275,6 @@ public:
         m_compileMo->SetValue(cfg.ReadBool("compile_mo", true));
         m_showSummary->SetValue(cfg.ReadBool("show_summary", false));
         m_focusToText->SetValue(cfg.ReadBool("focus_to_text", false));
-        m_keepCrlf->SetValue(cfg.ReadBool("keep_crlf", true));
 
         if (IsSpellcheckingAvailable())
         {
@@ -279,14 +283,22 @@ public:
 
         m_useFontList->SetValue(cfg.ReadBool("custom_font_list_use", false));
         m_useFontText->SetValue(cfg.ReadBool("custom_font_text_use", false));
-        m_fontList->SetSelectedFont(wxFont(cfg.Read("custom_font_list_name", wxEmptyString)));
-        m_fontText->SetSelectedFont(wxFont(cfg.Read("custom_font_text_name", wxEmptyString)));
 
-        wxString format = cfg.Read("crlf_format", "unix");
-        int sel;
-        if (format == "win") sel = 1;
-        else /* "unix" or obsolete settings */ sel = 0;
-        m_crlf->SetSelection(sel);
+        #if defined(__WXOSX__)
+            #define DEFAULT_FONT "Helvetica"
+        #elif defined(__WXMSW__)
+            #define DEFAULT_FONT "Arial"
+        #elif defined(__WXGTK__)
+            #define DEFAULT_FONT "sans serif"
+        #endif
+        auto listFont = wxFont(cfg.Read("custom_font_list_name", ""));
+        if (!listFont.IsOk())
+            listFont = wxFont(11, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, DEFAULT_FONT);
+        auto textFont = wxFont(cfg.Read("custom_font_text_name", ""));
+        if (!textFont.IsOk())
+            textFont = wxFont(11, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, DEFAULT_FONT);
+        m_fontList->SetSelectedFont(listFont);
+        m_fontText->SetSelectedFont(textFont);
     }
 
     void SaveValues(wxConfigBase& cfg) override
@@ -296,7 +308,6 @@ public:
         cfg.Write("compile_mo", m_compileMo->GetValue());
         cfg.Write("show_summary", m_showSummary->GetValue());
         cfg.Write("focus_to_text", m_focusToText->GetValue());
-        cfg.Write("keep_crlf", m_keepCrlf->GetValue());
 
         if (IsSpellcheckingAvailable())
         {
@@ -306,15 +317,12 @@ public:
         wxFont listFont = m_fontList->GetSelectedFont();
         wxFont textFont = m_fontText->GetSelectedFont();
 
-        cfg.Write("custom_font_list_use", listFont.IsOk() && m_useFontList->GetValue());
-        cfg.Write("custom_font_text_use", textFont.IsOk() && m_useFontText->GetValue());
+        cfg.Write("custom_font_list_use", m_useFontList->GetValue());
+        cfg.Write("custom_font_text_use", m_useFontText->GetValue());
         if ( listFont.IsOk() )
             cfg.Write("custom_font_list_name", listFont.GetNativeFontInfoDesc());
         if ( textFont.IsOk() )
             cfg.Write("custom_font_text_name", textFont.GetNativeFontInfoDesc());
-
-        static const char *formats[] = { "unix", "win" };
-        cfg.Write("crlf_format", formats[m_crlf->GetSelection()]);
 
         // On Windows, we must update the UI here; on other platforms, it was done
         // via TransferDataFromWindowAndUpdateUI immediately:
@@ -327,8 +335,6 @@ public:
 private:
     wxTextCtrl *m_userName, *m_userEmail;
     wxCheckBox *m_compileMo, *m_showSummary, *m_focusToText, *m_spellchecking;
-    wxChoice *m_crlf;
-    wxCheckBox *m_keepCrlf;
     wxCheckBox *m_useFontList, *m_useFontText;
     wxFontPickerCtrl *m_fontList, *m_fontText;
 #if NEED_CHOOSELANG_UI
@@ -371,7 +377,8 @@ public:
 
         auto buttonsSizer = new wxBoxSizer(wxHORIZONTAL);
 
-        auto import = new wxButton(this, wxID_ANY, _("Learn From Files..."));
+        auto import = new wxButton(this, wxID_ANY,
+                                   MSW_OR_OTHER(_("Learn from files..."), _("Learn From Files...")));
         buttonsSizer->Add(import, wxSizerFlags());
         // TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
         auto clear = new wxButton(this, wxID_ANY, _("Reset"));
@@ -388,11 +395,11 @@ public:
                             "near-empty, it will not be very effective. The more translations\n"
                             "you edit and the larger the TM grows, the better it gets.");
         auto explain = new ExplanationLabel(this, explainTxt);
-        sizer->Add(explain, wxSizerFlags().Expand().Border(wxLEFT|wxRIGHT, ExplanationLabel::CHECKBOX_INDENT));
+        sizer->Add(explain, wxSizerFlags().Expand().Border(wxLEFT, ExplanationLabel::CHECKBOX_INDENT));
 
         auto learnMore = new LearnMoreLink(this, "http://poedit.net/trac/wiki/Doc/TranslationMemory");
         sizer->AddSpacer(5);
-        sizer->Add(learnMore, wxSizerFlags().Border(wxLEFT|wxRIGHT, ExplanationLabel::CHECKBOX_INDENT + LearnMoreLink::EXTRA_INDENT));
+        sizer->Add(learnMore, wxSizerFlags().Border(wxLEFT, ExplanationLabel::CHECKBOX_INDENT + LearnMoreLink::EXTRA_INDENT));
         sizer->AddSpacer(10);
 
 #ifdef __WXOSX__
@@ -569,6 +576,9 @@ public:
 
         m_list = new wxListBox(this, wxID_ANY);
         m_list->SetMinSize(wxSize(250,300));
+#ifdef __WXOSX__
+        m_list->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
+#endif
         horizontal->Add(m_list, wxSizerFlags(1).Expand().Border(wxRIGHT));
 
         auto buttons = new wxBoxSizer(wxVERTICAL);
@@ -589,10 +599,11 @@ public:
     void InitValues(const wxConfigBase& cfg) override
     {
         m_extractors.Read(const_cast<wxConfigBase*>(&cfg));
-        
+
+        m_list->Clear();
         for (const auto& item: m_extractors.Data)
             m_list->Append(item.Name);
-        
+
         if (m_extractors.Data.empty())
         {
             m_edit->Enable(false);
@@ -645,7 +656,9 @@ private:
             wxID_OK
         );
 
+        m_supressDataTransfer++;
         dlg->ShowWindowModalThenDo([=](int retcode){
+            m_supressDataTransfer--;
             (void)dlg; // force use
             if (retcode == wxID_OK)
             {
@@ -664,6 +677,8 @@ private:
 
     void OnNewExtractor(wxCommandEvent&)
     {
+        m_supressDataTransfer++;
+
         Extractor info;
         m_extractors.Data.push_back(info);
         m_list->Append(wxEmptyString);
@@ -679,6 +694,8 @@ private:
                 m_list->Delete(index);
                 m_extractors.Data.erase(m_extractors.Data.begin() + index);
             }
+
+            m_supressDataTransfer--;
 
             if (wxPreferencesEditor::ShouldApplyChangesImmediately())
                 TransferDataFromWindow();
@@ -794,6 +811,92 @@ public:
 #endif // HAS_UPDATES_CHECK
 
 
+class AdvancedPageWindow : public PrefsPanel
+{
+public:
+    AdvancedPageWindow(wxWindow *parent) : PrefsPanel(parent)
+    {
+        wxSizer *topsizer = new wxBoxSizer(wxVERTICAL);
+
+        wxSizer *sizer = new wxBoxSizer(wxVERTICAL);
+        topsizer->Add(sizer, wxSizerFlags(1).Expand().DoubleBorder());
+        SetSizer(topsizer);
+
+        sizer->Add(new ExplanationLabel(this, _("These settings affect internal formatting of PO files. Adjust them if you have specific requirements e.g. because of version control.")), wxSizerFlags().Expand().Border(wxBOTTOM));
+
+        auto crlfbox = new wxBoxSizer(wxHORIZONTAL);
+        sizer->Add(crlfbox, wxSizerFlags().Expand().Border(wxTOP));
+        crlfbox->Add(new wxStaticText(this, wxID_ANY, _("Line endings:")), wxSizerFlags().Center().BORDER_WIN(wxTOP, 1));
+        m_crlf = new wxChoice(this, wxID_ANY);
+        m_crlf->Append(_("Unix (recommended)"));
+        m_crlf->Append(_("Windows"));
+        crlfbox->Add(m_crlf, wxSizerFlags(1).Center().BORDER_OSX(wxLEFT, 3).BORDER_WIN(wxLEFT, 5));
+
+        /// TRANSLATORS: Followed by text control for entering number; wraps text at given width
+        m_wrap = new wxCheckBox(this, wxID_ANY, _("Wrap at:"));
+        crlfbox->AddSpacer(10);
+        crlfbox->Add(m_wrap, wxSizerFlags().Center().BORDER_WIN(wxTOP, 1));
+        m_wrapWidth = new wxSpinCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(50,-1));
+        m_wrapWidth->SetRange(10, 1000);
+        crlfbox->Add(m_wrapWidth, wxSizerFlags().Center().BORDER_OSX(wxLEFT, 3));
+
+        m_keepFmt = new wxCheckBox(this, wxID_ANY, _("Preserve formatting of existing files"));
+        sizer->Add(m_keepFmt, wxSizerFlags().Border(wxTOP));
+
+        Fit();
+
+        if (wxPreferencesEditor::ShouldApplyChangesImmediately())
+        {
+            Bind(wxEVT_CHECKBOX, [=](wxCommandEvent&){ TransferDataFromWindow(); });
+            Bind(wxEVT_CHOICE, [=](wxCommandEvent&){ TransferDataFromWindow(); });
+            Bind(wxEVT_TEXT, [=](wxCommandEvent&){ TransferDataFromWindow(); });
+        }
+
+        // handle UI updates:
+        m_wrapWidth->Bind(wxEVT_UPDATE_UI, [=](wxUpdateUIEvent& e){ e.Enable(m_wrap->GetValue()); });
+    }
+
+    void InitValues(const wxConfigBase& cfg) override
+    {
+        m_keepFmt->SetValue(cfg.ReadBool("keep_crlf", true));
+
+        wxString format = cfg.Read("crlf_format", "unix");
+        int sel;
+        if (format == "win") sel = 1;
+        else /* "unix" or obsolete settings */ sel = 0;
+        m_crlf->SetSelection(sel);
+
+        m_wrap->SetValue(cfg.ReadBool("wrap_po_files", true));
+        m_wrapWidth->SetValue((int)cfg.ReadLong("wrap_po_files_width", 79));
+    }
+
+    void SaveValues(wxConfigBase& cfg) override
+    {
+        cfg.Write("keep_crlf", m_keepFmt->GetValue());
+
+        static const char *formats[] = { "unix", "win" };
+        cfg.Write("crlf_format", formats[m_crlf->GetSelection()]);
+
+        cfg.Write("wrap_po_files", m_wrap->GetValue());
+        cfg.Write("wrap_po_files_width", m_wrapWidth->GetValue());
+    }
+
+private:
+    wxChoice *m_crlf;
+    wxCheckBox *m_wrap;
+    wxSpinCtrl *m_wrapWidth;
+    wxCheckBox *m_keepFmt;
+};
+
+class AdvancedPage : public wxStockPreferencesPage
+{
+public:
+    AdvancedPage() : wxStockPreferencesPage(Kind_Advanced) {}
+    wxString GetName() const override { return _("Advanced"); }
+    wxWindow *CreateWindow(wxWindow *parent) override { return new AdvancedPageWindow(parent); }
+};
+
+
 } // anonymous namespace
 
 
@@ -807,6 +910,7 @@ std::unique_ptr<PoeditPreferencesEditor> PoeditPreferencesEditor::Create()
 #ifdef HAS_UPDATES_CHECK
     p->AddPage(new UpdatesPage);
 #endif
+    p->AddPage(new AdvancedPage);
     return p;
 }
 

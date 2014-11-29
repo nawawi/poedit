@@ -31,7 +31,6 @@
 
 #include "digger.h"
 #include "extractor.h"
-#include "catalog.h"
 #include "progressinfo.h"
 #include "gexecute.h"
 #include "utility.h"
@@ -40,8 +39,19 @@ namespace
 {
 
 // concatenates catalogs using msgcat
-bool ConcatCatalogs(const wxArrayString& files, const wxString& outfile)
+bool ConcatCatalogs(const wxArrayString& files, TempDirectory& tmpdir, wxString *outfile)
 {
+    if (files.empty())
+        return false;
+
+    if (files.size() == 1)
+    {
+        *outfile = files.front();
+        return true;
+    }
+
+    *outfile = tmpdir.CreateFileName("merged.pot");
+
     wxString list;
     for ( wxArrayString::const_iterator i = files.begin();
           i != files.end(); ++i )
@@ -51,7 +61,7 @@ bool ConcatCatalogs(const wxArrayString& files, const wxString& outfile)
 
     wxString cmd =
         wxString::Format("msgcat --force-po -o %s %s",
-                         QuoteCmdlineArg(outfile),
+                         QuoteCmdlineArg(*outfile),
                          list.c_str());
     bool succ = ExecuteGettext(cmd);
 
@@ -85,7 +95,8 @@ bool FilenameMatchesPathsList(const wxString& fn, const wxArrayString& paths)
 Catalog *SourceDigger::Dig(const wxArrayString& paths,
                            const wxArrayString& excludePaths,
                            const wxArrayString& keywords,
-                           const wxString& charset)
+                           const wxString& charset,
+                           UpdateResultReason& reason)
 {
     ExtractorsDB db;
     db.Read(wxConfig::Get());
@@ -94,7 +105,10 @@ Catalog *SourceDigger::Dig(const wxArrayString& paths,
 
     wxArrayString *all_files = FindFiles(paths, excludePaths, db);
     if (all_files == NULL)
+    {
+        reason = UpdateResultReason::NoSourcesFound;
         return NULL;
+    }
 
     TempDirectory tmpdir;
     wxArrayString partials;
@@ -116,13 +130,9 @@ Catalog *SourceDigger::Dig(const wxArrayString& paths,
 
     delete[] all_files;
 
-    if ( partials.empty() )
+    wxString mergedFile;
+    if ( !ConcatCatalogs(partials, tmpdir, &mergedFile) )
         return NULL; // couldn't parse any source files
-
-    wxString mergedFile = tmpdir.CreateFileName("merged.pot");
-
-    if ( !ConcatCatalogs(partials, mergedFile) )
-        return NULL;
 
     Catalog *c = new Catalog(mergedFile, Catalog::CreationFlag_IgnoreHeader);
 
@@ -174,12 +184,9 @@ bool SourceDigger::DigFiles(TempDirectory& tmpdir,
             return false;
     }
 
-    if ( tempfiles.empty() )
+    wxString outfile;
+    if ( !ConcatCatalogs(tempfiles, tmpdir, &outfile) )
         return false; // failed to parse any source files
-
-    wxString outfile = tmpdir.CreateFileName("merged_chunks.pot");
-    if ( !ConcatCatalogs(tempfiles, outfile) )
-        return false;
 
     outFiles.push_back(outfile);
     return true;
@@ -202,7 +209,7 @@ wxArrayString *SourceDigger::FindFiles(const wxArrayString& paths,
     {
         if ( !FindInDir(paths[i], excludePaths, files) )
         {
-            wxLogWarning(_("No files found in: ") + paths[i]);
+            wxLogTrace("poedit", "no files found in '%s'", paths[i]);
         }
     }
 
@@ -221,9 +228,7 @@ wxArrayString *SourceDigger::FindFiles(const wxArrayString& paths,
     m_progressInfo->SetGaugeMax((int)filescnt);
     
     if (filescnt == 0)
-    {
-        wxLogError(_("Poedit did not find any files in scanned directories."));
-    }
+        return nullptr;
 
     return p_files;
 }

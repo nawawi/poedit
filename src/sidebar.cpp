@@ -91,8 +91,9 @@ SidebarBlock::SidebarBlock(Sidebar *parent, const wxString& label, int flags)
             m_sizer->Add(new SidebarSeparator(parent),
                          wxSizerFlags().Expand().Border(wxBOTTOM|wxLEFT, 2));
         }
-        m_sizer->Add(new HeadingLabel(parent, label),
-                     wxSizerFlags().Expand().DoubleBorder(wxLEFT|wxRIGHT));
+        m_headerSizer = new wxBoxSizer(wxHORIZONTAL);
+        m_headerSizer->Add(new HeadingLabel(parent, label), wxSizerFlags().Expand().Center());
+        m_sizer->Add(m_headerSizer, wxSizerFlags().Expand().DoubleBorder(wxLEFT|wxRIGHT));
     }
     m_innerSizer = new wxBoxSizer(wxVERTICAL);
     m_sizer->Add(m_innerSizer, wxSizerFlags(1).Expand().DoubleBorder(wxLEFT|wxRIGHT));
@@ -149,10 +150,10 @@ private:
 };
 
 
-class AutoCommentSidebarBlock : public SidebarBlock
+class ExtractedCommentSidebarBlock : public SidebarBlock
 {
 public:
-    AutoCommentSidebarBlock(Sidebar *parent)
+    ExtractedCommentSidebarBlock(Sidebar *parent)
         : SidebarBlock(parent, _("Notes for translators:"))
     {
         m_innerSizer->AddSpacer(5);
@@ -162,12 +163,12 @@ public:
 
     bool ShouldShowForItem(CatalogItem *item) const override
     {
-        return item->HasAutoComments();
+        return item->HasExtractedComments();
     }
 
     void Update(CatalogItem *item) override
     {
-        auto comment = wxJoin(item->GetAutoComments(), ' ', '\0');
+        auto comment = wxJoin(item->GetExtractedComments(), '\n', '\0');
         if (comment.StartsWith("TRANSLATORS:") || comment.StartsWith("translators:"))
         {
             comment.Remove(0, 12);
@@ -293,7 +294,8 @@ public:
         #ifdef __WXOSX__
             auto shortcut = wxString::Format(L"⌘%d", index);
         #else
-            auto shortcut = wxString::Format("Ctrl+%d", index);
+            // TRANSLATORS: This is the key shortcut used in menus on Windows, some languages call them differently
+            auto shortcut = wxString::Format("%s%d", _("Ctrl+"), index);
         #endif
             m_info->SetLabel(wxString::Format(L"%s • %s", shortcut, percent));
         }
@@ -319,7 +321,13 @@ public:
         m_text->SetAlignment(isRTL ? wxALIGN_RIGHT : wxALIGN_LEFT);
         m_text->SetAndWrapLabel(text);
 
+#ifndef __WXOSX__
+        // FIXME: Causes weird issues on OS X: tooltips appearing on the main list control,
+        //        over toolbar, where the mouse just was etc.
         m_icon->SetToolTip(tooltip);
+        m_text->SetToolTip(tooltip);
+#endif
+        (void)tooltip;
 
         SetBackgroundColour(m_bg);
         InvalidateBestSize();
@@ -392,6 +400,11 @@ SuggestionsSidebarBlock::SuggestionsSidebarBlock(Sidebar *parent, wxMenu *menu)
 
     m_innerSizer->AddSpacer(10);
 
+    m_suggestionsSizer = new wxBoxSizer(wxVERTICAL);
+    m_extrasSizer = new wxBoxSizer(wxVERTICAL);
+    m_innerSizer->Add(m_suggestionsSizer, wxSizerFlags().Expand());
+    m_innerSizer->Add(m_extrasSizer, wxSizerFlags().Expand());
+
     m_iGotNothing = new wxStaticText(parent, wxID_ANY,
                                 #ifdef __WXMSW__
                                      // TRANSLATORS: This is shown when no translation suggestions can be found in the TM (Windows).
@@ -442,6 +455,11 @@ void SuggestionsSidebarBlock::SetMessage(const wxString& icon, const wxString& t
     m_parent->Layout();
 }
 
+void SuggestionsSidebarBlock::ReportError(SuggestionsBackend*, std::exception_ptr e)
+{
+    SetMessage("SuggestionError", DescribeException(e));
+}
+
 void SuggestionsSidebarBlock::ClearSuggestions()
 {
     m_pendingQueries = 0;
@@ -455,19 +473,13 @@ void SuggestionsSidebarBlock::UpdateSuggestions(const SuggestionsList& hits)
     wxWindowUpdateLocker lock(m_parent);
 
     m_suggestions.insert(m_suggestions.end(), hits.begin(), hits.end());
-    std::stable_sort(m_suggestions.begin(), m_suggestions.end(),
-                     [](const Suggestion& a, const Suggestion& b){
-                        if (std::fabs(a.score - b.score) <= std::numeric_limits<double>::epsilon())
-                            return a.timestamp > b.timestamp;
-                        else
-                            return a.score > b.score;
-                     });
+    std::stable_sort(m_suggestions.begin(), m_suggestions.end());
 
     // create any necessary controls:
     while (m_suggestions.size() > m_suggestionsWidgets.size())
     {
         auto w = new SuggestionWidget(m_parent);
-        m_innerSizer->Add(w, wxSizerFlags().Expand());
+        m_suggestionsSizer->Add(w, wxSizerFlags().Expand());
         m_suggestionsWidgets.push_back(w);
     }
     m_innerSizer->Layout();
@@ -493,7 +505,7 @@ void SuggestionsSidebarBlock::BuildSuggestionsMenu(int count)
     auto menu = m_suggestionsMenu;
     for (int i = 0; i < count; i++)
     {
-        auto text = wxString::Format("(empty)\tCtrl+%d", i+1);
+        auto text = wxString::Format("(empty)\t%s%d", _("Ctrl+"), i+1);
         auto item = new wxMenuItem(menu, wxID_ANY, text);
         item->SetBitmap(wxArtProvider::GetBitmap("SuggestionTM"));
 
@@ -518,9 +530,9 @@ void SuggestionsSidebarBlock::UpdateSuggestionsMenu()
     bool isRTL = m_parent->GetCurrentLanguage().IsRTL();
     wxString formatMask;
     if (isRTL)
-        formatMask = L"\u202b%s\u202c\tCtrl+%d";
+        formatMask = L"\u202b%s\u202c\t" + _("Ctrl+") + "%d";
     else
-        formatMask = L"\u202a%s\u202c\tCtrl+%d";
+        formatMask = L"\u202a%s\u202c\t" + _("Ctrl+") + "%d";
 
     int index = 0;
     for (auto s: m_suggestions)
@@ -574,11 +586,11 @@ void SuggestionsSidebarBlock::UpdateVisibility()
         heightRemaining -= m_suggestionsWidgets[w]->GetSize().y;
         if (heightRemaining < 20)
             break;
-        m_innerSizer->Show(m_suggestionsWidgets[w]);
+        m_suggestionsSizer->Show(m_suggestionsWidgets[w]);
     }
 
     for (; w < m_suggestionsWidgets.size(); w++)
-        m_innerSizer->Hide(m_suggestionsWidgets[w]);
+        m_suggestionsSizer->Hide(m_suggestionsWidgets[w]);
 
 }
 
@@ -607,32 +619,37 @@ void SuggestionsSidebarBlock::Update(CatalogItem *item)
     ClearMessage();
     ClearSuggestions();
 
-    QueryProvider(TranslationMemory::Get(), item);
+    QueryAllProviders(item);
 }
 
-void SuggestionsSidebarBlock::QueryProvider(SuggestionsBackend& backend, CatalogItem *item)
+void SuggestionsSidebarBlock::QueryAllProviders(CatalogItem *item)
 {
     auto thisQueryId = ++m_latestQueryId;
+    QueryProvider(TranslationMemory::Get(), item, thisQueryId);
+}
+
+void SuggestionsSidebarBlock::QueryProvider(SuggestionsBackend& backend, CatalogItem *item, uint64_t queryId)
+{
     m_pendingQueries++;
 
     // we need something to talk to GUI thread through that is guaranteed
     // to exist, and the app object is a good choice:
     wxApp *app = wxTheApp;
+    auto backendPtr = &backend;
     std::weak_ptr<SuggestionsSidebarBlock> weakSelf = std::dynamic_pointer_cast<SuggestionsSidebarBlock>(shared_from_this());
 
     m_provider->SuggestTranslation
     (
         backend,
-        m_parent->GetCurrentLanguage().Code(),
+        m_parent->GetCurrentLanguage(),
         item->GetString().ToStdWstring(),
-        SUGGESTIONS_REQUEST_COUNT,
 
         // when receiving data
         [=](const SuggestionsList& hits){
-            app->CallAfter([weakSelf,thisQueryId,hits]{
+            app->CallAfter([weakSelf,queryId,hits]{
                 auto self = weakSelf.lock();
                 // maybe this call is already out of date:
-                if (!self || self->m_latestQueryId != thisQueryId)
+                if (!self || self->m_latestQueryId != queryId)
                     return;
                 self->UpdateSuggestions(hits);
                 if (--self->m_pendingQueries == 0)
@@ -642,12 +659,12 @@ void SuggestionsSidebarBlock::QueryProvider(SuggestionsBackend& backend, Catalog
 
         // on error:
         [=](std::exception_ptr e){
-            app->CallAfter([weakSelf,thisQueryId,e]{
+            app->CallAfter([weakSelf,queryId,backendPtr,e]{
                 auto self = weakSelf.lock();
                 // maybe this call is already out of date:
-                if (!self || self->m_latestQueryId != thisQueryId)
+                if (!self || self->m_latestQueryId != queryId)
                     return;
-                self->SetMessage("SuggestionError", DescribeException(e));
+                self->ReportError(backendPtr, e);
                 if (--self->m_pendingQueries == 0)
                     self->OnQueriesFinished();
             });
@@ -676,12 +693,12 @@ Sidebar::Sidebar(wxWindow *parent, wxMenu *suggestionsMenu)
     m_topBlocksSizer = new wxBoxSizer(wxVERTICAL);
     m_bottomBlocksSizer = new wxBoxSizer(wxVERTICAL);
 
-    m_blocksSizer->Add(m_topBlocksSizer, wxSizerFlags(1).Expand());
+    m_blocksSizer->Add(m_topBlocksSizer, wxSizerFlags(1).Expand().ReserveSpaceEvenIfHidden());
     m_blocksSizer->Add(m_bottomBlocksSizer, wxSizerFlags().Expand());
 
     AddBlock(new SuggestionsSidebarBlock(this, suggestionsMenu), Top);
     AddBlock(new OldMsgidSidebarBlock(this), Bottom);
-    AddBlock(new AutoCommentSidebarBlock(this), Bottom);
+    AddBlock(new ExtractedCommentSidebarBlock(this), Bottom);
     AddBlock(new CommentSidebarBlock(this), Bottom);
     AddBlock(new AddCommentSidebarBlock(this), Bottom);
 

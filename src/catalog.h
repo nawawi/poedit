@@ -55,6 +55,14 @@ typedef enum
     BOOKMARK_LAST
 } Bookmark;
 
+/// Result of Catalog::Update()
+enum class UpdateResultReason
+{
+    Unspecified,
+    CancelledByUser,
+    NoSourcesFound
+};
+
 /** This class holds information about one particular string.
     This includes source string and its occurrences in source code
     (so-called references), translation and translation's status
@@ -88,7 +96,7 @@ class CatalogItem
                   m_context(dt.m_context),
                   m_translations(dt.m_translations),
                   m_references(dt.m_references),
-                  m_autocomments(dt.m_autocomments),
+                  m_extractedComments(dt.m_extractedComments),
                   m_oldMsgid(dt.m_oldMsgid),
                   m_isFuzzy(dt.m_isFuzzy),
                   m_isTranslated(dt.m_isTranslated),
@@ -148,13 +156,13 @@ class CatalogItem
         const wxString& GetComment() const { return m_comment; }
 
         /// Returns array of all auto comments.
-        const wxArrayString& GetAutoComments() const { return m_autocomments; }
+        const wxArrayString& GetExtractedComments() const { return m_extractedComments; }
 
         /// Convenience function: does this entry has a comment?
         bool HasComment() const { return !m_comment.empty(); }
 
         /// Convenience function: does this entry has auto comments?
-        bool HasAutoComments() const { return !m_autocomments.empty(); }
+        bool HasExtractedComments() const { return !m_extractedComments.empty(); }
 
         /// Adds new reference to the entry (used by SourceDigger).
         void AddReference(const wxString& ref)
@@ -240,16 +248,16 @@ class CatalogItem
             flag when called with "foo" as argument. */
         bool IsInFormat(const wxString& format);
 
-        /// Adds new autocomments (#. )
-        void AddAutoComments(const wxString& com)
+        /// Adds new extracted comments (#. )
+        void AddExtractedComments(const wxString& com)
         {
-            m_autocomments.Add(com);
+            m_extractedComments.Add(com);
         }
 
-        /// Clears autocomments.
-        void ClearAutoComments()
+        /// Clears extracted comments.
+        void ClearExtractedComments()
         {
-            m_autocomments.Clear();
+            m_extractedComments.Clear();
         }
 
         void SetOldMsgid(const wxArrayString& data) { m_oldMsgid = data; }
@@ -290,7 +298,7 @@ class CatalogItem
 
         wxArrayString m_translations;
 
-        wxArrayString m_references, m_autocomments;
+        wxArrayString m_references, m_extractedComments;
         wxArrayString m_oldMsgid;
         bool m_isFuzzy, m_isTranslated, m_isModified, m_isAutomatic;
         bool m_hasBadTokens;
@@ -322,7 +330,7 @@ class CatalogDeletedData
         CatalogDeletedData(const CatalogDeletedData& dt)
                 : m_deletedLines(dt.m_deletedLines),
                   m_references(dt.m_references),
-                  m_autocomments(dt.m_autocomments),
+                  m_extractedComments(dt.m_extractedComments),
                   m_flags(dt.m_flags),
                   m_comment(dt.m_comment),
                   m_lineNum(dt.m_lineNum) {}
@@ -337,7 +345,7 @@ class CatalogDeletedData
         const wxString& GetComment() const { return m_comment; }
 
         /// Returns array of all auto comments.
-        const wxArrayString& GetAutoComments() const { return m_autocomments; }
+        const wxArrayString& GetExtractedComments() const { return m_extractedComments; }
 
         /// Convenience function: does this entry has a comment?
         bool HasComment() const { return !m_comment.empty(); }
@@ -375,22 +383,22 @@ class CatalogDeletedData
         /// Get line number of this entry.
         int GetLineNumber() const { return m_lineNum; }
 
-        /// Adds new autocomments (#. )
-        void AddAutoComments(const wxString& com)
+        /// Adds new extracted comments (#. )
+        void AddExtractedComments(const wxString& com)
         {
-            m_autocomments.Add(com);
+            m_extractedComments.Add(com);
         }
 
-        /// Clears autocomments.
-        void ClearAutoComments()
+        /// Clears extracted comments.
+        void ClearExtractedComments()
         {
-            m_autocomments.Clear();
+            m_extractedComments.Clear();
         }
 
     private:
         wxArrayString m_deletedLines;
 
-        wxArrayString m_references, m_autocomments;
+        wxArrayString m_references, m_extractedComments;
         wxString m_flags;
         wxString m_comment;
         int m_lineNum;
@@ -484,6 +492,10 @@ class Catalog
             Error
         };
 
+        // Common wrapping values
+        static const int NO_WRAPPING = -1;
+        static const int DEFAULT_WRAPPING = -2;
+
         /// Default ctor. Creates empty catalog, you have to call Load.
         Catalog();
 
@@ -539,14 +551,14 @@ class Catalog
         /** Updates the catalog from sources.
             \see SourceDigger, Parser, UpdateFromPOT.
          */
-        bool Update(ProgressInfo *progress, bool summary, bool *cancelledByUser);
+        bool Update(ProgressInfo *progress, bool summary, UpdateResultReason& reason);
 
         /** Updates the catalog from POT file.
             \see Update
          */
         bool UpdateFromPOT(const wxString& pot_file,
                            bool summary,
-                           bool *cancelledByUser,
+                           UpdateResultReason& reason,
                            bool replace_header = false);
 
         /// Returns the number of strings/translations in the catalog.
@@ -634,7 +646,7 @@ class Catalog
         void FixupCommonIssues();
 
         int DoValidate(const wxString& po_file);
-        bool DoSaveOnly(const wxString& po_file);
+        bool DoSaveOnly(const wxString& po_file, wxTextFileType crlf);
         bool DoSaveOnly(wxTextFile& f, wxTextFileType crlf);
 
         /** Merges the catalog with reference catalog
@@ -670,6 +682,8 @@ class Catalog
         bool m_isOk;
         wxString m_fileName;
         HeaderData m_header;
+        wxTextFileType m_fileCRLF;
+        int m_fileWrappingWidth;
 
         friend class LoadParser;
 };
@@ -681,6 +695,9 @@ class CatalogParser
     public:
         CatalogParser(wxTextFile *f)
             : m_textFile(f),
+              m_detectedLineWidth(0),
+              m_detectedWrappedLines(false),
+              m_lastLineHardWrapped(true), m_previousLineHardWrapped(true),
               m_ignoreHeader(false),
               m_ignoreTranslations(false)
         {}
@@ -700,7 +717,18 @@ class CatalogParser
          */
         bool Parse();
 
+        int GetWrappingWidth() const;
+
     protected:
+        // Read one line from file, remove all \r and \n characters, ignore empty linesed:
+        wxString ReadTextLine();
+
+        void PossibleWrappedLine()
+        {
+            if (!m_previousLineHardWrapped)
+                m_detectedWrappedLines = true;
+        }
+
         /** Called when new entry was parsed. Parsing continues
             if returned value is true and is cancelled if it
             is false.
@@ -714,7 +742,7 @@ class CatalogParser
                              const wxString& flags,
                              const wxArrayString& references,
                              const wxString& comment,
-                             const wxArrayString& autocomments,
+                             const wxArrayString& extractedComments,
                              const wxArrayString& msgid_old,
                              unsigned lineNumber) = 0;
 
@@ -726,7 +754,7 @@ class CatalogParser
                                     const wxString& /*flags*/,
                                     const wxArrayString& /*references*/,
                                     const wxString& /*comment*/,
-                                    const wxArrayString& /*autocomments*/,
+                                    const wxArrayString& /*extractedComments*/,
                                     unsigned /*lineNumber*/)
         {
             return true;
@@ -736,6 +764,9 @@ class CatalogParser
 
         /// Textfile being parsed.
         wxTextFile *m_textFile;
+        int m_detectedLineWidth;
+        bool m_detectedWrappedLines;
+        bool m_lastLineHardWrapped, m_previousLineHardWrapped;
 
         /// Whether the header should be parsed or not
         bool m_ignoreHeader;

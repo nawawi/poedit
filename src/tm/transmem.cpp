@@ -53,6 +53,7 @@
 #include <Document.h>
 #include <Field.h>
 #include <DateField.h>
+#include <PrefixQuery.h>
 #include <StringUtils.h>
 #include <TermQuery.h>
 #include <BooleanQuery.h>
@@ -84,8 +85,6 @@ using namespace Lucene;
 class TranslationMemoryImpl
 {
 public:
-    static const int DEFAULT_MAXHITS = 10;
-
 #ifdef __WXMSW__
     typedef SimpleFSDirectory DirectoryType;
 #else
@@ -97,9 +96,8 @@ public:
           m_analyzer(newLucene<StandardAnalyzer>(LuceneVersion::LUCENE_CURRENT))
     {}
 
-    SuggestionsList Search(const std::string& lang,
-                           const std::wstring& source,
-                           int maxHits = -1);
+    SuggestionsList Search(const Language& lang,
+                           const std::wstring& source);
 
     std::shared_ptr<TranslationMemory::Writer> CreateWriter();
 
@@ -153,6 +151,8 @@ IndexReaderPtr TranslationMemoryImpl::Reader()
 namespace
 {
 
+static const int DEFAULT_MAXHITS = 10;
+
 // Normalized score that must be met for a suggestion to be shown. This is
 // an empirical guess of what constitues good matches.
 static const double QUALITY_THRESHOLD = 0.6;
@@ -170,22 +170,18 @@ bool ContainsResult(const SuggestionsList& all, const std::wstring& r)
 
 template<typename T>
 void PerformSearchWithBlock(IndexSearcherPtr searcher,
-                            const Lucene::String& lang,
+                            QueryPtr lang,
                             const std::wstring& exactSourceText,
                             QueryPtr query,
-                            int maxHits,
                             double scoreThreshold,
                             double scoreScaling,
                             T callback)
 {
-    // TODO: use short form of the language too (cs vs cs_CZ), boost the
-    //       full form in the query
-    auto langQ = newLucene<TermQuery>(newLucene<Term>(L"lang", lang));
     auto fullQuery = newLucene<BooleanQuery>();
-    fullQuery->add(langQ, BooleanClause::MUST);
+    fullQuery->add(lang, BooleanClause::MUST);
     fullQuery->add(query, BooleanClause::MUST);
 
-    auto hits = searcher->search(fullQuery, maxHits);
+    auto hits = searcher->search(fullQuery, DEFAULT_MAXHITS);
 
     for (int i = 0; i < hits->scoreDocs.size(); i++)
     {
@@ -197,26 +193,40 @@ void PerformSearchWithBlock(IndexSearcherPtr searcher,
         auto doc = searcher->doc(scoreDoc->doc);
         auto src = doc->get(L"source");
         if (src == exactSourceText)
+        {
             score = 1.0;
-        else if (score == 1.0)
-            score = 0.95; // can't score non-exact thing as 100%
+        }
+        else
+        {
+            if (score == 1.0)
+            {
+                score = 0.95; // can't score non-exact thing as 100%:
 
-        callback(doc, score * scoreScaling);
+                // Check against too small queries having perfect hit in a large stored text.
+                // Do this by penalizing too large difference in lengths of the source strings.
+                double len1 = exactSourceText.size();
+                double len2 = src.size();
+                score *= 1.0 - 0.4 * (std::abs(len1 - len2) / std::max(len1, len2));
+            }
+
+            score *= scoreScaling;
+        }
+
+        callback(doc, score);
     }
 }
 
 void PerformSearch(IndexSearcherPtr searcher,
-                   const Lucene::String& lang,
+                   QueryPtr lang,
                    const std::wstring& exactSourceText,
                    QueryPtr query,
                    SuggestionsList& results,
-                   int maxHits,
                    double scoreThreshold,
                    double scoreScaling)
 {
     PerformSearchWithBlock
     (
-        searcher, lang, exactSourceText, query, maxHits,
+        searcher, lang, exactSourceText, query,
         scoreThreshold, scoreScaling,
         [&results](DocumentPtr doc, double score)
         {
@@ -229,20 +239,36 @@ void PerformSearch(IndexSearcherPtr searcher,
             }
         }
     );
+
+    std::stable_sort(results.begin(), results.end());
 }
 
 } // anonymous namespace
 
-SuggestionsList TranslationMemoryImpl::Search(const std::string& lang,
-                                              const std::wstring& source,
-                                              int maxHits)
+SuggestionsList TranslationMemoryImpl::Search(const Language& lang,
+                                              const std::wstring& source)
 {
     try
     {
-        const Lucene::String llang = StringUtils::toUnicode(lang);
+        const Lucene::String fullLang = lang.WCode();
+        const Lucene::String shortLang = StringUtils::toUnicode(lang.Lang());
 
-        if (maxHits <= 0)
-            maxHits = DEFAULT_MAXHITS;
+        QueryPtr langPrimary = newLucene<TermQuery>(newLucene<Term>(L"lang", fullLang));
+        QueryPtr langSecondary;
+        if (fullLang == shortLang)
+        {
+            // for e.g. 'cs', search also 'cs_*' (e.g. 'cs_CZ')
+            langSecondary = newLucene<PrefixQuery>(newLucene<Term>(L"lang", shortLang + L"_"));
+        }
+        else
+        {
+            // search short variants of the language too
+            langSecondary = newLucene<TermQuery>(newLucene<Term>(L"lang", shortLang));
+        }
+        langSecondary->setBoost(0.85);
+        auto langQ = newLucene<BooleanQuery>();
+        langQ->add(langPrimary, BooleanClause::SHOULD);
+        langQ->add(langSecondary, BooleanClause::SHOULD);
 
         SuggestionsList results;
 
@@ -264,15 +290,15 @@ SuggestionsList TranslationMemoryImpl::Search(const std::string& lang,
         auto searcher = newLucene<IndexSearcher>(Reader());
 
         // Try exact phrase first:
-        PerformSearch(searcher, llang, source, phraseQ, results, maxHits,
-                      /*scoreThreshold=*/1.0, /*scoreScaling=*/1.0);
+        PerformSearch(searcher, langQ, source, phraseQ, results,
+                      QUALITY_THRESHOLD, /*scoreScaling=*/1.0);
         if (!results.empty())
             return results;
 
         // Then, if no matches were found, permit being a bit sloppy:
         phraseQ->setSlop(1);
-        PerformSearch(searcher, llang, source, phraseQ, results, maxHits,
-                      /*scoreThreshold=*/1.0, /*scoreScaling=*/0.9);
+        PerformSearch(searcher, langQ, source, phraseQ, results,
+                      QUALITY_THRESHOLD, /*scoreScaling=*/0.9);
 
         if (!results.empty())
             return results;
@@ -282,7 +308,7 @@ SuggestionsList TranslationMemoryImpl::Search(const std::string& lang,
         boolQ->setMinimumNumberShouldMatch(std::max(1, boolQ->getClauses().size() - MAX_ALLOWED_LENGTH_DIFFERENCE));
         PerformSearchWithBlock
         (
-            searcher, llang, source, boolQ, maxHits,
+            searcher, langQ, source, boolQ,
             QUALITY_THRESHOLD, /*scoreScaling=*/0.8,
             [=,&results](DocumentPtr doc, double score)
             {
@@ -303,6 +329,7 @@ SuggestionsList TranslationMemoryImpl::Search(const std::string& lang,
             }
         );
 
+        std::stable_sort(results.begin(), results.end());
         return results;
     }
     catch (LuceneException&)
@@ -352,11 +379,11 @@ public:
         CATCH_AND_RETHROW_EXCEPTION
     }
 
-    virtual void Insert(const std::wstring& lang,
+    virtual void Insert(const Language& lang,
                         const std::wstring& source,
                         const std::wstring& trans)
     {
-        if (lang.empty())
+        if (!lang.IsValid())
             return;
 
         // Compute unique ID for the translation:
@@ -366,7 +393,7 @@ public:
         boost::uuids::name_generator gen(s_namespace);
 
         std::wstring itemId(L"en"); // TODO: srclang
-        itemId += lang;
+        itemId += lang.WCode();
         itemId += source;
         itemId += trans;
 
@@ -383,7 +410,7 @@ public:
                                       Field::STORE_YES, Field::INDEX_NO));
             doc->add(newLucene<Field>(L"srclang", L"en",
                                       Field::STORE_YES, Field::INDEX_NOT_ANALYZED));
-            doc->add(newLucene<Field>(L"lang", lang,
+            doc->add(newLucene<Field>(L"lang", lang.WCode(),
                                       Field::STORE_YES, Field::INDEX_NOT_ANALYZED));
             doc->add(newLucene<Field>(L"source", source,
                                       Field::STORE_YES, Field::INDEX_ANALYZED));
@@ -397,10 +424,9 @@ public:
 
     virtual void Insert(const Catalog &cat)
     {
-        const std::string lang = cat.GetLanguage().Code();
-        if (lang.empty())
+        auto lang = cat.GetLanguage();
+        if (!lang.IsValid())
             return;
-        const std::wstring wlang(lang.begin(), lang.end());
 
         int cnt = cat.GetCount();
         for (int i = 0; i < cnt; i++)
@@ -423,7 +449,7 @@ public:
             // want to save old entries in the TM too, so that we harvest as
             // much useful translations as we can.
 
-            Insert(wlang, item.GetString().ToStdWstring(), item.GetTranslation().ToStdWstring());
+            Insert(lang, item.GetString().ToStdWstring(), item.GetTranslation().ToStdWstring());
         }
     }
 
@@ -487,22 +513,20 @@ TranslationMemory::~TranslationMemory() { delete m_impl; }
 // public API
 // ----------------------------------------------------------------
 
-SuggestionsList TranslationMemory::Search(const std::string& lang,
-                                          const std::wstring& source,
-                                          int maxHits)
+SuggestionsList TranslationMemory::Search(const Language& lang,
+                                          const std::wstring& source)
 {
-    return m_impl->Search(lang, source, maxHits);
+    return m_impl->Search(lang, source);
 }
 
-void TranslationMemory::SuggestTranslation(const std::string& lang,
+void TranslationMemory::SuggestTranslation(const Language& lang,
                                            const std::wstring& source,
-                                           int maxHits,
                                            success_func_type onSuccess,
                                            error_func_type onError)
 {
     try
     {
-        onSuccess(Search(lang, source, maxHits));
+        onSuccess(Search(lang, source));
     }
     catch (...)
     {

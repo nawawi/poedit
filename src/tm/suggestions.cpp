@@ -34,15 +34,21 @@ public:
     SuggestionsProviderImpl() : m_pool(2) {}
 
     void SuggestTranslation(SuggestionsBackend& backend,
-                            const std::string& lang,
+                            const Language& lang,
                             const std::wstring& source,
-                            int maxHits,
                             SuggestionsProvider::success_func_type onSuccess,
                             SuggestionsProvider::error_func_type onError)
     {
         auto bck = &backend;
         m_pool.enqueue([=](){
-            bck->SuggestTranslation(lang, source, maxHits, onSuccess, onError);
+            // don't bother asking the backend if the language is invalid:
+            if (!lang.IsValid())
+            {
+                onSuccess(SuggestionsList());
+                return;
+            }
+            // query the backend:
+            bck->SuggestTranslation(lang, source, onSuccess, onError);
         });
     }
 
@@ -61,11 +67,10 @@ SuggestionsProvider::~SuggestionsProvider()
 }
 
 void SuggestionsProvider::SuggestTranslation(SuggestionsBackend& backend,
-                                             const std::string& lang,
+                                             const Language& lang,
                                              const std::wstring& source,
-                                             int maxHits,
                                              success_func_type onSuccess,
                                              error_func_type onError)
 {
-    m_impl->SuggestTranslation(backend, lang, source, maxHits, onSuccess, onError);
+    m_impl->SuggestTranslation(backend, lang, source, onSuccess, onError);
 }

@@ -26,6 +26,7 @@
 #ifndef _EDFRAME_H_
 #define _EDFRAME_H_
 
+#include <memory>
 #include <set>
 
 #include <wx/frame.h>
@@ -54,6 +55,7 @@ class TranslationTextCtrl;
 class PoeditFrame;
 class AttentionBar;
 class ErrorBar;
+class MainToolbar;
 class Sidebar;
 
 /** This class provides main editing frame. It handles user's input
@@ -260,6 +262,9 @@ private:
 
         void OnSelectionUpdate(wxUpdateUIEvent& event);
         void OnSingleSelectionUpdate(wxUpdateUIEvent& event);
+        void OnHasCatalogUpdate(wxUpdateUIEvent& event);
+        void OnIsEditableUpdate(wxUpdateUIEvent& event);
+        void OnUpdateFromSourcesUpdate(wxUpdateUIEvent& event);
 
 #if defined(__WXMSW__) || defined(__WXGTK__)
         void OnTextEditingCommand(wxCommandEvent& event);
@@ -268,7 +273,15 @@ private:
 
         void OnSuggestion(wxCommandEvent& event);
         void OnAutoTranslateAll(wxCommandEvent& event);
-        bool AutoTranslateCatalog(int *matchesCount = nullptr);
+
+        enum AutoTranslateFlags
+        {
+            AutoTranslate_OnlyExact     = 0x01,
+            AutoTranslate_ExactNotFuzzy = 0x02,
+        };
+        bool AutoTranslateCatalog(int *matchesCount = nullptr, int flags = 0);
+        template<typename T>
+        bool AutoTranslateCatalog(int *matchesCount, const T& range, int flags = 0);
 
         void OnPurgeDeleted(wxCommandEvent& event);
 
@@ -303,6 +316,8 @@ private:
         Catalog *m_catalog;
         wxString m_fileName;
         bool m_fileExistsOnDisk;
+
+        std::unique_ptr<MainToolbar> m_toolbar;
 
         wxPanel *m_bottomPanel;
         wxSplitterWindow *m_splitter;

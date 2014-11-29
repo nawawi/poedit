@@ -173,7 +173,7 @@
       <object class="separator"/>
       <object class="wxMenuItem" name="show_sidebar">
         <label platform="win">Show sidebar</label>
-        <label platform="mac">Show Sidebar</label>
+        <label platform="mac|unix">Show Sidebar</label>
         <checkable platform="win|unix">1</checkable>
         <accel>Ctrl+Alt+S</accel>
       </object>
@@ -191,8 +191,8 @@
         <label platform="unix|mac">Update from _POT File...</label>
       </object>
       <object class="wxMenuItem" name="menu_auto_translate">
-        <label platform="win">Fill missing translations from _TM</label>
-        <label platform="unix|mac">Fill Missing Translations from _TM</label>
+        <label platform="win">Fill missing translations from _TM...</label>
+        <label platform="unix|mac">Fill Missing Translations from _TM...</label>
       </object>
       <object class="wxMenuItem" name="menu_purge_deleted">
         <label platform="win">_Purge deleted translations</label>

@@ -239,6 +239,16 @@ std::string Language::Variant() const
         return m_code.substr(0, pos);
 }
 
+std::string Language::RFC3066() const
+{
+    auto c = Country();
+    auto l = Lang();
+    if (c.empty())
+        return l;
+    else
+        return l + "-" + c;
+}
+
 
 Language Language::TryParse(const std::wstring& s)
 {
@@ -371,6 +381,13 @@ wxString Language::DisplayName() const
 {
     icu::UnicodeString s;
     ToIcu().getDisplayName(s);
+    return FromIcuStr(s);
+}
+
+wxString Language::LanguageDisplayName() const
+{
+    icu::UnicodeString s;
+    ToIcu().getDisplayLanguage(s);
     return FromIcuStr(s);
 }
 

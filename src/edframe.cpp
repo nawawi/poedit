@@ -23,7 +23,10 @@
  *
  */
 
+#include "edframe.h"
+
 #include <wx/wx.h>
+#include <wx/checkbox.h>
 #include <wx/config.h>
 #include <wx/html/htmlwin.h>
 #include <wx/statline.h>
@@ -63,10 +66,11 @@
 #include <map>
 #include <algorithm>
 #include <future>
+#include <boost/range/counting_range.hpp>
 
 #include "catalog.h"
+#include "customcontrols.h"
 #include "edapp.h"
-#include "edframe.h"
 #include "propertiesdlg.h"
 #include "prefsdlg.h"
 #include "fileviewer.h"
@@ -75,6 +79,7 @@
 #include "language.h"
 #include "progressinfo.h"
 #include "commentdlg.h"
+#include "main_toolbar.h"
 #include "manager.h"
 #include "pluralforms/pl_evaluate.h"
 #include "attentionbar.h"
@@ -359,16 +364,12 @@ class CustomizedTextCtrl : public wxTextCtrl
 public:
     CustomizedTextCtrl(wxWindow *parent,
                        wxWindowID winid,
-                       const wxString &value = wxEmptyString,
-                       const wxPoint &pos = wxDefaultPosition,
-                       const wxSize &size = wxDefaultSize,
-                       long style = 0,
-                       const wxValidator& validator = wxDefaultValidator,
-                       const wxString &name = wxTextCtrlNameStr)
-       : wxTextCtrl(parent, winid, value, pos, size, style, validator, name)
+                       long style = 0)
+       : wxTextCtrl(parent, winid, "", wxDefaultPosition, wxDefaultSize, style)
     {
         NSTextView *text = TextView();
 
+        [text setTextContainerInset:NSMakeSize(1,3)];
         [text setRichText:NO];
 
         [text setAutomaticQuoteSubstitutionEnabled:NO];
@@ -421,36 +422,32 @@ protected:
         return [scroll documentView];
     }
 };
+
 #else // !__WXOSX__
-typedef wxTextCtrl CustomizedTextCtrl;
-#endif
 
-class UnfocusableTextCtrl : public CustomizedTextCtrl
+class CustomizedTextCtrl : public wxTextCtrl
 {
-    public:
-        UnfocusableTextCtrl(wxWindow *parent,
-                            wxWindowID winid,
-                            const wxString &value = wxEmptyString,
-                            const wxPoint &pos = wxDefaultPosition,
-                            const wxSize &size = wxDefaultSize,
-                            long style = 0,
-                            const wxValidator& validator = wxDefaultValidator,
-                            const wxString &name = wxTextCtrlNameStr)
-           : CustomizedTextCtrl(parent, winid, value, pos, size, style, validator, name)
-        {
-        }
-
-        virtual bool AcceptsFocus() const { return false; }
+public:
+    CustomizedTextCtrl(wxWindow *parent,
+                       wxWindowID winid,
+                       long style = 0)
+       : wxTextCtrl(parent, winid, "", wxDefaultPosition, wxDefaultSize, style)
+    {
+        wxTextAttr padding;
+        padding.SetLeftIndent(5);
+        padding.SetRightIndent(5);
+        SetDefaultStyle(padding);
+    }
 };
+
+#endif // !__WXOSX__
 
 
 class AnyTranslatableTextCtrl : public CustomizedTextCtrl
 {
     public:
         AnyTranslatableTextCtrl(wxWindow *parent, wxWindowID winid, int style = 0)
-           : CustomizedTextCtrl(parent, winid, wxEmptyString,
-                                wxDefaultPosition, wxDefaultSize,
-                                wxTE_MULTILINE | wxTE_RICH2 | style)
+           : CustomizedTextCtrl(parent, winid, wxTE_MULTILINE | wxTE_RICH2 | style)
         {
             InitColors();
             Bind(wxEVT_TEXT, [=](wxCommandEvent& e){
@@ -593,6 +590,8 @@ class SourceTextCtrl : public AnyTranslatableTextCtrl
         {
             SetLanguageRTL(false); // English is LTR
         }
+
+        virtual bool AcceptsFocus() const { return false; }
 };
 
 
@@ -669,10 +668,26 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
    EVT_UPDATE_UI(XRCID("menu_references"), PoeditFrame::OnSingleSelectionUpdate)
    EVT_UPDATE_UI_RANGE(ID_BOOKMARK_SET, ID_BOOKMARK_SET + 9, PoeditFrame::OnSingleSelectionUpdate)
 
-   EVT_UPDATE_UI(XRCID("menu_fuzzy"), PoeditFrame::OnSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("go_done_and_next"),   PoeditFrame::OnSingleSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("go_prev"),            PoeditFrame::OnSingleSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("go_next"),            PoeditFrame::OnSingleSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("go_prev_page"),       PoeditFrame::OnSingleSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("go_next_page"),       PoeditFrame::OnSingleSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("go_prev_unfinished"), PoeditFrame::OnSingleSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("go_next_unfinished"), PoeditFrame::OnSingleSelectionUpdate)
+
+   EVT_UPDATE_UI(XRCID("menu_fuzzy"),         PoeditFrame::OnSelectionUpdate)
    EVT_UPDATE_UI(XRCID("menu_copy_from_src"), PoeditFrame::OnSelectionUpdate)
-   EVT_UPDATE_UI(XRCID("menu_clear"), PoeditFrame::OnSelectionUpdate)
-   EVT_UPDATE_UI(XRCID("menu_comment"), PoeditFrame::OnSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("menu_clear"),         PoeditFrame::OnSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("menu_comment"),       PoeditFrame::OnSelectionUpdate)
+
+   // handling of open files:
+   EVT_UPDATE_UI(wxID_SAVE,                   PoeditFrame::OnHasCatalogUpdate)
+   EVT_UPDATE_UI(wxID_SAVEAS,                 PoeditFrame::OnHasCatalogUpdate)
+   EVT_UPDATE_UI(XRCID("menu_statistics"),    PoeditFrame::OnHasCatalogUpdate)
+   EVT_UPDATE_UI(XRCID("menu_validate"),      PoeditFrame::OnIsEditableUpdate)
+   EVT_UPDATE_UI(XRCID("menu_update"),        PoeditFrame::OnUpdateFromSourcesUpdate)
+   EVT_UPDATE_UI(XRCID("menu_update_from_pot"), PoeditFrame::OnHasCatalogUpdate)
 
 #if defined(__WXMSW__) || defined(__WXGTK__)
    EVT_MENU(wxID_UNDO,      PoeditFrame::OnTextEditingCommand)
@@ -689,7 +704,10 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
    EVT_UPDATE_UI(wxID_PASTE,     PoeditFrame::OnTextEditingCommandUpdate)
    EVT_UPDATE_UI(wxID_DELETE,    PoeditFrame::OnTextEditingCommandUpdate)
    EVT_UPDATE_UI(wxID_SELECTALL, PoeditFrame::OnTextEditingCommandUpdate)
-  #if 0
+#endif
+END_EVENT_TABLE()
+
+#if 0
     // These translations are provided by wxWidgets. Force the strings here,
     // even though unused, because Poedit is translated into many more languages
     // than wx is.
@@ -700,9 +718,20 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
     _("&Paste"),              _("Paste")
     _("&Delete"),             _("Delete")
     _("Select &All"),         _("Select All")
-  #endif
+
+    /// TRANSLATORS: Keyboard shortcut for display in Windows menus
+    _("Ctrl+"),
+    /// TRANSLATORS: Keyboard shortcut for display in Windows menus
+    _("Alt+"),
+    /// TRANSLATORS: Keyboard shortcut for display in Windows menus
+    _("Shift+"),
+    /// TRANSLATORS: Keyboard shortcut for display in Windows menus
+    _("Enter"),
+    /// TRANSLATORS: Keyboard shortcut for display in Windows menus
+    _("Up"),
+    /// TRANSLATORS: Keyboard shortcut for display in Windows menus
+    _("Down"),
 #endif
-END_EVENT_TABLE()
 
 
 
@@ -801,9 +830,7 @@ PoeditFrame::PoeditFrame() :
     if (MenuBar)
     {
 #ifndef __WXOSX__
-        wxString menuName(_("&File"));
-        menuName.Replace(wxT("&"), wxEmptyString);
-        m_menuForHistory = MenuBar->GetMenu(MenuBar->FindMenu(menuName));
+        m_menuForHistory = MenuBar->GetMenu(MenuBar->FindMenu(_("&File")));
         FileHistory().UseMenu(m_menuForHistory);
         FileHistory().AddFilesToMenu(m_menuForHistory);
 #endif
@@ -820,7 +847,7 @@ PoeditFrame::PoeditFrame() :
         return;
     }
 
-    wxXmlResource::Get()->LoadToolBar(this, "toolbar");
+    m_toolbar = MainToolbar::Create(this);
 
     GetMenuBar()->Check(XRCID("menu_ids"), m_displayIDs);
 
@@ -1128,6 +1155,11 @@ void PoeditFrame::SetAccelerators()
         { wxACCEL_CTRL, WXK_PAGEDOWN,           XRCID("go_next_page") },
         { wxACCEL_CTRL, WXK_NUMPAD_PAGEDOWN,    XRCID("go_next_page") },
 
+        { wxACCEL_CTRL | wxACCEL_SHIFT, WXK_UP,             XRCID("go_prev_unfinished") },
+        { wxACCEL_CTRL | wxACCEL_SHIFT, WXK_NUMPAD_UP,      XRCID("go_prev_unfinished") },
+        { wxACCEL_CTRL | wxACCEL_SHIFT, WXK_DOWN,           XRCID("go_next_unfinished") },
+        { wxACCEL_CTRL | wxACCEL_SHIFT, WXK_NUMPAD_DOWN,    XRCID("go_next_unfinished") },
+
         { wxACCEL_CTRL, WXK_UP,                 XRCID("go_prev") },
         { wxACCEL_CTRL, WXK_NUMPAD_UP,          XRCID("go_prev") },
         { wxACCEL_CTRL, WXK_DOWN,               XRCID("go_next") },
@@ -1193,11 +1225,11 @@ void PoeditFrame::InitSpellchecker()
                 // TRANSLATORS: %s is language name in its basic form (as you
                 // would see e.g. in a list of supported languages). You may need
                 // to rephrase it, e.g. to an equivalent of "for language %s".
-                _("Spellchecker dictionary for %s isn't available, you need to install it."),
-                lang.DisplayName()
+                _(L"Spellchecking is disabled, because the dictionary for %s isn’t installed."),
+                lang.LanguageDisplayName()
             )
         );
-        msg.AddAction(_("Learn more"), std::bind(ShowSpellcheckerHelp));
+        msg.AddAction(_("Install"), []{ ShowSpellcheckerHelp(); });
         msg.AddDontShowAgain();
         m_attentionBar->ShowMessage(msg);
     }
@@ -1431,8 +1463,8 @@ wxString PoeditFrame::GetSaveAsFilename(Catalog *cat, const wxString& current)
     }
 
     name = wxFileSelector(_("Save as..."), path, name, wxEmptyString,
-	                      wxString::Format("%s (*.po)|*.po|%s (*.*)|*.*",
-                              _("PO Translation Files"), _("All Files")),
+	                      wxString::Format("%s (*.po)|*.po",
+                              _("PO Translation Files")),
                           wxFD_SAVE | wxFD_OVERWRITE_PROMPT, this);
     if (!name.empty())
     {
@@ -1560,9 +1592,10 @@ void PoeditFrame::NewFromPOT()
     if (!pot_file.empty())
     {
         wxConfig::Get()->Write("last_file_path", wxPathOnly(pot_file));
+        UpdateResultReason reason;
         ok = catalog->UpdateFromPOT(pot_file,
                                     /*summary=*/false,
-                                    /*cancelledByUser=*/nullptr,
+                                    reason,
                                     /*replace_header=*/true);
     }
     if (!ok)
@@ -1761,24 +1794,52 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
     if (m_list)
         locker.reset(new wxWindowUpdateLocker(m_list));
 
-    ProgressInfo progress(this, _("Updating catalog"));
 
-    bool cancelledByUser;
+    UpdateResultReason reason = UpdateResultReason::Unspecified;
     bool succ;
-    if (pot_file.empty())
-        succ = m_catalog->Update(&progress, true, &cancelledByUser);
-    else
-        succ = m_catalog->UpdateFromPOT(pot_file, true, &cancelledByUser);
 
-    EnsureContentView(Content::PO);
-    m_list->CatalogChanged(m_catalog);
+    {
+        ProgressInfo progress(this, _("Updating catalog"));
+        if (pot_file.empty())
+            succ = m_catalog->Update(&progress, true, reason);
+        else
+            succ = m_catalog->UpdateFromPOT(pot_file, true, reason);
+
+        EnsureContentView(Content::PO);
+        if (m_sidebar)
+            m_sidebar->ResetCatalog();
+        m_list->CatalogChanged(m_catalog);
+    }
 
     m_modified = succ || m_modified;
-    if (!succ && !cancelledByUser)
+
+    if (!succ)
     {
-        wxLogWarning(_("Entries in the catalog are probably incorrect."));
-        wxLogError(
-           _("Updating the catalog failed. Click on 'Details >>' for details."));
+        switch (reason)
+        {
+            case UpdateResultReason::NoSourcesFound:
+            {
+                wxWindowPtr<wxMessageDialog> dlg(new wxMessageDialog
+                    (
+                        this,
+                        _("Source code not available."),
+                        _("Updating failed"),
+                        wxOK | wxICON_ERROR
+                    ));
+                dlg->SetExtendedMessage(_(L"Translations couldn’t be updated from the source code, because no code was found in the location specified in the catalog’s Properties."));
+                dlg->ShowWindowModalThenDo([dlg](int){});
+                break;
+            }
+            case UpdateResultReason::Unspecified:
+            {
+                wxLogWarning(_("Entries in the catalog are probably incorrect."));
+                wxLogError(
+                   _("Updating the catalog failed. Click on 'Details >>' for details."));
+                break;
+            }
+            case UpdateResultReason::CancelledByUser:
+                break;
+        }
     }
 
     return succ;
@@ -2047,18 +2108,19 @@ void PoeditFrame::ShowReference(int num)
 
 void PoeditFrame::OnFuzzyFlag(wxCommandEvent& event)
 {
-    if (event.GetEventObject() == GetToolBar())
+    bool setFuzzy = false;
+
+    auto source = event.GetEventObject();
+    if (source && dynamic_cast<wxMenu*>(source))
     {
-        GetMenuBar()->Check(XRCID("menu_fuzzy"),
-                            GetToolBar()->GetToolState(XRCID("menu_fuzzy")));
+        setFuzzy = GetMenuBar()->IsChecked(XRCID("menu_fuzzy"));
+        m_toolbar->SetFuzzy(setFuzzy);
     }
     else
     {
-        GetToolBar()->ToggleTool(XRCID("menu_fuzzy"),
-                                 GetMenuBar()->IsChecked(XRCID("menu_fuzzy")));
+        setFuzzy = m_toolbar->IsFuzzy();
+        GetMenuBar()->Check(XRCID("menu_fuzzy"), setFuzzy);
     }
-
-    bool setFuzzy = !GetCurrentItem()->IsFuzzy();
 
     bool modified = false;
 
@@ -2253,7 +2315,7 @@ void PoeditFrame::UpdateFromTextCtrl()
         return;
 
     wxString key = entry->GetString();
-    bool newfuzzy = GetToolBar()->GetToolState(XRCID("menu_fuzzy"));
+    bool newfuzzy = m_toolbar->IsFuzzy();
 
     const bool oldIsTranslated = entry->IsTranslated();
     bool allTranslated = true; // will be updated later
@@ -2302,8 +2364,7 @@ void PoeditFrame::UpdateFromTextCtrl()
     if (newfuzzy == entry->IsFuzzy() && !m_dontAutoclearFuzzyStatus)
         newfuzzy = false;
 
-
-    GetToolBar()->ToggleTool(XRCID("menu_fuzzy"), newfuzzy);
+    m_toolbar->SetFuzzy(newfuzzy);
     GetMenuBar()->Check(XRCID("menu_fuzzy"), newfuzzy);
 
     if ( entry->IsFuzzy() != newfuzzy )
@@ -2370,8 +2431,8 @@ void PoeditFrame::UpdateToTextCtrl()
     t_c = entry->GetComment();
     t_c.Replace("\\n", "\\n\n");
 
-    for (unsigned i=0; i < entry->GetAutoComments().GetCount(); i++)
-      t_ac += entry->GetAutoComments()[i] + "\n";
+    for (unsigned i=0; i < entry->GetExtractedComments().GetCount(); i++)
+      t_ac += entry->GetExtractedComments()[i] + "\n";
     t_ac.Replace("\\n", "\\n\n");
 
     // remove "# " in front of every comment line
@@ -2421,7 +2482,7 @@ void PoeditFrame::UpdateToTextCtrl()
     // by default, editing fuzzy item unfuzzies it
     m_dontAutoclearFuzzyStatus = false;
 
-    GetToolBar()->ToggleTool(XRCID("menu_fuzzy"), entry->IsFuzzy());
+    m_toolbar->SetFuzzy(entry->IsFuzzy());
     GetMenuBar()->Check(XRCID("menu_fuzzy"), entry->IsFuzzy());
 
     ShowPluralFormUI(entry->HasPlural());
@@ -2501,8 +2562,8 @@ void PoeditFrame::ReadCatalog(Catalog *cat)
                 AttentionMessage::Info,
                 _("You should set your email address in Preferences so that it can be used for Last-Translator header in GNU gettext files.")
             );
-        msg.AddAction(_("Set email"),
-                      std::bind(&PoeditApp::EditPreferences, &wxGetApp()));
+        msg.AddAction(MSW_OR_OTHER(_("Set email"), _("Set Email")),
+                      []{ wxGetApp().EditPreferences(); });
         msg.AddDontShowAgain();
 
         m_attentionBar->ShowMessage(msg);
@@ -2516,8 +2577,8 @@ void PoeditFrame::ReadCatalog(Catalog *cat)
                 AttentionMessage::Error,
                 _("Translation's project name isn't set.")
             );
-        msg.AddAction(_("Set name"),
-                      std::bind(&PoeditFrame::EditCatalogProperties, this));
+        msg.AddAction(MSW_OR_OTHER(_("Set name"), _("Set Name")),
+                      [=]{ EditCatalogProperties(); });
 
         m_attentionBar->ShowMessage(msg);
     }
@@ -2531,8 +2592,8 @@ void PoeditFrame::ReadCatalog(Catalog *cat)
                 AttentionMessage::Error,
                 _("Language of the translation isn't set.")
             );
-        msg.AddAction(_("Set language"),
-                      std::bind(&PoeditFrame::EditCatalogProperties, this));
+        msg.AddAction(MSW_OR_OTHER(_("Set language"), _("Set Language")),
+                      [=]{ EditCatalogProperties(); });
 
         m_attentionBar->ShowMessage(msg);
     }
@@ -2578,8 +2639,8 @@ void PoeditFrame::ReadCatalog(Catalog *cat)
                     AttentionMessage::Error,
                     err
                 );
-            msg.AddAction(_("Fix the header"),
-                          std::bind(&PoeditFrame::EditCatalogProperties, this));
+            msg.AddAction(MSW_OR_OTHER(_("Fix the header"), _("Fix the Header")),
+                          [=]{ EditCatalogProperties(); });
 
             m_attentionBar->ShowMessage(msg);
         }
@@ -2620,8 +2681,7 @@ void PoeditFrame::ReadCatalog(Catalog *cat)
                                     language.DisplayName()
                                 )
                             );
-                        msg.AddAction(_("Review"),
-                                      std::bind(&PoeditFrame::EditCatalogProperties, this));
+                        msg.AddAction(_("Review"), [=]{ EditCatalogProperties(); });
                         msg.AddDontShowAgain();
 
                         m_attentionBar->ShowMessage(msg);
@@ -2690,44 +2750,27 @@ void PoeditFrame::RefreshControls(int flags)
 
 void PoeditFrame::UpdateStatusBar()
 {
-    int all, fuzzy, untranslated, badtokens, unfinished;
     if (m_catalog)
     {
-        wxString txt;
+        int all, fuzzy, untranslated, errors, unfinished;
+        m_catalog->GetStatistics(&all, &fuzzy, &errors, &untranslated, &unfinished);
 
-        m_catalog->GetStatistics(&all, &fuzzy, &badtokens, &untranslated, &unfinished);
+        int percent = (all == 0) ? 0 : (100 * (all - unfinished) / all);
 
-        int percent = (all == 0 ) ? 0 : (100 * (all - unfinished) / all);
-
-        wxString details;
-        if ( fuzzy > 0 )
+        wxString text;
+        text.Printf(_("Translated: %d of %d (%d %%)"), all - unfinished, all, percent);
+        if (unfinished > 0)
         {
-            details += wxString::Format(wxPLURAL("%i fuzzy", "%i fuzzy", fuzzy), fuzzy);
+            text += L"  •  ";
+            text += wxString::Format(_("Remains: %d"), unfinished);
         }
-        if ( badtokens > 0 )
+        if (errors > 0)
         {
-            if ( !details.empty() )
-                details += ", ";
-            details += wxString::Format(wxPLURAL("%i bad token", "%i bad tokens", badtokens), badtokens);
-        }
-        if ( untranslated > 0 )
-        {
-            if ( !details.empty() )
-                details += ", ";
-            details += wxString::Format(wxPLURAL("%i not translated", "%i not translated", untranslated), untranslated);
-        }
-        if ( details.empty() )
-        {
-            txt.Printf(wxPLURAL("%i %% translated, %i string", "%i %% translated, %i strings", all),
-                       percent, all);
-        }
-        else
-        {
-            txt.Printf(wxPLURAL("%i %% translated, %i string (%s)", "%i %% translated, %i strings (%s)", all),
-                       percent, all, details.c_str());
+            text += L"  •  ";
+            text += wxString::Format(wxPLURAL("%d error", "%d errors", errors), errors);
         }
 
-        GetStatusBar()->SetStatusText(txt);
+        GetStatusBar()->SetStatusText(text);
     }
 }
 
@@ -2790,26 +2833,13 @@ void PoeditFrame::UpdateTitle()
 void PoeditFrame::UpdateMenu()
 {
     wxMenuBar *menubar = GetMenuBar();
-    wxToolBar *toolbar = GetToolBar();
 
     const bool hasCatalog = m_catalog != nullptr;
     const bool editable = hasCatalog && !m_catalog->empty();
 
-    menubar->Enable(wxID_SAVE, hasCatalog);
-    menubar->Enable(wxID_SAVEAS, hasCatalog);
     menubar->Enable(XRCID("menu_compile_mo"), hasCatalog);
     menubar->Enable(XRCID("menu_export"), hasCatalog);
 
-#ifndef __WXOSX__
-    toolbar->EnableTool(wxID_SAVE, hasCatalog);
-#endif
-    toolbar->EnableTool(XRCID("menu_update"), editable);
-    toolbar->EnableTool(XRCID("menu_validate"), editable);
-    toolbar->EnableTool(XRCID("menu_fuzzy"), editable);
-
-    menubar->Enable(XRCID("menu_update"), editable);
-    menubar->Enable(XRCID("menu_validate"), editable);
-    menubar->Enable(XRCID("menu_fuzzy"), editable);
     menubar->Enable(XRCID("menu_comment"), editable);
     menubar->Enable(XRCID("menu_copy_from_src"), editable);
     menubar->Enable(XRCID("menu_clear"), editable);
@@ -2818,8 +2848,6 @@ void PoeditFrame::UpdateMenu()
     menubar->Enable(XRCID("menu_find_next"), editable);
     menubar->Enable(XRCID("menu_find_prev"), editable);
 
-    menubar->Enable(XRCID("menu_update"), editable);
-    menubar->Enable(XRCID("menu_update_from_pot"), hasCatalog);
     menubar->Enable(XRCID("menu_auto_translate"), editable);
     menubar->Enable(XRCID("menu_purge_deleted"), editable);
     menubar->Enable(XRCID("menu_validate"), editable);
@@ -2840,11 +2868,6 @@ void PoeditFrame::UpdateMenu()
 
     menubar->Enable(XRCID("menu_purge_deleted"),
                     editable && m_catalog->HasDeletedItems());
-
-    const bool doupdate = hasCatalog &&
-                          !m_catalog->Header().SearchPaths.empty();
-    toolbar->EnableTool(XRCID("menu_update"), doupdate);
-    menubar->Enable(XRCID("menu_update"), doupdate);
 
 #ifdef __WXGTK__
     if (!editable)
@@ -3038,42 +3061,107 @@ void PoeditFrame::OnSuggestion(wxCommandEvent& event)
 
 void PoeditFrame::OnAutoTranslateAll(wxCommandEvent&)
 {
-    int matches = 0;
-    if (!AutoTranslateCatalog(&matches))
-        return;
+    wxWindowPtr<wxDialog> dlg(new wxDialog(this, wxID_ANY, _("Fill missing translations from TM")));
+    auto topsizer = new wxBoxSizer(wxVERTICAL);
+    auto sizer = new wxBoxSizer(wxVERTICAL);
+    auto onlyExact = new wxCheckBox(dlg.get(), wxID_ANY, _("Only fill in exact matches"));
+    auto onlyExactE = new ExplanationLabel(dlg.get(), _("By default, inaccurate results are filled in as well and marked as fuzzy. Check this option to only include accurate matches."));
+    auto noFuzzy = new wxCheckBox(dlg.get(), wxID_ANY, _(L"Don’t mark exact matches as fuzzy"));
+    auto noFuzzyE = new ExplanationLabel(dlg.get(), _("Only enable if you trust the quality of your TM. By default, all matches from the TM are marked as fuzzy and should be reviewed."));
 
-    wxString msg, details;
+#ifdef __WXOSX__
+    sizer->AddSpacer(5);
+    sizer->Add(new HeadingLabel(dlg.get(), _("Fill missing translations from TM")), wxSizerFlags().Expand().DoubleBorder(wxBOTTOM));
+#endif
+    sizer->Add(onlyExact, wxSizerFlags().Border(wxTOP));
+    sizer->Add(onlyExactE, wxSizerFlags().Expand().Border(wxLEFT, ExplanationLabel::CHECKBOX_INDENT));
+    sizer->Add(noFuzzy, wxSizerFlags().DoubleBorder(wxTOP));
+    sizer->Add(noFuzzyE, wxSizerFlags().Expand().Border(wxLEFT, ExplanationLabel::CHECKBOX_INDENT));
+    topsizer->Add(sizer, wxSizerFlags(1).Expand().DoubleBorder());
 
-    if (matches)
+    auto buttons = dlg->CreateButtonSizer(wxOK | wxCANCEL);
+    auto ok = static_cast<wxButton*>(dlg->FindWindow(wxID_OK));
+    ok->SetLabel(_("Fill"));
+    ok->SetDefault();
+#ifdef __WXOSX__
+    topsizer->Add(buttons, wxSizerFlags().Expand());
+#else
+    topsizer->Add(buttons, wxSizerFlags().Expand().Border());
+    topsizer->AddSpacer(5);
+#endif
+
+    dlg->SetSizer(topsizer);
+    dlg->SetMinSize(wxSize(400, -1));
+    dlg->Layout();
+    dlg->Fit();
+    dlg->CenterOnParent();
+
+    dlg->ShowWindowModalThenDo([this,onlyExact,noFuzzy,dlg](int retcode)
     {
-        msg = wxString::Format(wxPLURAL("%d entry was filled from the translation memory.",
-                                        "%d entries were filled from the translation memory.",
-                                        matches), matches);
-        details = _("The translations were marked as fuzzy, because they may be inaccurate. You should review them for correctness.");
-    }
-    else
-    {
-        msg = _("No entries could be filled from the translation memory.");
-        details = _(L"The TM doesn’t contain any strings similar to the content of this file. It is only effective for semi-automatic translations after Poedit learns enough from files that you translated manually.");
-    }
+        if (retcode != wxID_OK)
+            return;
 
-    wxWindowPtr<wxMessageDialog> dlg(
-        new wxMessageDialog
-            (
-                this,
-                msg,
-                _("Filling missing translations from TM..."),
-                wxOK | wxICON_INFORMATION
-            )
-    );
-    dlg->SetExtendedMessage(details);
-    dlg->ShowWindowModalThenDo([dlg](int){});
+        int matches = 0;
+
+        int flags = 0;
+        if (onlyExact->GetValue())
+            flags |= AutoTranslate_OnlyExact;
+        if (noFuzzy->GetValue())
+            flags |= AutoTranslate_ExactNotFuzzy;
+
+        if (m_list->HasMultipleSelection())
+        {
+            if (!AutoTranslateCatalog(&matches, m_list->GetSelectedCatalogItems(), flags))
+                return;
+        }
+        else
+        {
+            if (!AutoTranslateCatalog(&matches, flags))
+                return;
+        }
+
+        wxString msg, details;
+
+        if (matches)
+        {
+            msg = wxString::Format(wxPLURAL("%d entry was filled from the translation memory.",
+                                            "%d entries were filled from the translation memory.",
+                                            matches), matches);
+            details = _("The translations were marked as fuzzy, because they may be inaccurate. You should review them for correctness.");
+        }
+        else
+        {
+            msg = _("No entries could be filled from the translation memory.");
+            details = _(L"The TM doesn’t contain any strings similar to the content of this file. It is only effective for semi-automatic translations after Poedit learns enough from files that you translated manually.");
+        }
+
+        wxWindowPtr<wxMessageDialog> resultsDlg(
+            new wxMessageDialog
+                (
+                    this,
+                    msg,
+                    _("Fill missing translations from TM"),
+                    wxOK | wxICON_INFORMATION
+                )
+        );
+        resultsDlg->SetExtendedMessage(details);
+        resultsDlg->ShowWindowModalThenDo([resultsDlg](int){});
+    });
 }
 
-bool PoeditFrame::AutoTranslateCatalog(int *matchesCount)
+bool PoeditFrame::AutoTranslateCatalog(int *matchesCount, int flags)
+{
+    return AutoTranslateCatalog(matchesCount, boost::counting_range(0, (int)m_catalog->GetCount()), flags);
+}
+
+template<typename T>
+bool PoeditFrame::AutoTranslateCatalog(int *matchesCount, const T& range, int flags)
 {
     if (matchesCount)
         *matchesCount = 0;
+
+    if (range.empty())
+        return false;
 
     if (!wxConfig::Get()->ReadBool("use_tm", true))
         return false;
@@ -3081,49 +3169,50 @@ bool PoeditFrame::AutoTranslateCatalog(int *matchesCount)
     wxBusyCursor bcur;
 
     TranslationMemory& tm = TranslationMemory::Get();
-    std::string langcode(m_catalog->GetLanguage().Code());
+    auto lang = m_catalog->GetLanguage();
 
-    int cnt = m_catalog->GetCount();
-    if (cnt)
+    int matches = 0;
+    wxString msg;
+
+    // TODO: make this window-modal
+    ProgressInfo progress(this, _("Translating"));
+    progress.UpdateMessage(_("Filling missing translations from TM..."));
+    progress.SetGaugeMax((int)range.size());
+    for (int i: range)
     {
-        int matches = 0;
-        wxString msg;
+        progress.UpdateGauge();
 
-        // TODO: make this window-modal
-        ProgressInfo progress(this, _("Translating"));
-        progress.UpdateMessage(_("Filling missing translations from TM..."));
-        progress.SetGaugeMax(cnt);
-        for (int i = 0; i < cnt; i++)
+        CatalogItem& dt = (*m_catalog)[i];
+        if (dt.HasPlural())
+            continue; // can't handle yet (TODO?)
+        if (dt.IsFuzzy() || !dt.IsTranslated())
         {
-            progress.UpdateGauge();
+            auto results = tm.Search(lang, dt.GetString().ToStdWstring());
+            if (results.empty())
+                continue;
 
-            CatalogItem& dt = (*m_catalog)[i];
-            if (dt.HasPlural())
-                continue; // can't handle yet (TODO?)
-            if (dt.IsFuzzy() || !dt.IsTranslated())
+            auto& res = results.front();
+            if ((flags & AutoTranslate_OnlyExact) && !res.IsExactMatch())
+                continue;
+
+            dt.SetTranslation(res.text);
+            dt.SetAutomatic(true);
+            dt.SetFuzzy(!res.IsExactMatch() || (flags & AutoTranslate_ExactNotFuzzy) == 0);
+
+            matches++;
+            msg.Printf(wxPLURAL("Translated %u string", "Translated %u strings", matches), matches);
+            progress.UpdateMessage(msg);
+
+            if (m_modified == false)
             {
-                auto results = tm.Search(langcode, dt.GetString().ToStdWstring(), 1);
-                if (!results.empty())
-                {
-                    dt.SetTranslation(results[0].text);
-                    dt.SetAutomatic(true);
-                    dt.SetFuzzy(true);
-                    matches++;
-                    msg.Printf(wxPLURAL("Translated %u string", "Translated %u strings", matches), matches);
-                    progress.UpdateMessage(msg);
-
-                    if (m_modified == false)
-                    {
-                        m_modified = true;
-                        UpdateTitle();
-                    }
-                }
+                m_modified = true;
+                UpdateTitle();
             }
         }
-
-        if (matchesCount)
-            *matchesCount = matches;
     }
+
+    if (matchesCount)
+        *matchesCount = matches;
 
     RefreshControls();
 
@@ -3145,21 +3234,24 @@ wxMenu *PoeditFrame::GetPopupMenu(int item)
                  #else
                  wxString(_("Copy from Source Text"))
                  #endif
-                   + "\tCtrl+B");
+                   + "\t" + _("Ctrl+") + "B");
     menu->Append(XRCID("menu_clear"),
                  #ifdef __WXMSW__
                  wxString(_("Clear translation"))
                  #else
                  wxString(_("Clear Translation"))
                  #endif
-                   + "\tCtrl+K");
+                   + "\t" + _("Ctrl+") + "K");
    menu->Append(XRCID("menu_comment"),
                  #ifdef __WXMSW__
                  wxString(_("Edit comment"))
                  #else
                  wxString(_("Edit Comment"))
                  #endif
-                   + "\tCtrl+M");
+                 #ifndef __WXOSX__
+                   + "\t" + _("Ctrl+") + "M"
+                 #endif
+                 );
 
     if ( !refs.empty() )
     {
@@ -3444,8 +3536,10 @@ void PoeditFrame::AddBookmarksMenu(wxMenu *parent)
     #define BK_ACCEL_SET  "Ctrl+rawctrl+%i"
     #define BK_ACCEL_GO   "Ctrl+Alt+%i"
 #else
-    #define BK_ACCEL_SET  "Alt+%i"
-    #define BK_ACCEL_GO   "Ctrl+Alt+%i"
+    // TRANSLATORS: This is the key shortcut used in menus on Windows, some languages call them differently
+    #define BK_ACCEL_SET  _("Alt+") + "%i"
+    // TRANSLATORS: This is the key shortcut used in menus on Windows, some languages call them differently
+    #define BK_ACCEL_GO   _("Ctrl+") + _("Alt+") + "%i"
 #endif
 
 #ifdef __WXMSW__
@@ -3590,12 +3684,27 @@ void PoeditFrame::OnUpdateShowHideSidebar(wxUpdateUIEvent& event)
 
 void PoeditFrame::OnSelectionUpdate(wxUpdateUIEvent& event)
 {
-    event.Enable(m_list && m_list->HasSelection());
+    event.Enable(m_catalog && m_list && m_list->HasSelection());
 }
 
 void PoeditFrame::OnSingleSelectionUpdate(wxUpdateUIEvent& event)
 {
-    event.Enable(m_list && m_list->HasSingleSelection());
+    event.Enable(m_catalog && m_list && m_list->HasSingleSelection());
+}
+
+void PoeditFrame::OnHasCatalogUpdate(wxUpdateUIEvent& event)
+{
+    event.Enable(m_catalog);
+}
+
+void PoeditFrame::OnIsEditableUpdate(wxUpdateUIEvent& event)
+{
+    event.Enable(m_catalog && !m_catalog->empty());
+}
+
+void PoeditFrame::OnUpdateFromSourcesUpdate(wxUpdateUIEvent& event)
+{
+    event.Enable(m_catalog && !m_catalog->Header().SearchPaths.empty());
 }
 
 #if defined(__WXMSW__) || defined(__WXGTK__)
@@ -3705,6 +3814,22 @@ void PoeditFrame::OnNextUnfinished(wxCommandEvent&)
 
 void PoeditFrame::OnDoneAndNext(wxCommandEvent&)
 {
+    auto item = GetCurrentItem();
+
+    // If the user is "done" with an item, it should be in its final approved state:
+    if (item->IsFuzzy())
+    {
+        item->SetFuzzy(false);
+        item->SetAutomatic(false);
+        item->SetModified(true);
+        if (!IsModified())
+        {
+            m_modified = true;
+            UpdateTitle();
+            UpdateStatusBar();
+        }
+    }
+
     // like "next unfinished", but wraps
     Navigate(+1, Pred_UnfinishedItem, /*wrap=*/true);
 }

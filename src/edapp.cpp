@@ -405,13 +405,28 @@ void PoeditApp::SetDefaultExtractors(wxConfigBase *cfg)
         const char *name;
         const char *exts;
     } s_gettextLangs[] = {
-        { "C/C++",    "*.c;*.cpp;*.h;*.hpp;*.cc;*.C;*.cxx;*.hxx" },
-        { "C#",       "*.cs" },
-        { "Java",     "*.java" },
-        { "Perl",     "*.pl" },
-        { "PHP",      "*.php;*.phtml" },
-        { "Python",   "*.py" },
-        { "TCL",      "*.tcl" },
+        { "C/C++",      "*.c;*.cpp;*.cc;*.C;*.c++;*.cxx;*.h;*.hpp;*.hxx;*.hh" },
+        { "C#",         "*.cs" },
+        { "EmacsLisp",  "*.el" },
+        { "GSettings",  "gschema.xml" },
+        { "Glade",      "*.glade;*.glade2;*.ui" },
+        { "Java",       "*.java" },
+        { "JavaScript", "*.js" },
+        { "Lisp",       "*.lisp" },
+        { "Lua",        "*.lua" },
+        { "ObjectiveC", "*.m" },
+        { "PHP",        "*.php;*.php3;*.php4;*.phtml" },
+        { "Perl",       "*.pl;*.PL;*.pm;*.perl" },
+        { "Python",     "*.py" },
+        { "RST",        "*.rst" },
+        { "Scheme",     "*.scm" },
+        { "Shell",      "*.sh;*.bash" },
+        { "Smalltalk",  "*.st" },
+        { "TCL",        "*.tcl" },
+        { "Vala",       "*.vala" },
+        { "YCP",        "*.ycp" },
+        { "awk",        "*.awk" },
+        { "librep",     "*.jl" },
         { NULL, NULL }
     };
 
@@ -431,7 +446,7 @@ void PoeditApp::SetDefaultExtractors(wxConfigBase *cfg)
         Extractor ex;
         ex.Name = s_gettextLangs[i].name;
         ex.Extensions = s_gettextLangs[i].exts;
-        ex.Command = wxString("xgettext") + langflag + " --add-comments=TRANSLATORS --add-comments=translators: --force-po -o %o %C %K %F";
+        ex.Command = wxString("xgettext") + langflag + " --add-comments=TRANSLATORS: --add-comments=translators: --force-po -o %o %C %K %F";
         ex.KeywordItem = "-k%k";
         ex.FileItem = "%f";
         ex.CharsetItem = "--from-code=%c";
@@ -556,7 +571,16 @@ bool PoeditApp::OnExceptionInMainLoop()
     }
     catch ( std::exception& e )
     {
-        wxLogError(_("Unhandled exception occurred: %s"), e.what());
+        const char *msg = e.what();
+        // try interpreting as UTF-8 first as the most likely one (from external sources)
+        wxString s = wxString::FromUTF8(msg);
+        if (s.empty())
+        {
+            s = wxString(msg);
+            if (s.empty()) // not in current locale either, fall back to Latin1
+                s = wxString(msg, wxConvISO8859_1);
+        }
+        wxLogError(_("Unhandled exception occurred: %s"), s);
     }
 #ifdef __WXOSX__
     catch ( NSException *e )
@@ -795,7 +819,7 @@ void PoeditApp::TweakOSXMenuBar(wxMenuBar *bar)
     Sparkle_AddMenuItem(apple->GetHMenu(), _("Check for Updates...").utf8_str());
 #endif
 
-    int editMenuPos = bar->FindMenu(_("Edit"));
+    int editMenuPos = bar->FindMenu(_("&Edit"));
     if (editMenuPos == wxNOT_FOUND)
         editMenuPos = 1;
     wxMenu *edit = bar->GetMenu(editMenuPos);
@@ -868,7 +892,7 @@ void PoeditApp::TweakOSXMenuBar(wxMenuBar *bar)
     AddNativeItem(speech, -1, _("Stop Speaking"), @selector(stopSpeaking:), @"");
     [editNS setSubmenu:speech forItem:item];
 
-    int viewMenuPos = bar->FindMenu(_("View"));
+    int viewMenuPos = bar->FindMenu(_("&View"));
     if (viewMenuPos != wxNOT_FOUND)
     {
         NSMenu *viewNS = bar->GetMenu(viewMenuPos)->GetHMenu();
@@ -988,14 +1012,14 @@ void PoeditApp::AssociateFileTypeIfNeeded()
     auto poIcon = wxStandardPaths::Get().GetResourcesDir() + "\\Resources\\poedit-translation-generic.ico";
     wxRegKey key1(wxRegKey::HKCU, "Software\\Classes\\.po");
     key1.Create();
-    key1.SetValue("", "GettextFile");
-    wxRegKey key2(wxRegKey::HKCU, "Software\\Classes\\GettextFile");
+    key1.SetValue("", "Poedit.PO");
+    wxRegKey key2(wxRegKey::HKCU, "Software\\Classes\\Poedit.PO");
     key2.Create();
-    key2.SetValue("", _("PO Translation File"));
-    wxRegKey key3(wxRegKey::HKCU, "Software\\Classes\\GettextFile\\Shell\\Open\\Command");
+    key2.SetValue("", _("PO Translation"));
+    wxRegKey key3(wxRegKey::HKCU, "Software\\Classes\\Poedit.PO\\Shell\\Open\\Command");
     key3.Create();
     key3.SetValue("", poCmd);
-    wxRegKey key4(wxRegKey::HKCU, "Software\\Classes\\GettextFile\\DefaultIcon");
+    wxRegKey key4(wxRegKey::HKCU, "Software\\Classes\\Poedit.PO\\DefaultIcon");
     key4.Create();
     key4.SetValue("", poIcon);
 }

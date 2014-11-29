@@ -25,6 +25,9 @@
 
 #include "attentionbar.h"
 
+#include "utility.h"
+
+#include <wx/checkbox.h>
 #include <wx/sizer.h>
 #include <wx/settings.h>
 #include <wx/artprov.h>
@@ -33,6 +36,8 @@
 #include <wx/statbmp.h>
 #include <wx/config.h>
 #include <wx/dcclient.h>
+
+#include "customcontrols.h"
 
 #ifdef __WXOSX__
 #include "osx_helpers.h"
@@ -55,11 +60,7 @@ AttentionBar::AttentionBar(wxWindow *parent)
     : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize,
               wxTAB_TRAVERSAL | wxBORDER_NONE)
 {
-#ifdef __WXMSW__
-    SetBackgroundColour("#FFF499"); // match Visual Studio 2012+'s aesthetics
-#endif
 #ifdef __WXOSX__
-    SetBackgroundColour("#FCDE59");
     SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
 
@@ -68,10 +69,12 @@ AttentionBar::AttentionBar(wxWindow *parent)
 #endif
     m_label = new wxStaticText(this, wxID_ANY, "");
 
-    m_explanation = new wxStaticText(this, wxID_ANY, "");
+    m_explanation = new AutoWrappingText(this, "");
     m_explanation->SetForegroundColour(GetBackgroundColour().ChangeLightness(40));
 
     m_buttons = new wxBoxSizer(wxHORIZONTAL);
+
+    m_checkbox = new wxCheckBox(this, wxID_ANY, "");
 
     wxButton *btnClose =
             new wxBitmapButton
@@ -102,10 +105,15 @@ AttentionBar::AttentionBar(wxWindow *parent)
 
     auto labelSizer = new wxBoxSizer(wxVERTICAL);
     labelSizer->Add(m_label, wxSizerFlags().Expand());
-    labelSizer->Add(m_explanation, wxSizerFlags().Expand());
+    labelSizer->Add(m_explanation, wxSizerFlags().Expand().Border(wxTOP|wxRIGHT, 4));
     sizer->Add(labelSizer, wxSizerFlags(1).Center().DoubleBorder(wxALL));
+    sizer->AddSpacer(20);
     sizer->Add(m_buttons, wxSizerFlags().Center().Border(wxALL, SMALL_BORDER));
+    sizer->Add(m_checkbox, wxSizerFlags().Center().Border(wxRIGHT, BUTTONS_SPACE));
     sizer->Add(btnClose, wxSizerFlags().Center().Border(wxALL, SMALL_BORDER));
+#ifdef __WXMSW__
+    sizer->AddSpacer(4);
+#endif
 
     SetSizer(sizer);
 
@@ -151,6 +159,27 @@ void AttentionBar::ShowMessage(const AttentionMessage& msg)
             break;
     }
 #else
+
+    switch ( msg.m_kind )
+    {
+        case AttentionMessage::Question:
+            SetBackgroundColour("#ABE887");
+            break;
+        default:
+    #ifdef __WXMSW__
+            SetBackgroundColour("#FFF499"); // match Visual Studio 2012+'s aesthetics
+    #else
+            SetBackgroundColour("#FCDE59");
+    #endif
+            break;
+    }
+
+#ifdef __WXMSW__
+    auto bg = GetBackgroundColour();
+    for (auto w : GetChildren())
+        w->SetBackgroundColour(bg);
+#endif
+
     wxString iconName;
     switch ( msg.m_kind )
     {
@@ -171,8 +200,10 @@ void AttentionBar::ShowMessage(const AttentionMessage& msg)
 #endif
 
     m_label->SetLabelText(msg.m_text);
-    m_explanation->SetLabel(msg.m_explanation);
+    m_explanation->SetAndWrapLabel(msg.m_explanation);
     m_explanation->GetContainingSizer()->Show(m_explanation, !msg.m_explanation.empty());
+    m_checkbox->SetLabel(msg.m_checkbox);
+    m_checkbox->GetContainingSizer()->Show(m_checkbox, !msg.m_checkbox.empty());
 
     m_buttons->Clear(true/*delete_windows*/);
     m_actions.clear();
@@ -190,10 +221,10 @@ void AttentionBar::ShowMessage(const AttentionMessage& msg)
 
     // we need to size the control correctly _and_ lay out the controls if this
     // is the first time it's being shown, otherwise we can get garbled look:
-    SetSize(GetParent()->GetClientSize().x,
-            GetBestSize().y);
+    SetSize(GetParent()->GetClientSize().x, GetBestSize().y);
     Layout();
 
+    Refresh();
     Show();
     GetParent()->Layout();
 }
@@ -219,7 +250,9 @@ void AttentionBar::OnAction(wxCommandEvent& event)
     }
 
     // first perform the action...
-    i->second();
+    AttentionMessage::ActionInfo info;
+    info.checkbox = m_checkbox->IsShown() && m_checkbox->IsChecked();
+    i->second(info);
 
     // ...then hide the message
     HideMessage();
@@ -248,6 +281,9 @@ bool AttentionMessage::IsBlacklisted(const wxString& id)
 
 void AttentionMessage::AddDontShowAgain()
 {
-    AddAction(_("Don't show again"),
-              std::bind(&AttentionMessage::AddToBlacklist, m_id));
+    auto id = m_id;
+    AddAction(
+        MSW_OR_OTHER(_("Don't show again"), _("Don't Show Again")), [id]{
+        AddToBlacklist(id);
+    });
 }

@@ -117,6 +117,9 @@
     <ClCompile Include="src\tm\suggestions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\wx\main_toolbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\attentionbar.h">
@@ -236,9 +239,15 @@
     <ClInclude Include="src\tm\suggestions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\main_toolbar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\poedit.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="locales\win\windows_strings.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

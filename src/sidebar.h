@@ -79,6 +79,7 @@ protected:
     SidebarBlock(Sidebar *parent, const wxString& label, int flags = 0);
 
     Sidebar *m_parent;
+    wxSizer *m_headerSizer;
     wxSizer *m_innerSizer;
 
 private:
@@ -101,12 +102,10 @@ public:
     void Update(CatalogItem *item) override;
 
 protected:
-    // How many entries to request from a single provider?
-    static const int SUGGESTIONS_REQUEST_COUNT = 9;
     // How many entries can have shortcuts?
     static const int SUGGESTIONS_MENU_ENTRIES = 9;
 
-    void UpdateVisibility();
+    virtual void UpdateVisibility();
 
     virtual wxBitmap GetIconForSuggestion(const Suggestion& s) const;
     virtual wxString GetTooltipForSuggestion(const Suggestion& s) const;
@@ -114,6 +113,7 @@ protected:
     void ClearMessage();
     void SetMessage(const wxString& icon, const wxString& text);
 
+    virtual void ReportError(SuggestionsBackend *backend, std::exception_ptr e);
     virtual void ClearSuggestions();
     virtual void UpdateSuggestions(const SuggestionsList& hits);
     virtual void OnQueriesFinished();
@@ -122,7 +122,8 @@ protected:
     virtual void UpdateSuggestionsMenu();
     virtual void ClearSuggestionsMenu();
 
-    void QueryProvider(SuggestionsBackend& backend, CatalogItem *item);
+    virtual void QueryAllProviders(CatalogItem *item);
+    void QueryProvider(SuggestionsBackend& backend, CatalogItem *item, uint64_t queryId);
 
 protected:
     std::unique_ptr<SuggestionsProvider> m_provider;
@@ -134,6 +135,10 @@ protected:
     wxStaticBitmap *m_msgIcon;
     ExplanationLabel *m_msgText;
     wxStaticText *m_iGotNothing;
+
+    wxSizer *m_suggestionsSizer;
+    // Additional sizer for derived classes, shown below suggestions
+    wxSizer *m_extrasSizer;
 
     SuggestionsList m_suggestions;
     std::vector<SuggestionWidget*> m_suggestionsWidgets;
@@ -165,6 +170,10 @@ public:
 
     /// Refreshes displayed content
     void RefreshContent();
+
+    /// Call when catalog changes/is invalidated
+    /// TODO: use shared_ptr<CatalogItem> instead to be safe
+    void ResetCatalog() { SetSelectedItem(nullptr, nullptr); }
 
     /// Set max height of the upper (not input-aligned) part.
     void SetUpperHeight(int size);

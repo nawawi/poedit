@@ -39,6 +39,7 @@ public:
 
     bool IsValid() const { return !m_code.empty(); }
     const std::string& Code() const { return m_code; }
+    std::wstring WCode() const { return std::wstring(m_code.begin(), m_code.end()); }
 
     /// Returns language part (cs)
     std::string Lang() const;
@@ -49,6 +50,9 @@ public:
     /// Returns optional variant (after @, e.g. 'latin', typically empty)
     std::string Variant() const;
 
+    /// Return code formatted as in RFC 3066, e.g. en-US
+    std::string RFC3066() const;
+
     /// Returns name of the locale suitable for ICU
     std::string IcuLocaleName() const { return LangAndCountry(); }
     /// Returns ICU equivalent of the language info
@@ -56,6 +60,9 @@ public:
 
     /// Returns name of this language suitable for display to the user in current UI language
     wxString DisplayName() const;
+
+    /// Like DisplayName(), but shorted (no country/variant).
+    wxString LanguageDisplayName() const;
 
     /// Returns name of this language in itself
     wxString DisplayNameInItself() const;
