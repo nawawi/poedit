@@ -25,7 +25,7 @@
 ;
 
 #define VERSION          "1.7"
-#define VERSION_FULL     "1.7beta3"
+#define VERSION_FULL     "1.7"
 
 #ifndef CONFIG
 #define Config           "Release"
@@ -86,6 +86,7 @@ VersionInfoCopyright=Copyright © 1999-2014 Vaclav Slavik
 VersionInfoProductName=Poedit
 VersionInfoProductVersion={#VERSION}
 VersionInfoProductTextVersion={#VERSION_FULL}
+DisableDirPage=auto
 
 [Files]
 Source: {#CONFIG}\Poedit.exe; DestDir: {app}; Flags: ignoreversion
@@ -103,13 +104,19 @@ Source: "{#CONFIG}\Translations\*"; DestDir: "{app}\Translations"; Flags: recurs
 Source: "{#CONFIG}\GettextTools\*"; DestDir: "{app}\GettextTools"; Flags: ignoreversion recursesubdirs
 
 [InstallDelete]
-; delete files from previous versions that are no longer needed (and in case of
-; poedit.exe.manifest, actually harmful):
+;Delete obsolete files from version 1.6:
+Type: files; Name: "{app}\icu*52*.d??"
+; Delete files from previous versions that are no longer needed (and in case of poedit.exe.manifest, actually harmful):
 Type: filesandordirs; Name: "{app}\bin"
 Type: filesandordirs; Name: "{app}\doc"
 Type: filesandordirs; Name: "{app}\share"
 
 [Registry]
+; Uninstall Poedit settings on uninstall:
+Root: "HKCU"; Subkey: "Software\Vaclav Slavik"; Flags: uninsdeletekeyifempty dontcreatekey
+Root: "HKCU"; Subkey: "Software\Vaclav Slavik\Poedit"; Flags: uninsdeletekey dontcreatekey
+
+; Associate files with Poedit:
 Root: "HKCR"; Subkey: ".po"; ValueType: string; ValueData: "Poedit.PO"; Flags: noerror
 Root: "HKCR"; Subkey: "Poedit.PO"; ValueType: string; ValueData: "PO Translation"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.PO"; ValueType: string; ValueName: "FriendlyTypeName"; ValueData: "@{app}\Poedit.exe,-222"; Flags: uninsdeletekey noerror
@@ -123,8 +130,8 @@ Root: "HKCR"; Subkey: "Poedit.MO"; ValueType: string; ValueName: "FriendlyTypeNa
 Root: "HKCR"; Subkey: "Poedit.MO\Shell\Open\Command"; ValueType: string; ValueData: """{app}\Poedit.exe"" ""%1"""; Flags: uninsdeletevalue noerror
 Root: "HKCR"; Subkey: "Poedit.MO\DefaultIcon"; ValueType: string; ValueData: "{app}\Resources\poedit-translation-generic.ico"; Flags: uninsdeletekey noerror
 
-Root: "HKCU"; Subkey: "Software\Vaclav Slavik"; Flags: uninsdeletekeyifempty dontcreatekey
-Root: "HKCU"; Subkey: "Software\Vaclav Slavik\Poedit"; Flags: uninsdeletekey dontcreatekey
+; Remove old, incorrectly done, association keys when upgrading:
+Root: "HKCR"; Subkey: "GettextFile"; ValueType: none; Flags: uninsdeletekey noerror dontcreatekey deletekey
 
 [Icons]
 Name: {commonprograms}\Poedit; Filename: {app}\Poedit.exe; WorkingDir: {app}; IconIndex: 0; Comment: Translations editor.
@@ -162,7 +169,6 @@ Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
 Name: "hungarian"; MessagesFile: "compiler:Languages\Hungarian.isl"
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
-Name: "nepali"; MessagesFile: "compiler:Languages\Nepali.islu"
 Name: "norwegian"; MessagesFile: "compiler:Languages\Norwegian.isl"
 Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
@@ -175,4 +181,12 @@ Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [CustomMessages]
 OpenAfterInstall=Open Poedit after installation
+brazilianportuguese.OpenAfterInstall=Abrir o Poedit após a instalação
+catalan.OpenAfterInstall=Obre el Poedit després de la instal·lació
 czech.OpenAfterInstall=Po instalaci otevřít Poedit
+dutch.OpenAfterInstall=Poedit starten na insallatie
+french.OpenAfterInstall=Ouvrir Poedit après l'installation
+hungarian.OpenAfterInstall=Poedit megnyitása telepítés után
+polish.OpenAfterInstall=Otwórz program Poedit po zakończeniu instalacji
+spanish.OpenAfterInstall=Abrir Poedit tras la instalación
+turkish.OpenAfterInstall=Kurulumdan sonra Poedit'i aç
