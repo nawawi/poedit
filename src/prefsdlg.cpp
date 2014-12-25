@@ -32,7 +32,7 @@
 #include <wx/choicdlg.h>
 #include <wx/checkbox.h>
 #include <wx/choice.h>
-#include <wx/listbox.h>
+#include <wx/checklst.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 #include <wx/fontutil.h>
@@ -574,7 +574,7 @@ public:
         auto horizontal = new wxBoxSizer(wxHORIZONTAL);
         sizer->Add(horizontal, wxSizerFlags(1).Expand());
 
-        m_list = new wxListBox(this, wxID_ANY);
+        m_list = new wxCheckListBox(this, wxID_ANY);
         m_list->SetMinSize(wxSize(250,300));
 #ifdef __WXOSX__
         m_list->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
@@ -594,6 +594,11 @@ public:
         m_new->Bind(wxEVT_BUTTON, &ExtractorsPageWindow::OnNewExtractor, this);
         m_edit->Bind(wxEVT_BUTTON, &ExtractorsPageWindow::OnEditExtractor, this);
         m_delete->Bind(wxEVT_BUTTON, &ExtractorsPageWindow::OnDeleteExtractor, this);
+
+        m_edit->Bind(wxEVT_UPDATE_UI, [=](wxUpdateUIEvent& e) { e.Enable(m_list->GetSelection() != wxNOT_FOUND); });
+        m_delete->Bind(wxEVT_UPDATE_UI, [=](wxUpdateUIEvent& e) { e.Enable(m_list->GetSelection() != wxNOT_FOUND); });
+
+        m_list->Bind(wxEVT_CHECKLISTBOX, &ExtractorsPageWindow::OnEnableExtractor, this);
     }
 
     void InitValues(const wxConfigBase& cfg) override
@@ -602,15 +607,16 @@ public:
 
         m_list->Clear();
         for (const auto& item: m_extractors.Data)
-            m_list->Append(item.Name);
-
-        if (m_extractors.Data.empty())
         {
-            m_edit->Enable(false);
-            m_delete->Enable(false);
+            auto index = m_list->Append(item.Name);
+            m_list->Check(index, item.Enabled);
         }
-        else
+
+        if (!m_extractors.Data.empty())
+        {
             m_list->SetSelection(0);
+            m_list->EnsureVisible(0);
+        }
     }
 
     void SaveValues(wxConfigBase& cfg) override
@@ -681,8 +687,8 @@ private:
 
         Extractor info;
         m_extractors.Data.push_back(info);
-        m_list->Append(wxEmptyString);
-        int index = (int)m_extractors.Data.size()-1;
+        auto index = m_list->Append(wxEmptyString);
+        m_list->Check(index);
         EditExtractor(index, [=](bool added){
             if (added)
             {
@@ -715,11 +721,15 @@ private:
         int index = m_list->GetSelection();
         m_extractors.Data.erase(m_extractors.Data.begin() + index);
         m_list->Delete(index);
-        if (m_extractors.Data.empty())
-        {
-            m_list->Enable(false);
-            m_list->Enable(false);
-        }
+
+        if (wxPreferencesEditor::ShouldApplyChangesImmediately())
+            TransferDataFromWindow();
+    }
+
+    void OnEnableExtractor(wxCommandEvent& e)
+    {
+        int index = e.GetInt();
+        m_extractors.Data[index].Enabled = m_list->IsChecked(index);
 
         if (wxPreferencesEditor::ShouldApplyChangesImmediately())
             TransferDataFromWindow();
@@ -727,7 +737,7 @@ private:
 
     ExtractorsDB m_extractors;
 
-    wxListBox *m_list;
+    wxCheckListBox *m_list;
     wxButton *m_new, *m_edit, *m_delete;
 };
 

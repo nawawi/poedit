@@ -762,8 +762,7 @@ void PoeditFrame::DestroyContentView()
     }
     m_textTransPlural.clear();
 
-    if (m_list)
-        m_list->CatalogChanged(NULL);
+    NotifyCatalogChanged(nullptr);
 
     if (m_splitter)
         wxConfigBase::Get()->Write("/splitter", (long)m_splitter->GetSashPosition());
@@ -1289,7 +1288,7 @@ void PoeditFrame::NewFromPOT()
     else
     {
         EnsureContentView(Content::PO);
-        m_list->CatalogChanged(m_catalog);
+        NotifyCatalogChanged(m_catalog);
     }
 
     UpdateTitle();
@@ -1330,8 +1329,7 @@ void PoeditFrame::NewFromPOT()
         UpdateMenu();
         UpdateStatusBar();
         UpdateTextLanguage();
-        if (m_list)
-            m_list->CatalogChanged(m_catalog); // refresh language column
+        NotifyCatalogChanged(m_catalog); // refresh language column
     });
 }
 
@@ -1391,8 +1389,7 @@ void PoeditFrame::EditCatalogProperties()
             {
                 UpdateTextLanguage();
                 // trigger resorting and language header update:
-                if (m_list)
-                    m_list->CatalogChanged(m_catalog);
+                NotifyCatalogChanged(m_catalog);
             }
         }
     });
@@ -1419,8 +1416,7 @@ void PoeditFrame::EditCatalogPropertiesAndUpdateFromSources()
             {
                 UpdateTextLanguage();
                 // trigger resorting and language header update:
-                if (m_list)
-                    m_list->CatalogChanged(m_catalog);
+                NotifyCatalogChanged(m_catalog);
             }
 
             if (!m_catalog->Header().SearchPaths.empty())
@@ -1477,9 +1473,7 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
             succ = m_catalog->UpdateFromPOT(pot_file, true, reason);
 
         EnsureContentView(Content::PO);
-        if (m_sidebar)
-            m_sidebar->ResetCatalog();
-        m_list->CatalogChanged(m_catalog);
+        NotifyCatalogChanged(m_catalog);
     }
 
     m_modified = succ || m_modified;
@@ -1550,7 +1544,7 @@ void PoeditFrame::OnUpdate(wxCommandEvent& event)
                 if (wxConfig::Get()->ReadBool("use_tm", true) &&
                     wxConfig::Get()->ReadBool("use_tm_when_updating", false))
                 {
-                    AutoTranslateCatalog();
+                    AutoTranslateCatalog(nullptr, AutoTranslate_OnlyGoodQuality);
                 }
             }
         }
@@ -2215,7 +2209,7 @@ void PoeditFrame::ReadCatalog(Catalog *cat)
         // confused. GetCurrentItem() could return nullptr or something invalid,
         // causing crash in UpdateToTextCtrl() called from
         // RecreatePluralTextCtrls() just few lines below.
-        m_list->CatalogChanged(m_catalog);
+        NotifyCatalogChanged(m_catalog);
     }
 
     m_fileName = cat->GetFileName();
@@ -2379,9 +2373,8 @@ void PoeditFrame::RefreshControls(int flags)
         UpdateMenu();
         UpdateTitle();
         delete m_catalog;
-        m_catalog = NULL;
-        if (m_list)
-            m_list->CatalogChanged(NULL);
+        m_catalog = nullptr;
+        NotifyCatalogChanged(nullptr);
         return;
     }
 
@@ -2404,6 +2397,14 @@ void PoeditFrame::RefreshControls(int flags)
     Refresh();
 }
 
+
+void PoeditFrame::NotifyCatalogChanged(Catalog *cat)
+{
+    if (m_sidebar)
+        m_sidebar->ResetCatalog();
+    if (m_list)
+        m_list->CatalogChanged(cat);
+}
 
 
 void PoeditFrame::UpdateStatusBar()
@@ -2851,6 +2852,9 @@ bool PoeditFrame::AutoTranslateCatalog(int *matchesCount, const T& range, int fl
 
             auto& res = results.front();
             if ((flags & AutoTranslate_OnlyExact) && !res.IsExactMatch())
+                continue;
+
+            if ((flags & AutoTranslate_OnlyGoodQuality) && res.score < 0.75)
                 continue;
 
             dt.SetTranslation(res.text);
@@ -3473,6 +3477,8 @@ void PoeditFrame::OnNextUnfinished(wxCommandEvent&)
 void PoeditFrame::OnDoneAndNext(wxCommandEvent&)
 {
     auto item = GetCurrentItem();
+    if (!item)
+        return;
 
     // If the user is "done" with an item, it should be in its final approved state:
     if (item->IsFuzzy())
