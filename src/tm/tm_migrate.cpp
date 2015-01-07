@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2013-2014 Vaclav Slavik
+ *  Copyright (C) 2013-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -296,7 +296,7 @@ bool MigrateLegacyTranslationMemory()
         );
         dlg.SetExtendedMessage(wxString::Format(
             _(L"Your translation memory data couldn't be migrated. The error was:\n\n%s\nPlease email help@poedit.net and we’ll get it fixed."),
-            e.what()));
+            e.What()));
         dlg.ShowModal();
     }
 

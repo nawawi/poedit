@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2007-2014 Vaclav Slavik
+ *  Copyright (C) 2007-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,24 @@
 
 #ifndef _OSX_HELPERS_H_
 #define _OSX_HELPERS_H_
+
+
+#if defined(__cplusplus) && defined(__OBJC__)
+
+#include <wx/string.h>
+
+inline NSString *wxStringToNS(const wxString& s)
+{
+    return [NSString stringWithUTF8String: s.utf8_str()];
+}
+
+inline wxString wxStringFromNS(NSString *s)
+{
+    return wxString::FromUTF8Unchecked([s UTF8String]);
+}
+
+#endif // defined(__cplusplus) && defined(__OBJC__)
+
 
 // FIXME: This is a hack to work around Automake's lack of support for ObjC++.
 //        Remove it after switching build system to Bakefile.

@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2014 Vaclav Slavik
+ *  Copyright (C) 1999-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -48,8 +48,8 @@
 #include <wx/windowptr.h>
 
 #ifdef __WXOSX__
-#include <wx/cocoa/string.h>
 #import <AppKit/NSDocumentController.h>
+#include "osx_helpers.h"
 #endif
 
 #include <map>
@@ -1104,7 +1104,7 @@ void PoeditFrame::OnSave(wxCommandEvent& event)
     }
     catch (Exception& e)
     {
-        wxLogError("%s", e.what());
+        wxLogError("%s", e.What());
     }
 }
 
@@ -1550,7 +1550,7 @@ void PoeditFrame::OnUpdate(wxCommandEvent& event)
         }
         catch (Exception& e)
         {
-            wxLogError("%s", e.what());
+            wxLogError("%s", e.What());
         }
 
         RefreshControls();
@@ -1570,7 +1570,7 @@ void PoeditFrame::OnValidate(wxCommandEvent&)
     }
     catch (Exception& e)
     {
-        wxLogError("%s", e.what());
+        wxLogError("%s", e.What());
     }
 }
 
@@ -2352,7 +2352,7 @@ void PoeditFrame::NoteAsRecentFile()
     wxFileName fn(m_fileName);
     fn.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE);
 #ifdef __WXOSX__
-    [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String: fn.GetFullPath().utf8_str()]]];
+    [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:[NSURL fileURLWithPath:wxStringToNS(fn.GetFullPath())]];
 #else
     FileHistory().AddFileToHistory(fn.GetFullPath());
 #endif
@@ -2575,7 +2575,7 @@ void PoeditFrame::WriteCatalog(const wxString& catalog, TFunctor completionHandl
             }
             catch ( const Exception& e )
             {
-                wxLogWarning(_("Failed to update translation memory: %s"), e.what());
+                wxLogWarning(_("Failed to update translation memory: %s"), e.What());
             }
             catch ( ... )
             {

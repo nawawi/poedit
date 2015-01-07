@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2010-2014 Vaclav Slavik
+ *  Copyright (C) 2010-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -32,7 +32,7 @@
 #include <wx/display.h>
 
 #ifdef __WXOSX__
-#include <wx/cocoa/string.h>
+#include "osx_helpers.h"
 #endif
 
 wxString EscapeMarkup(const wxString& str)
@@ -138,7 +138,7 @@ TempOutputFileFor::TempOutputFileFor(const wxString& filename)
     wxFileName::SplitPath(filename, &path, &name, &ext);
 
 #ifdef __WXOSX__
-    NSURL *fileUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String: filename.utf8_str()]];
+    NSURL *fileUrl = [NSURL fileURLWithPath:wxStringToNS(filename)];
     NSURL *tempdirUrl =
         [[NSFileManager defaultManager] URLForDirectory:NSItemReplacementDirectory
                                                inDomain:NSUserDomainMask
@@ -149,8 +149,8 @@ TempOutputFileFor::TempOutputFileFor(const wxString& filename)
     {
         NSURL *newFileUrl = [tempdirUrl URLByAppendingPathComponent:[fileUrl lastPathComponent]];
         NSString *newFilePath = [newFileUrl path];
-        m_filenameTmp = wxStringWithNSString(newFilePath);
-        m_tempDir = wxStringWithNSString([tempdirUrl path]);
+        m_filenameTmp = wxStringFromNS(newFilePath);
+        m_tempDir = wxStringFromNS([tempdirUrl path]);
     }
     // else: fall through to the generic code
 #endif // __WXOSX__

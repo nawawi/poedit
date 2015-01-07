@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2013-2014 Vaclav Slavik
+ *  Copyright (C) 2013-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -40,7 +40,7 @@
 #include <wx/xrc/xmlres.h>
 
 #ifdef __WXOSX__
-#include <wx/cocoa/string.h>
+#include "osx_helpers.h"
 #else
 #include <wx/commandlinkbutton.h>
 #endif
@@ -63,7 +63,7 @@ public:
 
         NSButton *btn = (NSButton*)m_button->GetHandle();
 
-        NSString *str = wxNSStringWithWxString(label + "\n" + note);
+        NSString *str = wxStringToNS(label + "\n" + note);
         NSRange topLine = NSMakeRange(0, label.length() + 1);
         NSRange bottomLine = NSMakeRange(label.length() + 1, note.length());
 

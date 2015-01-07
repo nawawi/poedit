@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2014 Vaclav Slavik
+ *  Copyright (C) 1999-2015 Vaclav Slavik
  *  Copyright (C) 2005 Olivier Sannier
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
@@ -270,14 +270,14 @@ void PoeditListCtrl::CatalogChanged(Catalog* catalog)
 
     const bool isSameCatalog = (catalog == m_catalog);
 
+    std::vector<int> selection;
+    if (isSameCatalog)
+        selection = GetSelectedCatalogItems();
+
     // this is to prevent crashes (wxMac at least) when shortening virtual
     // listctrl when its scrolled to the bottom:
     m_catalog = nullptr;
     SetItemCount(0);
-
-    std::vector<int> selection;
-    if (isSameCatalog)
-        selection = GetSelectedCatalogItems();
 
     // now read the new catalog:
     m_catalog = catalog;

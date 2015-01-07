@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2014 Vaclav Slavik
+ *  Copyright (C) 2014-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -33,7 +33,7 @@
 #endif
 
 #ifdef __WXOSX__
-    #include <wx/cocoa/string.h>
+    #include "osx_helpers.h"
 #endif
 
 #ifdef __WXMSW__
@@ -136,7 +136,7 @@ bool InitTextCtrlSpellchecker(wxTextCtrl *text, bool enable, const Language& lan
 #ifdef __WXOSX__
 bool SetSpellcheckerLang(const wxString& lang)
 {
-    NSString *nslang = wxNSStringWithWxString(lang);
+    NSString *nslang = wxStringToNS(lang);
     NSSpellChecker *sc = [NSSpellChecker sharedSpellChecker];
     [sc setAutomaticallyIdentifiesLanguages:NO];
     return [sc setLanguage: nslang];

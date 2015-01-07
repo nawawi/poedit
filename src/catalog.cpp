@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2014 Vaclav Slavik
+ *  Copyright (C) 1999-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -35,10 +35,6 @@
 #include <wx/msgdlg.h>
 #include <wx/filename.h>
 
-#ifdef __WXOSX__
-#include <wx/cocoa/string.h>
-#endif
-
 #include <set>
 #include <algorithm>
 
@@ -51,6 +47,10 @@
 #include "version.h"
 #include "language.h"
 
+#ifdef __WXOSX__
+#import <Foundation/Foundation.h>
+#include "osx_helpers.h"
+#endif
 
 // ----------------------------------------------------------------------
 // Textfile processing utilities:
@@ -905,7 +905,14 @@ wxString CatalogParser::ReadTextLine()
             }
             else
             {
-                m_detectedLineWidth = std::max(m_detectedLineWidth, (int)ln.size());
+                // Watch out for lines with too long words that couldn't be wrapped.
+                // That "2" is to account for unwrappable comment lines: "#: somethinglong"
+                // See https://github.com/vslavik/poedit/issues/135
+                auto space = ln.find_last_of(' ');
+                if (space != wxString::npos && space > 2)
+                {
+                    m_detectedLineWidth = std::max(m_detectedLineWidth, (int)ln.size());
+                }
             }
         }
 
@@ -1612,15 +1619,15 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
         if (mo_compilation_status == CompilationStatus::Success)
         {
 #ifdef __WXOSX__
-            NSURL *mofileUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String: mo_file.utf8_str()]];
-            NSURL *mofiletempUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String: mo_file_temp.utf8_str()]];
+            NSURL *mofileUrl = [NSURL fileURLWithPath:wxStringToNS(mo_file)];
+            NSURL *mofiletempUrl = [NSURL fileURLWithPath:wxStringToNS(mo_file_temp)];
             bool sandboxed = (getenv("APP_SANDBOX_CONTAINER_ID") != NULL);
             CompiledMOFilePresenter *presenter = nil;
             if (sandboxed)
             {
                 presenter = [CompiledMOFilePresenter new];
                 presenter.presentedItemURL = mofileUrl;
-                presenter.primaryPresentedItemURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String: po_file.utf8_str()]];
+                presenter.primaryPresentedItemURL = [NSURL fileURLWithPath:wxStringToNS(po_file)];
                 [NSFileCoordinator addFilePresenter:presenter];
                 [NSFileCoordinator filePresenters];
             }

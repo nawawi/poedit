@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2000-2014 Vaclav Slavik
+ *  Copyright (C) 2000-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -372,6 +372,5 @@ bool PropertiesDialog::Validate()
     }
 
     return m_validatedLang == 1 &&
-           m_validatedPlural == 1 &&
-           !m_project->GetValue().empty();
+           m_validatedPlural == 1;
 }

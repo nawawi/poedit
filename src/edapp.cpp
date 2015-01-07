@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2014 Vaclav Slavik
+ *  Copyright (C) 1999-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -44,7 +44,6 @@
 
 #ifdef __WXOSX__
 #include "osx_helpers.h"
-#include <wx/cocoa/string.h>
 #endif
 
 #ifdef __WXMSW__
@@ -566,27 +565,14 @@ bool PoeditApp::OnExceptionInMainLoop()
     {
         throw;
     }
-    catch ( Exception& e )
+    catch ( std::exception& )
     {
-        wxLogError(_("Unhandled exception occurred: %s"), e.what());
-    }
-    catch ( std::exception& e )
-    {
-        const char *msg = e.what();
-        // try interpreting as UTF-8 first as the most likely one (from external sources)
-        wxString s = wxString::FromUTF8(msg);
-        if (s.empty())
-        {
-            s = wxString(msg);
-            if (s.empty()) // not in current locale either, fall back to Latin1
-                s = wxString(msg, wxConvISO8859_1);
-        }
-        wxLogError(_("Unhandled exception occurred: %s"), s);
+        wxLogError(_("Unhandled exception occurred: %s"), DescribeCurrentException());
     }
 #ifdef __WXOSX__
     catch ( NSException *e )
     {
-        wxLogError(_("Unhandled exception occurred: %s"), wxStringWithNSString([e reason]));
+        wxLogError(_("Unhandled exception occurred: %s"), wxStringFromNS([e reason]));
     }
 #endif
     catch ( ... )
@@ -724,7 +710,7 @@ void PoeditApp::OnAbout(wxCommandEvent&)
     about.SetVersion(wxGetApp().GetAppVersion());
     about.SetDescription(_("Poedit is an easy to use translations editor."));
 #endif
-    about.SetCopyright(L"Copyright \u00a9 1999-2014 Václav Slavík");
+    about.SetCopyright(L"Copyright \u00a9 1999-2015 Václav Slavík");
 #ifdef __WXGTK__ // other ports would show non-native about dlg
     about.SetWebSite("http://poedit.net");
 #endif
@@ -800,7 +786,7 @@ void PoeditApp::OpenPoeditWeb(const wxString& path)
 
 static NSMenuItem *AddNativeItem(NSMenu *menu, int pos, const wxString&text, SEL ac, NSString *key)
 {
-    NSString *str = wxNSStringWithWxString(text);
+    NSString *str = wxStringToNS(text);
     if (pos == -1)
         return [menu addItemWithTitle:str action:ac keyEquivalent:key];
     else
@@ -952,7 +938,7 @@ void PoeditApp::InstallOpenRecentMenu(wxMenuBar *bar)
         return;
 
     NSMenu *native = fileMenu->GetHMenu();
-    NSMenuItem *nativeItem = [native itemWithTitle:wxNSStringWithWxString(item->GetItemLabelText())];
+    NSMenuItem *nativeItem = [native itemWithTitle:wxStringToNS(item->GetItemLabelText())];
     if (!nativeItem)
         return;
 

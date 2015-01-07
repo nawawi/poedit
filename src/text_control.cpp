@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2014 Vaclav Slavik
+ *  Copyright (C) 1999-2015 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -29,9 +29,9 @@
 #include <wx/wupdlock.h>
 
 #ifdef __WXOSX__
-  #include <wx/cocoa/string.h>
   #import <AppKit/NSTextView.h>
   #import <Foundation/NSUndoManager.h>
+  #include "osx_helpers.h"
 #endif
 
 #ifdef __WXMSW__
@@ -181,7 +181,7 @@ void CustomizedTextCtrl::DoSetValue(const wxString& value, int flags)
 {
     wxEventBlocker block(this, (flags & SetValue_SendEvent) ? 0 : wxEVT_ANY);
 
-    [TextView(this) setString:wxNSStringWithWxString(value)];
+    [TextView(this) setString:wxStringToNS(value)];
 
     SendTextUpdatedEventIfAllowed();
 }
@@ -429,7 +429,9 @@ void AnyTranslatableTextCtrl::HighlightText()
     UndoSupressor blockUndo(this);
   #endif
 
-    SetStyle(0, text.length(), m_attrs->Default());
+    auto deflt = m_attrs->Default();
+    deflt.SetFont(GetFont());
+    SetStyle(0, text.length(), deflt);
 
     m_syntax.Highlight(text, [=](int a, int b, SyntaxHighlighter::TextKind kind){
         SetStyle(a, b, m_attrs->For(kind));
