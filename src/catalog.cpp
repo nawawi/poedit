@@ -1275,7 +1275,21 @@ void Catalog::FixupCommonIssues()
     wxLogTrace("poedit", "catalog lang is '%s'", GetLanguage().Code());
 
     if (m_header.Project == "PACKAGE VERSION")
-        m_header.Project = "";
+        m_header.Project.clear();
+
+    if (m_header.GetHeader("Language-Team") == "LANGUAGE <LL@li.org>")
+    {
+        m_header.DeleteHeader("Language-Team");
+        m_header.Team.clear();
+        m_header.TeamEmail.clear();
+    }
+
+    if (m_header.GetHeader("Last-Translator") == "FULL NAME <EMAIL@ADDRESS>")
+    {
+        m_header.DeleteHeader("Last-Translator");
+        m_header.Translator.clear();
+        m_header.TranslatorEmail.clear();
+    }
 
     wxString pluralForms = m_header.GetHeader("Plural-Forms");
 
@@ -1477,13 +1491,6 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
                    po_file.c_str());
         return false;
     }
-
-    // Update information about last modification time. But if the header
-    // was empty previously, the author apparently doesn't want this header
-    // set, so don't mess with it. See https://sourceforge.net/tracker/?func=detail&atid=389156&aid=1900298&group_id=27043
-    // for motivation:
-    if ( !m_header.RevisionDate.empty() )
-        m_header.RevisionDate = GetCurrentTimeRFC822();
 
     TempOutputFileFor po_file_temp_obj(po_file);
     const wxString po_file_temp = po_file_temp_obj.FileName();
@@ -1736,6 +1743,13 @@ bool Catalog::DoSaveOnly(wxTextFile& f, wxTextFileType crlf)
     /* Save .po file: */
     if (!m_header.Charset || m_header.Charset == "CHARSET")
         m_header.Charset = "UTF-8";
+
+    // Update information about last modification time. But if the header
+    // was empty previously, the author apparently doesn't want this header
+    // set, so don't mess with it. See https://sourceforge.net/tracker/?func=detail&atid=389156&aid=1900298&group_id=27043
+    // for motivation:
+    if ( !m_header.RevisionDate.empty() )
+        m_header.RevisionDate = GetCurrentTimeRFC822();
 
     SaveMultiLines(f, m_header.Comment);
     f.AddLine(_T("msgid \"\""));

@@ -77,19 +77,19 @@ inline ITextDocumentPtr TextDocument(wxTextCtrl *ctrl)
     return doc;
 }
 
-// Temporarily supresses recording of changes for Undo/Redo functionality
+// Temporarily suppresses recording of changes for Undo/Redo functionality
 // See http://stackoverflow.com/questions/4138981/temporaily-disabling-the-c-sharp-rich-edit-undo-buffer-while-performing-syntax-h
 // and http://forums.codeguru.com/showthread.php?325068-Realizing-Undo-Redo-functionality-for-RichEdit-Syntax-Highlighter
-class UndoSupressor
+class UndoSuppressor
 {
 public:
-    UndoSupressor(CustomizedTextCtrl *ctrl) : m_doc(TextDocument(ctrl))
+    UndoSuppressor(CustomizedTextCtrl *ctrl) : m_doc(TextDocument(ctrl))
     {
         if (m_doc)
             m_doc->Undo(tomSuspend, NULL);
     }
 
-    ~UndoSupressor()
+    ~UndoSuppressor()
     {
         if (m_doc)
             m_doc->Undo(tomResume, NULL);
@@ -234,7 +234,7 @@ CustomizedTextCtrl::CustomizedTextCtrl(wxWindow *parent, wxWindowID winid, long 
 // We use wxTE_RICH2 style, which allows for pasting rich-formatted
 // text into the control. We want to allow only plain text (all the
 // formatting done is Poedit's syntax highlighting), so we need to
-// override copy/cut/paste command.s Plus, the richedit control
+// override copy/cut/paste commands. Plus, the richedit control
 // (or wx's use of it) has a bug in it that causes it to copy wrong
 // data when copying from the same text control to itself after its
 // content was programatically changed:
@@ -381,7 +381,7 @@ void AnyTranslatableTextCtrl::DoSetValue(const wxString& value, int flags)
 void AnyTranslatableTextCtrl::UpdateRTLStyle()
 {
     wxEventBlocker block(this, wxEVT_TEXT);
-    UndoSupressor blockUndo(this);
+    UndoSuppressor blockUndo(this);
 
     PARAFORMAT2 pf;
     ::ZeroMemory(&pf, sizeof(pf));
@@ -423,10 +423,16 @@ void AnyTranslatableTextCtrl::HighlightText()
 
 #else // !__WXOSX__
 
+#ifndef __WXGTK__
+    // Freezing (and more to the point, thawing) the window from inside wxEVT_TEXT
+    // handler breaks pasting under GTK+ (selection is not replaced).
+    // See https://github.com/vslavik/poedit/issues/139
     wxWindowUpdateLocker noupd(this);
+#endif
+
     wxEventBlocker block(this, wxEVT_TEXT);
   #ifdef __WXMSW__
-    UndoSupressor blockUndo(this);
+    UndoSuppressor blockUndo(this);
   #endif
 
     auto deflt = m_attrs->Default();
