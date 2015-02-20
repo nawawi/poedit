@@ -30,9 +30,9 @@
 #include <vector>
 #include <memory>
 
+#include "catalog.h"
 #include "suggestions.h"
 
-class Catalog;
 class TranslationMemoryImpl;
 
 /** 
@@ -52,16 +52,19 @@ public:
     /**
         Search translation memory for similar strings.
         
+        @param srclang Language of the source text.
         @param lang    Language of the desired translation.
         @param source  Source text.
 
         @return List of hits that were found, possibly empty.
      */
-    SuggestionsList Search(const Language& lang,
+    SuggestionsList Search(const Language& srclang,
+                           const Language& lang,
                            const std::wstring& source);
 
     /// SuggestionsBackend API implementation:
-    void SuggestTranslation(const Language& lang,
+    void SuggestTranslation(const Language& srclang,
+                            const Language& lang,
                             const std::wstring& source,
                             success_func_type onSuccess,
                             error_func_type onError) override;
@@ -69,8 +72,16 @@ public:
     /**
         Performs updates to the translation memory.
         
-        You must call Commit() for them to be written.
-    
+        Call Commit() to commit changes since the last commit to disk.
+        Call Rollback() to undo all changes since the last commit.
+        
+        Committing shouldn't be done too often, as it is expensive.
+        The writer is shared and can be used by multiple threads.
+        
+        Note that closing the writer on shutdown, if it has uncommitted
+        changes, will result in them being committed. You must to explicitly
+        Rollback() them if you don't want that behavior.
+
         All methods may throw Exception.
       */
     class Writer
@@ -80,14 +91,26 @@ public:
 
         /**
             Insert translation into the TM.
-            
-            @param lang    Language code (e.g. pt_BR or cs).
+
+            @param srclang Source text language.
+            @param lang    Translation language.
             @param source  Source text.
             @param trans   Translation text.
          */
-        virtual void Insert(const Language& lang,
+        virtual void Insert(const Language& srclang,
+                            const Language& lang,
                             const std::wstring& source,
                             const std::wstring& trans) = 0;
+
+        /**
+            Inserts a single catalog item.
+
+            @note
+            Not everything is included: fuzzy or untranslated entries are skipped.
+         */
+        virtual void Insert(const Language& srclang,
+                            const Language& lang,
+                            const CatalogItemPtr& item) = 0;
 
         /**
             Inserts entire content of the catalog.
@@ -96,17 +119,20 @@ public:
             Not everything is included: fuzzy or untranslated entries are omitted.
             If the catalog doesn't have language header, it is not included either.
          */
-        virtual void Insert(const Catalog& cat) = 0;
+        virtual void Insert(const CatalogPtr& cat) = 0;
 
         /// Deletes everything from the TM.
         virtual void DeleteAll() = 0;
 
         /// Commits changes written so far.
         virtual void Commit() = 0;
+
+        /// Rolls back changes written so far.
+        virtual void Rollback() = 0;
     };
 
-    /// Creates a writer for updating the TM
-    std::shared_ptr<Writer> CreateWriter();
+    /// Returns the shared writer instance
+    std::shared_ptr<Writer> GetWriter();
 
     /// Returns statistics about the TM
     void GetStats(long& numDocs, long& fileSize);

@@ -2,12 +2,12 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([poedit], [1.7.4], [poedit@googlegroups.com])
-PACKAGE_SHORT_VERSION=1.7.4
+AC_INIT([poedit], [1.8beta1], [poedit@googlegroups.com])
+PACKAGE_SHORT_VERSION=1.8
 AC_SUBST(PACKAGE_SHORT_VERSION)
 
 AC_CONFIG_AUX_DIR([admin])
-AC_CONFIG_SRCDIR([README])
+AC_CONFIG_SRCDIR([poedit.desktop])
 
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -149,15 +149,6 @@ PKG_CHECK_MODULES([GTKSPELL], [$gtkspell_packages],
     ])
 
 
-AX_BERKELEY_DB_CXX(4.7,
-[
-    AC_DEFINE_UNQUOTED(DB_HEADER, ["$DB_HEADER"])
-    AC_SUBST(DB_LIBS)
-],
-[
-  AC_MSG_ERROR([cannot find required Berkeley DB >= 4.7])
-])
-
 PKG_CHECK_MODULES([LUCENE], [liblucene++ >= 3.0.5],
         [
             CXXFLAGS="$CXXFLAGS $LUCENE_CFLAGS"
@@ -167,21 +158,78 @@ PKG_CHECK_MODULES([LUCENE], [liblucene++ >= 3.0.5],
             AC_MSG_ERROR([missing Lucene++ library])
         ])
 
-PKG_CHECK_MODULES([EXPAT], [expat],
+
+dnl Check for legacy TM support
+AC_ARG_ENABLE([legacytm],
+    AS_HELP_STRING([--disable-legacytm], [disable code to migrate pre-1.6 TM to the new format]))
+
+AS_IF([test "x$enable_legacytm" != "xno"],
+    [
+        enable_legacytm=yes
+        AX_BERKELEY_DB_CXX(4.7,
         [
-            CXXFLAGS="$CXXFLAGS $EXPAT_CFLAGS"
-            AC_SUBST(EXPAT_LIBS)
+            AC_DEFINE_UNQUOTED(DB_HEADER, ["$DB_HEADER"])
+            AC_SUBST(DB_LIBS)
         ],
         [
-            AC_MSG_ERROR([missing Expat library])
+          AC_MSG_ERROR([cannot find required Berkeley DB >= 4.7 (req. for legacy TM)])
         ])
 
+        PKG_CHECK_MODULES([EXPAT], [expat],
+            [
+                CXXFLAGS="$CXXFLAGS $EXPAT_CFLAGS"
+                AC_SUBST(EXPAT_LIBS)
+            ],
+            [
+                AC_MSG_ERROR([missing Expat library (req. for legacy TM)])
+            ])
+    ],
+    [
+        AC_DEFINE(DONT_MIGRATE_LEGACY_TM)
+    ])
 
-APPCAST_SUFFIX=""
-if echo "$VERSION" | grep -q '\(beta\|rc\)' ; then
-    APPCAST_SUFFIX="/beta"
-fi
-AC_SUBST(APPCAST_SUFFIX)
+AM_CONDITIONAL([MIGRATE_LEGACY_TM], [test "x$enable_legacytm" != "xno"])
+
+dnl Check for Compact Language Detector 2
+dnl (used for better language detection and for non-English source languages)
+AC_ARG_WITH([cld2],
+    AS_HELP_STRING([--without-cld2], [Ignore presence of cld2 and disable it]))
+
+AS_IF([test "x$with_cld2" != "xno"],
+      [
+          have_cld2=no
+          AC_CHECK_HEADERS([cld2/public/compact_lang_det.h],
+              [
+                  AC_MSG_CHECKING([for libcld2])
+                  old_LIBS="$LIBS"
+                  LIBS="-lcld2 $LIBS"
+                  AC_LINK_IFELSE([AC_LANG_PROGRAM(
+                      [
+                          #include <stdio.h>
+                          #include <cld2/public/compact_lang_det.h>
+                      ],
+                      [
+                          CLD2::isDataDynamic();
+                      ])],
+                      [have_cld2=yes])
+                  LIBS="$old_LIBS"
+                  AC_MSG_RESULT([$have_cld2])
+              ])
+      ],
+      [have_cld2=no])
+
+AS_IF([test "x$have_cld2" = "xyes"],
+      [
+          AC_DEFINE([HAVE_CLD2])
+          CLD2_LIBS="-lcld2"
+          AC_SUBST(CLD2_LIBS)
+      ],
+      [
+          AS_IF([test "x$with_cld2" = "xyes"],
+                [AC_MSG_ERROR([cld2 requested but not found])])
+      ])
+
+
 
 
 if test "x$GXX" == "xyes"; then
@@ -212,5 +260,9 @@ AC_OUTPUT
 echo "
 Configured $PACKAGE-$VERSION for $host
 
-    Debug build:      $USE_DEBUG
+Enabled features:
+
+    * debug build:                    $USE_DEBUG
+    * legacy (pre-1.6) TM migration:  $enable_legacytm
+    * language detection:             $have_cld2
 "

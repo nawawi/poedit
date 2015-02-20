@@ -23,6 +23,8 @@
  *
  */
 
+#ifndef DONT_MIGRATE_LEGACY_TM
+
 #include "transmem.h"
 
 #include "logcapture.h"
@@ -147,7 +149,8 @@ void XMLCALL OnStartElement(void *data, const char *name, const char **attrs)
                 t = wxString::FromUTF8(attrs[i+1]);
             if (!s.empty() && !t.empty())
             {
-                ctxt.tm->Insert(ctxt.lang, s.ToStdWstring(), t.ToStdWstring());
+                static const auto srclang = Language::English();
+                ctxt.tm->Insert(srclang, ctxt.lang, s.ToStdWstring(), t.ToStdWstring());
                 if (ctxt.count++ % 47 == 0)
                     ctxt.progress->Pulse(wxString::Format(_("Importing translations: %d"), ctxt.count));
             }
@@ -187,7 +190,7 @@ void DoMigrate(const wxString& path, const wxString& languages)
     ExpatContext ctxt;
     ctxt.progress = &progress;
     ctxt.count = 0;
-    ctxt.tm = TranslationMemory::Get().CreateWriter();
+    ctxt.tm = TranslationMemory::Get().GetWriter();
 
     XML_Parser parser = XML_ParserCreate(NULL);
     XML_SetUserData(parser, &ctxt);
@@ -302,3 +305,5 @@ bool MigrateLegacyTranslationMemory()
 
     return true;
 }
+
+#endif // !DONT_MIGRATE_LEGACY_TM

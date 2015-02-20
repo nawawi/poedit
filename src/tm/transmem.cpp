@@ -91,28 +91,35 @@ public:
     typedef MMapDirectory DirectoryType;
 #endif
 
-    TranslationMemoryImpl()
-        : m_dir(GetDatabaseDir()),
-          m_analyzer(newLucene<StandardAnalyzer>(LuceneVersion::LUCENE_CURRENT))
-    {}
+    TranslationMemoryImpl() { Init(); }
 
-    SuggestionsList Search(const Language& lang,
+    ~TranslationMemoryImpl()
+    {
+        m_reader->close();
+        m_writer->close();
+    }
+
+    SuggestionsList Search(const Language& srclang, const Language& lang,
                            const std::wstring& source);
 
-    std::shared_ptr<TranslationMemory::Writer> CreateWriter();
+    std::shared_ptr<TranslationMemory::Writer> GetWriter() { return m_writerAPI; }
 
     void GetStats(long& numDocs, long& fileSize);
 
 private:
+    void Init();
+
     static std::wstring GetDatabaseDir();
     IndexReaderPtr Reader();
     SearcherPtr Searcher();
 
 private:
-    std::wstring     m_dir;
     AnalyzerPtr      m_analyzer;
+    IndexWriterPtr   m_writer;
     IndexReaderPtr   m_reader;
     std::mutex       m_readerMutex;
+
+    std::shared_ptr<TranslationMemory::Writer> m_writerAPI;
 };
 
 
@@ -140,10 +147,14 @@ std::wstring TranslationMemoryImpl::GetDatabaseDir()
 IndexReaderPtr TranslationMemoryImpl::Reader()
 {
     std::lock_guard<std::mutex> guard(m_readerMutex);
-    if ( m_reader )
-        m_reader = m_reader->reopen();
-    else
-        m_reader = IndexReader::open(newLucene<DirectoryType>(m_dir), true);
+
+    auto newReader = m_reader->reopen();
+    if (m_reader != newReader)
+    {
+        m_reader->close();
+        m_reader = newReader;
+    }
+
     return m_reader;
 }
 
@@ -170,7 +181,7 @@ bool ContainsResult(const SuggestionsList& all, const std::wstring& r)
 
 template<typename T>
 void PerformSearchWithBlock(IndexSearcherPtr searcher,
-                            QueryPtr lang,
+                            QueryPtr srclang, QueryPtr lang,
                             const std::wstring& exactSourceText,
                             QueryPtr query,
                             double scoreThreshold,
@@ -178,6 +189,7 @@ void PerformSearchWithBlock(IndexSearcherPtr searcher,
                             T callback)
 {
     auto fullQuery = newLucene<BooleanQuery>();
+    fullQuery->add(srclang, BooleanClause::MUST);
     fullQuery->add(lang, BooleanClause::MUST);
     fullQuery->add(query, BooleanClause::MUST);
 
@@ -217,7 +229,7 @@ void PerformSearchWithBlock(IndexSearcherPtr searcher,
 }
 
 void PerformSearch(IndexSearcherPtr searcher,
-                   QueryPtr lang,
+                   QueryPtr srclang, QueryPtr lang,
                    const std::wstring& exactSourceText,
                    QueryPtr query,
                    SuggestionsList& results,
@@ -226,7 +238,7 @@ void PerformSearch(IndexSearcherPtr searcher,
 {
     PerformSearchWithBlock
     (
-        searcher, lang, exactSourceText, query,
+        searcher, srclang, lang, exactSourceText, query,
         scoreThreshold, scoreScaling,
         [&results](DocumentPtr doc, double score)
         {
@@ -245,11 +257,15 @@ void PerformSearch(IndexSearcherPtr searcher,
 
 } // anonymous namespace
 
-SuggestionsList TranslationMemoryImpl::Search(const Language& lang,
+SuggestionsList TranslationMemoryImpl::Search(const Language& srclang,
+                                              const Language& lang,
                                               const std::wstring& source)
 {
     try
     {
+        // TODO: query by srclang too!
+        auto srclangQ = newLucene<TermQuery>(newLucene<Term>(L"srclang", srclang.WCode()));
+
         const Lucene::String fullLang = lang.WCode();
         const Lucene::String shortLang = StringUtils::toUnicode(lang.Lang());
 
@@ -290,14 +306,14 @@ SuggestionsList TranslationMemoryImpl::Search(const Language& lang,
         auto searcher = newLucene<IndexSearcher>(Reader());
 
         // Try exact phrase first:
-        PerformSearch(searcher, langQ, source, phraseQ, results,
+        PerformSearch(searcher, srclangQ, langQ, source, phraseQ, results,
                       QUALITY_THRESHOLD, /*scoreScaling=*/1.0);
         if (!results.empty())
             return results;
 
         // Then, if no matches were found, permit being a bit sloppy:
         phraseQ->setSlop(1);
-        PerformSearch(searcher, langQ, source, phraseQ, results,
+        PerformSearch(searcher, srclangQ, langQ, source, phraseQ, results,
                       QUALITY_THRESHOLD, /*scoreScaling=*/0.9);
 
         if (!results.empty())
@@ -308,7 +324,7 @@ SuggestionsList TranslationMemoryImpl::Search(const Language& lang,
         boolQ->setMinimumNumberShouldMatch(std::max(1, boolQ->getClauses().size() - MAX_ALLOWED_LENGTH_DIFFERENCE));
         PerformSearchWithBlock
         (
-            searcher, langQ, source, boolQ,
+            searcher, srclangQ, langQ, source, boolQ,
             QUALITY_THRESHOLD, /*scoreScaling=*/0.8,
             [=,&results](DocumentPtr doc, double score)
             {
@@ -357,33 +373,32 @@ void TranslationMemoryImpl::GetStats(long& numDocs, long& fileSize)
 class TranslationMemoryWriterImpl : public TranslationMemory::Writer
 {
 public:
-    TranslationMemoryWriterImpl(DirectoryPtr dir, AnalyzerPtr analyzer)
-    {
-        m_writer = newLucene<IndexWriter>(dir, analyzer, IndexWriter::MaxFieldLengthLIMITED);
-        m_writer->setMergeScheduler(newLucene<SerialMergeScheduler>());
-    }
+    TranslationMemoryWriterImpl(IndexWriterPtr writer) : m_writer(writer) {}
 
-    ~TranslationMemoryWriterImpl()
-    {
-        if (m_writer)
-            m_writer->rollback();
-    }
+    ~TranslationMemoryWriterImpl() {}
 
-    virtual void Commit()
+    void Commit() override
     {
         try
         {
-            m_writer->close();
-            m_writer.reset();
+            m_writer->commit();
         }
         CATCH_AND_RETHROW_EXCEPTION
     }
 
-    virtual void Insert(const Language& lang,
-                        const std::wstring& source,
-                        const std::wstring& trans)
+    void Rollback() override
     {
-        if (!lang.IsValid())
+        try
+        {
+            m_writer->rollback();
+        }
+        CATCH_AND_RETHROW_EXCEPTION
+    }
+
+    void Insert(const Language& srclang, const Language& lang,
+                const std::wstring& source, const std::wstring& trans) override
+    {
+        if (!lang.IsValid() || !srclang.IsValid() || lang == srclang)
             return;
 
         // Compute unique ID for the translation:
@@ -392,7 +407,7 @@ public:
           boost::uuids::string_generator()("6e3f73c5-333f-4171-9d43-954c372a8a02");
         boost::uuids::name_generator gen(s_namespace);
 
-        std::wstring itemId(L"en"); // TODO: srclang
+        std::wstring itemId(srclang.WCode());
         itemId += lang.WCode();
         itemId += source;
         itemId += trans;
@@ -408,7 +423,7 @@ public:
                                       Field::STORE_YES, Field::INDEX_NOT_ANALYZED));
             doc->add(newLucene<Field>(L"created", DateField::timeToString(time(NULL)),
                                       Field::STORE_YES, Field::INDEX_NO));
-            doc->add(newLucene<Field>(L"srclang", L"en",
+            doc->add(newLucene<Field>(L"srclang", srclang.WCode(),
                                       Field::STORE_YES, Field::INDEX_NOT_ANALYZED));
             doc->add(newLucene<Field>(L"lang", lang.WCode(),
                                       Field::STORE_YES, Field::INDEX_NOT_ANALYZED));
@@ -422,38 +437,43 @@ public:
         CATCH_AND_RETHROW_EXCEPTION
     }
 
-    virtual void Insert(const Catalog &cat)
+    void Insert(const Language& srclang, const Language& lang, const CatalogItemPtr& item) override
     {
-        auto lang = cat.GetLanguage();
-        if (!lang.IsValid())
+        if (!lang.IsValid() || !srclang.IsValid())
             return;
 
-        int cnt = cat.GetCount();
-        for (int i = 0; i < cnt; i++)
+        // ignore translations with errors in them
+        if (item->GetValidity() == CatalogItem::Val_Invalid)
+            return;
+
+        // can't handle plurals yet (TODO?)
+        if (item->HasPlural())
+            return;
+
+        // ignore untranslated or unfinished translations
+        if (item->IsFuzzy() || !item->IsTranslated())
+            return;
+
+        Insert(srclang, lang, item->GetString().ToStdWstring(), item->GetTranslation().ToStdWstring());
+    }
+
+    void Insert(const CatalogPtr& cat) override
+    {
+        auto srclang = cat->GetSourceLanguage();
+        auto lang = cat->GetLanguage();
+        if (!lang.IsValid() || !srclang.IsValid())
+            return;
+
+        for (auto& item: cat->items())
         {
-            const CatalogItem& item = cat[i];
-
-            // ignore translations with errors in them
-            if (item.GetValidity() == CatalogItem::Val_Invalid)
-                continue;
-
-            // can't handle plurals yet (TODO?)
-            if (item.HasPlural())
-                continue;
-
-            // ignore untranslated or unfinished translations
-            if (item.IsFuzzy() || !item.IsTranslated())
-                continue;
-
             // Note that dt.IsModified() is intentionally not checked - we
             // want to save old entries in the TM too, so that we harvest as
             // much useful translations as we can.
-
-            Insert(lang, item.GetString().ToStdWstring(), item.GetTranslation().ToStdWstring());
+            Insert(srclang, lang, item);
         }
     }
 
-    virtual void DeleteAll()
+    void DeleteAll() override
     {
         try
         {
@@ -466,11 +486,21 @@ private:
     IndexWriterPtr m_writer;
 };
 
-std::shared_ptr<TranslationMemory::Writer> TranslationMemoryImpl::CreateWriter()
+
+void TranslationMemoryImpl::Init()
 {
     try
     {
-        return std::make_shared<TranslationMemoryWriterImpl>(newLucene<DirectoryType>(m_dir), m_analyzer);
+        auto dir = newLucene<DirectoryType>(GetDatabaseDir());
+        m_analyzer = newLucene<StandardAnalyzer>(LuceneVersion::LUCENE_CURRENT);
+
+        m_writer = newLucene<IndexWriter>(dir, m_analyzer, IndexWriter::MaxFieldLengthLIMITED);
+        m_writer->setMergeScheduler(newLucene<SerialMergeScheduler>());
+
+        // get the associated realtime reader:
+        m_reader = m_writer->getReader();
+
+        m_writerAPI = std::make_shared<TranslationMemoryWriterImpl>(m_writer);
     }
     CATCH_AND_RETHROW_EXCEPTION
 }
@@ -513,20 +543,22 @@ TranslationMemory::~TranslationMemory() { delete m_impl; }
 // public API
 // ----------------------------------------------------------------
 
-SuggestionsList TranslationMemory::Search(const Language& lang,
+SuggestionsList TranslationMemory::Search(const Language& srclang,
+                                          const Language& lang,
                                           const std::wstring& source)
 {
-    return m_impl->Search(lang, source);
+    return m_impl->Search(srclang, lang, source);
 }
 
-void TranslationMemory::SuggestTranslation(const Language& lang,
+void TranslationMemory::SuggestTranslation(const Language& srclang,
+                                           const Language& lang,
                                            const std::wstring& source,
                                            success_func_type onSuccess,
                                            error_func_type onError)
 {
     try
     {
-        onSuccess(Search(lang, source));
+        onSuccess(Search(srclang, lang, source));
     }
     catch (...)
     {
@@ -534,9 +566,9 @@ void TranslationMemory::SuggestTranslation(const Language& lang,
     }
 }
 
-std::shared_ptr<TranslationMemory::Writer> TranslationMemory::CreateWriter()
+std::shared_ptr<TranslationMemory::Writer> TranslationMemory::GetWriter()
 {
-    return m_impl->CreateWriter();
+    return m_impl->GetWriter();
 }
 
 void TranslationMemory::GetStats(long& numDocs, long& fileSize)

@@ -85,7 +85,9 @@ struct PoeditApp::RecentMenuData
 };
 #endif
 
+#ifndef DONT_MIGRATE_LEGACY_TM
 extern bool MigrateLegacyTranslationMemory();
+#endif
 
 IMPLEMENT_APP(PoeditApp);
 
@@ -245,9 +247,11 @@ bool PoeditApp::OnInit()
     FileHistory().Load(*wxConfig::Get());
 #endif
 
+#ifndef DONT_MIGRATE_LEGACY_TM
     // NB: It's important to do this before TM is used for the first time.
     if ( !MigrateLegacyTranslationMemory() )
         return false;
+#endif
 
 #ifdef __WXMSW__
     AssociateFileTypeIfNeeded();
@@ -327,16 +331,25 @@ static wxLayoutDirection g_layoutDirection = wxLayout_Default;
 void PoeditApp::SetupLanguage()
 {
 #if defined(__WXMSW__)
-	wxLocale::AddCatalogLookupPathPrefix(wxStandardPaths::Get().GetResourcesDir() + "\\Translations");
+	wxFileTranslationsLoader::AddCatalogLookupPathPrefix(wxStandardPaths::Get().GetResourcesDir() + "\\Translations");
 #elif !defined(__WXOSX__)
-    wxLocale::AddCatalogLookupPathPrefix(wxStandardPaths::Get().GetInstallPrefix() + "/share/locale");
+    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(wxStandardPaths::Get().GetInstallPrefix() + "/share/locale");
 #endif
 
     wxTranslations *trans = new wxTranslations();
     wxTranslations::Set(trans);
-    #if NEED_CHOOSELANG_UI
+
+#ifdef __WXGTK__
+    // Properly set locale is important for some aspects of GTK+ as well as
+    // other things. It's also the common thing to do, so don't break
+    // expectations needlessly:
+    m_locale.reset(new wxLocale());
+    m_locale->Init(wxLANGUAGE_DEFAULT, wxLOCALE_DONT_LOAD_DEFAULT);
+#endif
+
+#if NEED_CHOOSELANG_UI
     trans->SetLanguage(GetUILanguage());
-    #endif
+#endif
     trans->AddStdCatalog();
     trans->AddCatalog("poedit");
 
