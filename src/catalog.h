@@ -148,8 +148,8 @@ class CatalogItem
         wxString GetTranslation(unsigned n = 0) const;
 
         /// Returns all translations.
-        const wxArrayString& GetTranslations() const
-            { return m_translations; }
+        const wxArrayString& GetTranslations() const { return m_translations; }
+        wxArrayString& GetTranslations() { return m_translations; }
 
         /// Returns references (#:) lines for the entry
         const wxArrayString& GetRawReferences() const { return m_references; }
@@ -554,6 +554,21 @@ class Catalog
 
         /// Exports the catalog to HTML format
         bool ExportToHTML(const wxString& filename);
+
+        /**
+            Return base path to source code for extraction, or empty string if not configured.
+            
+            This is the path that file references are relative to. It should be,
+            but may not be, the root of the source tree.
+         */
+        wxString GetSourcesBasePath() const;
+
+        /**
+            Returns top-most directory of the configured source tree.
+            
+            Returns empty string if not configured.
+         */
+        wxString GetSourcesRootPath() const;
 
         /** Updates the catalog from sources.
             \see SourceDigger, Parser, UpdateFromPOT.
