@@ -2012,6 +2012,11 @@ wxString Catalog::GetSourcesRootPath() const
     return GetSourcesPath(m_fileName, m_header, SourcesPath::Root);
 }
 
+bool Catalog::HasSourcesAvailable() const
+{
+    return !GetSourcesBasePath().empty();
+}
+
 bool Catalog::Update(ProgressInfo *progress, bool summary, UpdateResultReason& reason)
 {
     reason = UpdateResultReason::Unspecified;
@@ -2020,25 +2025,9 @@ bool Catalog::Update(ProgressInfo *progress, bool summary, UpdateResultReason& r
         return false;
 
     wxString cwd = wxGetCwd();
-    if (m_fileName != wxEmptyString)
+    auto path = GetSourcesBasePath();
+    if (!path.empty())
     {
-        wxString path;
-
-        if (wxIsAbsolutePath(m_header.BasePath))
-        {
-            path = m_header.BasePath;
-        }
-        else
-        {
-            path = wxPathOnly(m_fileName);
-            if (path.empty())
-                path = ".";
-            path = path + "/" + m_header.BasePath;
-        }
-
-        if (!wxIsAbsolutePath(path))
-            path = cwd + "/" + path;
-
         if (!wxFileName::DirExists(path))
         {
             reason = UpdateResultReason::NoSourcesFound;
