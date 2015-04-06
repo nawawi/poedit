@@ -234,6 +234,7 @@ public: // for PoeditApp
         void NewFromPOT();
 
         void OnOpen(wxCommandEvent& event);
+        void OnOpenFromCrowdin(wxCommandEvent& event);
 #ifndef __WXOSX__
         void OnOpenHist(wxCommandEvent& event);
         void OnCloseCmd(wxCommandEvent& event);
@@ -242,10 +243,19 @@ private:
         void OnSave(wxCommandEvent& event);
         void OnSaveAs(wxCommandEvent& event);
         template<typename F>
-        void GetSaveAsFilenameThenDo(const CatalogPtr& cat, const wxString& current, F then);
+        void GetSaveAsFilenameThenDo(const CatalogPtr& cat, F then);
         void DoSaveAs(const wxString& filename);
         void OnProperties(wxCommandEvent& event);
-        void OnUpdate(wxCommandEvent& event);
+
+        void OnUpdateFromSources(wxCommandEvent& event);
+        void OnUpdateFromSourcesUpdate(wxUpdateUIEvent& event);
+        void OnUpdateFromPOT(wxCommandEvent& event);
+        void OnUpdateFromPOTUpdate(wxUpdateUIEvent& event);
+        void OnUpdateFromCrowdin(wxCommandEvent& event);
+        void OnUpdateFromCrowdinUpdate(wxUpdateUIEvent& event);
+        void OnUpdateSmart(wxCommandEvent& event);
+        void OnUpdateSmartUpdate(wxUpdateUIEvent& event);
+
         void OnValidate(wxCommandEvent& event);
         void OnListSel(wxListEvent& event);
         void OnListRightClick(wxMouseEvent& event);
@@ -281,7 +291,6 @@ private:
         void OnSingleSelectionUpdate(wxUpdateUIEvent& event);
         void OnHasCatalogUpdate(wxUpdateUIEvent& event);
         void OnIsEditableUpdate(wxUpdateUIEvent& event);
-        void OnUpdateFromSourcesUpdate(wxUpdateUIEvent& event);
 
 #if defined(__WXMSW__) || defined(__WXGTK__)
         void OnTextEditingCommand(wxCommandEvent& event);
@@ -334,7 +343,9 @@ private:
 
     private:
         CatalogPtr m_catalog;
-        wxString m_fileName;
+
+        wxString GetFileName() const
+            { return m_catalog ? m_catalog->GetFileName() : wxString(); }
         bool m_fileExistsOnDisk;
 
         std::unique_ptr<MainToolbar> m_toolbar;
