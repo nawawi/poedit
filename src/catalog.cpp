@@ -33,7 +33,6 @@
 #include <wx/textfile.h>
 #include <wx/strconv.h>
 #include <wx/memtext.h>
-#include <wx/msgdlg.h>
 #include <wx/filename.h>
 
 #include <set>
@@ -44,13 +43,18 @@
 #include "gexecute.h"
 #include "progressinfo.h"
 #include "str_helpers.h"
-#include "summarydlg.h"
 #include "utility.h"
 #include "version.h"
 #include "language.h"
 
 #ifdef __WXOSX__
 #import <Foundation/Foundation.h>
+#endif
+
+// TODO: split into different file
+#if wxUSE_GUI
+    #include <wx/msgdlg.h>
+    #include "summarydlg.h"
 #endif
 
 // ----------------------------------------------------------------------
@@ -1510,9 +1514,11 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
         else if (wrapping != DEFAULT_WRAPPING)
             wrappingFlag.Printf(" --width=%d", wrapping);
 
+        TempOutputFileFor po_file_temp2_obj(po_file_temp);
+        const wxString po_file_temp2 = po_file_temp2_obj.FileName();
         auto msgcatCmd = wxString::Format("msgcat --force-po%s -o %s %s",
                                           wrappingFlag,
-                                          QuoteCmdlineArg(po_file),
+                                          QuoteCmdlineArg(po_file_temp2),
                                           QuoteCmdlineArg(po_file_temp));
         wxLogTrace("poedit", "formatting file with %s", msgcatCmd);
 
@@ -1522,7 +1528,9 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
         //      msgids) that, while correct, are not something a *translator* can
         //      do anything about.
         wxLogNull null;
-        msgcat_ok = ExecuteGettext(msgcatCmd) && wxFileExists(po_file);
+        msgcat_ok = ExecuteGettext(msgcatCmd) &&
+                    wxFileExists(po_file_temp2) &&
+                    wxRenameFile(po_file_temp2, po_file, /*overwrite=*/true);
     }
 
     if ( msgcat_ok )
@@ -1574,7 +1582,7 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
                   (
                       wxString::Format("msgfmt -o %s %s",
                                        QuoteCmdlineArg(mo_file_temp),
-                                       QuoteCmdlineArg(po_file))
+                                       QuoteCmdlineArg(CliSafeFileName(po_file)))
                   ) )
             {
                 mo_compilation_status = CompilationStatus::Success;
@@ -1830,11 +1838,13 @@ bool Catalog::DoSaveOnly(wxTextBuffer& f, wxTextFileType crlf)
 
     if (!CanEncodeToCharset(f, m_header.Charset))
     {
+#if wxUSE_GUI
         wxString msg;
         msg.Printf(_("The catalog couldn't be saved in '%s' charset as specified in catalog settings.\n\nIt was saved in UTF-8 instead and the setting was modified accordingly."),
                    m_header.Charset.c_str());
         wxMessageBox(msg, _("Error saving catalog"),
                      wxOK | wxICON_EXCLAMATION);
+#endif
         m_header.Charset = "UTF-8";
 
         // Re-do the save again because we modified a header:
@@ -1865,7 +1875,7 @@ int Catalog::DoValidate(const wxString& po_file)
     GettextErrors err;
     ExecuteGettextAndParseOutput
     (
-        wxString::Format("msgfmt -o /dev/null -c %s", QuoteCmdlineArg(po_file)),
+        wxString::Format("msgfmt -o /dev/null -c %s", QuoteCmdlineArg(CliSafeFileName(po_file))),
         err
     );
 
@@ -1926,6 +1936,9 @@ wxString GetSourcesPath(const wxString& fileName, const Catalog::HeaderData& hea
     if (fileName.empty())
         return wxString();
 
+    if (header.BasePath.empty())
+        return wxString();
+
     wxString basepath;
     if (wxIsAbsolutePath(header.BasePath))
     {
@@ -1977,9 +1990,10 @@ wxString Catalog::GetSourcesRootPath() const
 
 bool Catalog::HasSourcesAvailable() const
 {
-    return !GetSourcesBasePath().empty();
+    return !GetSourcesBasePath().empty() && !m_header.SearchPaths.empty();
 }
 
+#if wxUSE_GUI // TODO: better separation into another file
 bool Catalog::Update(ProgressInfo *progress, bool summary, UpdateResultReason& reason)
 {
     reason = UpdateResultReason::Unspecified;
@@ -2032,7 +2046,7 @@ bool Catalog::Update(ProgressInfo *progress, bool summary, UpdateResultReason& r
 
     return newcat != nullptr;
 }
-
+#endif
 
 bool Catalog::UpdateFromPOT(const wxString& pot_file,
                             bool summary,
@@ -2158,6 +2172,7 @@ void Catalog::GetMergeSummary(const CatalogPtr& refcat,
 
 bool Catalog::ShowMergeSummary(const CatalogPtr& refcat, bool *cancelledByUser)
 {
+#if wxUSE_GUI
     if (cancelledByUser)
         *cancelledByUser = false;
     if (wxConfig::Get()->ReadBool("show_summary", false))
@@ -2173,6 +2188,11 @@ bool Catalog::ShowMergeSummary(const CatalogPtr& refcat, bool *cancelledByUser)
     }
     else
         return true;
+#else
+    (void)refcat;
+    (void)cancelledByUser;
+    return true;
+#endif
 }
 
 static unsigned GetCountFromPluralFormsHeader(const Catalog::HeaderData& header)

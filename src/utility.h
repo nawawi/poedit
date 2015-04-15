@@ -32,12 +32,16 @@
     #endif
 #endif
 
-#include <wx/app.h>
-#include <wx/string.h>
-#include <wx/arrstr.h>
-#include <wx/toplevel.h>
-
 #include <functional>
+
+#include <wx/app.h>
+#include <wx/arrstr.h>
+#include <wx/string.h>
+#include <wx/weakref.h>
+
+#if wxUSE_GUI
+    #include <wx/toplevel.h>
+#endif
 
 // ----------------------------------------------------------------------
 // Multithreading helpers
@@ -316,12 +320,21 @@ public:
     wxString m_filenameFinal;
 };
 
-// Helper for writing files
+
+#ifdef __WXMSW__
+/// Return filename safe for passing to CLI tools (gettext).
+/// Uses 8.3 short names to avoid Unicode and codepage issues.
+wxString CliSafeFileName(const wxString& fn);
+#else
+inline wxString CliSafeFileName(const wxString& fn) { return fn; }
+#endif
 
 
 // ----------------------------------------------------------------------
 // Helpers for persisting windows' state
 // ----------------------------------------------------------------------
+
+#if wxUSE_GUI
 
 enum WinStateFlags
 {
@@ -338,5 +351,7 @@ inline wxString WindowStatePath(const wxWindow *win)
 {
     return wxString::Format("/windows/%s/", win->GetName().c_str());
 }
+
+#endif // wxUSE_GUI
 
 #endif // _UTILITY_H_

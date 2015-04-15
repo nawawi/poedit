@@ -52,8 +52,9 @@
 #include "osx_helpers.h"
 #endif
 
-#include <map>
 #include <algorithm>
+#include <map>
+#include <fstream>
 #include <future>
 #include <boost/range/counting_range.hpp>
 
@@ -1082,8 +1083,8 @@ void PoeditFrame::OnOpen(wxCommandEvent&)
 
         wxString name = wxFileSelector(OSX_OR_OTHER("", _("Open catalog")),
                         path, wxEmptyString, wxEmptyString,
-                        wxString::Format("%s (*.po)|*.po|%s (*.*)|*.*",
-                            _("PO Translation Files"), _("All Files")),
+                        wxString::Format("%s (*.po)|*.po",
+                            _("PO Translation Files")),
                         wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
 
         if (!name.empty())
@@ -1274,8 +1275,17 @@ void PoeditFrame::OnExport(wxCommandEvent&)
 bool PoeditFrame::ExportCatalog(const wxString& filename)
 {
     wxBusyCursor bcur;
-    bool ok = m_catalog->ExportToHTML(filename);
-    return ok;
+
+    TempOutputFileFor tempfile(filename);
+    std::ofstream f;
+    f.open(tempfile.FileName().fn_str());
+    m_catalog->ExportToHTML(f);
+    if (!tempfile.Commit())
+    {
+        wxLogError(_("Couldn't save file %s."), filename);
+        return false;
+    }
+    return true;
 }
 
 
@@ -1304,10 +1314,9 @@ void PoeditFrame::NewFromPOT()
              path, wxEmptyString, wxEmptyString,
              wxString::Format
              (
-                 "%s (*.pot)|*.pot|%s (*.po)|*.po|%s (*.*)|*.*",
+                 "%s (*.pot)|*.pot|%s (*.po)|*.po",
                  _("POT Translation Templates"),
-                 _("PO Translation Files"),
-                 _("All Files")
+                 _("PO Translation Files")
              ),
              wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
     bool ok = false;
@@ -1595,45 +1604,50 @@ void PoeditFrame::OnUpdateFromSourcesUpdate(wxUpdateUIEvent& event)
 {
     event.Enable(m_catalog &&
                  !m_catalog->IsFromCrowdin() &&
-                 !m_catalog->Header().SearchPaths.empty());
+                 m_catalog->HasSourcesAvailable());
 }
 
 void PoeditFrame::OnUpdateFromPOT(wxCommandEvent&)
 {
     DoIfCanDiscardCurrentDoc([=]{
-        try
-        {
-            wxString path = wxPathOnly(GetFileName());
-            if (path.empty())
-                path = wxConfig::Get()->Read("last_file_path", wxEmptyString);
-            wxString pot_file =
-                wxFileSelector(_("Open catalog template"),
-                     path, wxEmptyString, wxEmptyString,
-                     wxString::Format
-                     (
-                         "%s (*.pot)|*.pot|%s (*.po)|*.po|%s (*.*)|*.*",
-                         _("POT Translation Templates"),
-                         _("PO Translation Files"),
-                         _("All Files")
-                     ),
-                     wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
-            if (pot_file.empty())
-                return;
-            wxConfig::Get()->Write("last_file_path", wxPathOnly(pot_file));
+        wxString path = wxPathOnly(GetFileName());
+        if (path.empty())
+            path = wxConfig::Get()->Read("last_file_path", wxEmptyString);
 
-            if (UpdateCatalog(pot_file))
+        wxWindowPtr<wxFileDialog> dlg(
+            new wxFileDialog(this,
+                             _("Open catalog template"),
+                             path,
+                             wxEmptyString,
+                             wxString::Format
+                             (
+                                 "%s (*.pot)|*.pot|%s (*.po)|*.po",
+                                 _("POT Translation Templates"),
+                                 _("PO Translation Files")
+                             ),
+                             wxFD_OPEN | wxFD_FILE_MUST_EXIST));
+
+        dlg->ShowWindowModalThenDo([=](int retcode){
+            if (retcode != wxID_OK)
+                return;
+            auto pot_file = dlg->GetPath();
+            wxConfig::Get()->Write("last_file_path", wxPathOnly(pot_file));
+            try
             {
-                if (wxConfig::Get()->ReadBool("use_tm", true) &&
-                    wxConfig::Get()->ReadBool("use_tm_when_updating", false))
+                if (UpdateCatalog(pot_file))
                 {
-                    AutoTranslateCatalog(nullptr, AutoTranslate_OnlyGoodQuality);
+                    if (wxConfig::Get()->ReadBool("use_tm", true) &&
+                        wxConfig::Get()->ReadBool("use_tm_when_updating", false))
+                    {
+                        AutoTranslateCatalog(nullptr, AutoTranslate_OnlyGoodQuality);
+                    }
                 }
             }
-        }
-        catch (...)
-        {
-            wxLogError("%s", DescribeCurrentException());
-        }
+            catch (...)
+            {
+                wxLogError("%s", DescribeCurrentException());
+            }
+        });
 
         RefreshControls();
     });
