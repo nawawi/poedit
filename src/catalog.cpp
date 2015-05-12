@@ -31,6 +31,7 @@
 #include <wx/datetime.h>
 #include <wx/config.h>
 #include <wx/textfile.h>
+#include <wx/stdpaths.h>
 #include <wx/strconv.h>
 #include <wx/memtext.h>
 #include <wx/filename.h>
@@ -251,10 +252,16 @@ void Catalog::HeaderData::UpdateDict()
     }
 
     if (TeamEmail.empty())
+    {
         SetHeader("Language-Team", Team);
+    }
     else
-        SetHeader("Language-Team",
-                  Team + " <" + TeamEmail + ">");
+    {
+        if (Team.empty())
+            SetHeader("Language-Team", TeamEmail);
+        else
+            SetHeader("Language-Team", Team + " <" + TeamEmail + ">");
+    }
 
     SetHeader("MIME-Version", "1.0");
     SetHeader("Content-Type", "text/plain; charset=" + Charset);
@@ -1075,6 +1082,8 @@ bool LoadParser::OnDeletedEntry(const wxArrayString& deletedLines,
 Catalog::Catalog()
 {
     m_sourceLanguage = Language::English();
+    m_fileType = Type::PO;
+
     m_fileCRLF = wxTextFileType_None;
     m_fileWrappingWidth = DEFAULT_WRAPPING;
 
@@ -1086,6 +1095,16 @@ Catalog::Catalog()
     }
 }
 
+Catalog::Catalog(const wxString& po_file, int flags)
+{
+    m_sourceLanguage = Language::English();
+    m_fileType = Type::PO;
+
+    m_fileCRLF = wxTextFileType_None;
+    m_fileWrappingWidth = DEFAULT_WRAPPING;
+
+    m_isOk = Load(po_file, flags);
+}
 
 Catalog::~Catalog()
 {
@@ -1093,12 +1112,16 @@ Catalog::~Catalog()
 }
 
 
-Catalog::Catalog(const wxString& po_file, int flags)
+bool Catalog::HasCapability(Catalog::Cap cap) const
 {
-    m_fileCRLF = wxTextFileType_None;
-    m_fileWrappingWidth = DEFAULT_WRAPPING;
-
-    m_isOk = Load(po_file, flags);
+    switch (cap)
+    {
+        case Cap::Translations:
+        case Cap::LanguageSetting:
+        case Cap::UserComments:
+            return m_fileType == Type::PO;
+    }
+    return false; // silence VC++ warning
 }
 
 
@@ -1166,6 +1189,13 @@ bool Catalog::Load(const wxString& po_file, int flags)
     m_isOk = false;
     m_fileName = po_file;
     m_header.BasePath = wxEmptyString;
+
+    wxString ext;
+    wxFileName::SplitPath(po_file, nullptr, nullptr, &ext);
+    if (ext.CmpNoCase("pot") == 0)
+        m_fileType = Type::POT;
+    else
+        m_fileType = Type::PO;
 
     /* Load the .po file: */
 
@@ -1237,6 +1267,13 @@ bool Catalog::Load(const wxString& po_file, int flags)
 
 void Catalog::FixupCommonIssues()
 {
+    if (m_header.Project == "PACKAGE VERSION")
+        m_header.Project.clear();
+
+    // All the following fixups are specific to POs and should *not* be done in POTs:
+    if (m_fileType == Type::POT)
+        return;
+
     if (!m_header.Lang.IsValid())
     {
         if (!m_fileName.empty())
@@ -1268,9 +1305,6 @@ void Catalog::FixupCommonIssues()
     }
 
     wxLogTrace("poedit", "catalog lang is '%s'", GetLanguage().Code());
-
-    if (m_header.Project == "PACKAGE VERSION")
-        m_header.Project.clear();
 
     if (m_header.GetHeader("Language-Team") == "LANGUAGE <LL@li.org>")
     {
@@ -1567,7 +1601,7 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
 
     /* If the user wants it, compile .mo file right now: */
 
-    if (save_mo && wxConfig::Get()->Read("compile_mo", (long)true))
+    if (m_fileType == Type::PO && save_mo && wxConfig::Get()->Read("compile_mo", (long)true))
     {
         const wxString mo_file = wxFileName::StripExtension(po_file) + ".mo";
         TempOutputFileFor mo_file_temp_obj(mo_file);
@@ -1760,10 +1794,22 @@ bool Catalog::DoSaveOnly(wxTextBuffer& f, wxTextFileType crlf)
     // was empty previously, the author apparently doesn't want this header
     // set, so don't mess with it. See https://sourceforge.net/tracker/?func=detail&atid=389156&aid=1900298&group_id=27043
     // for motivation:
-    if ( !m_header.RevisionDate.empty() )
-        m_header.RevisionDate = GetCurrentTimeRFC822();
+    auto currentTime = GetCurrentTimeRFC822();
+    switch (m_fileType)
+    {
+        case Type::PO:
+            if ( !m_header.RevisionDate.empty() )
+                m_header.RevisionDate = currentTime;
+            break;
+        case Type::POT:
+            if ( m_fileType == Type::POT && !m_header.CreationDate.empty() )
+                m_header.CreationDate = currentTime;
+            break;
+    }
 
     SaveMultiLines(f, m_header.Comment);
+    if (m_fileType == Type::POT)
+        f.AddLine("#, fuzzy");
     f.AddLine(_T("msgid \"\""));
     f.AddLine(_T("msgstr \"\""));
     wxString pohdr = wxString(_T("\"")) + m_header.ToString(_T("\"\n\""));
@@ -1854,6 +1900,99 @@ bool Catalog::DoSaveOnly(wxTextBuffer& f, wxTextFileType crlf)
 
     // Otherwise everything can be safely saved:
     return f.Write(crlf, wxCSConv(m_header.Charset));
+}
+
+
+bool Catalog::HasDuplicateItems() const
+{
+    typedef std::pair<wxString, wxString> MsgId;
+    std::set<MsgId> ids;
+    for (auto& item: m_items)
+    {
+        if (!ids.emplace(std::make_pair(item->GetContext(), item->GetString())).second)
+            return true;
+    }
+    return false;
+}
+
+bool Catalog::FixDuplicateItems()
+{
+    auto oldname = m_fileName;
+
+    TempDirectory tmpdir;
+    if ( !tmpdir.IsOk() )
+        return false;
+
+    wxString po_file_temp = tmpdir.CreateFileName("catalog.po");
+    wxString po_file_fixed = tmpdir.CreateFileName("fixed.po");
+
+    if ( !DoSaveOnly(po_file_temp, wxTextFileType_Unix) )
+    {
+        wxLogError(_("Couldn't save file %s."), po_file_temp.c_str());
+        return false;
+    }
+
+    ExecuteGettext(wxString::Format("msguniq -o %s %s",
+                                    QuoteCmdlineArg(po_file_fixed),
+                                    QuoteCmdlineArg(po_file_temp)));
+
+    if (!wxFileName::FileExists(po_file_fixed))
+        return false;
+
+    bool ok = Load(po_file_fixed);
+    m_fileName = oldname;
+    return ok;
+}
+
+
+namespace
+{
+
+wxString MaskForType(const char *extensions, const wxString& description, bool showExt = true)
+{
+    (void)showExt;
+#ifdef __WXMSW__
+    if (showExt)
+        return wxString::Format("%s (%s)|%s", description, extensions, extensions);
+    else
+#endif
+        return wxString::Format("%s|%s", description, extensions);
+}
+
+wxString MaskForType(Catalog::Type t)
+{
+    switch (t)
+    {
+        case Catalog::Type::PO:
+            return MaskForType("*.po", _("PO Translation Files"));
+        case Catalog::Type::POT:
+            return MaskForType("*.pot", _("POT Translation Templates"));
+    }
+    return ""; // silence stupid warning
+}
+
+} // anonymous namespace
+
+wxString Catalog::GetTypesFileMask(std::initializer_list<Type> types)
+{
+    if (types.size() == 0)
+        return "";
+    wxString out;
+    auto t = types.begin();
+    out += MaskForType(*t);
+    for (++t; t != types.end(); ++t)
+    {
+        out += "|";
+        out += MaskForType(*t);
+    }
+    return out;
+}
+
+wxString Catalog::GetAllTypesFileMask()
+{
+    return MaskForType("*.po;*.pot", _("All Translation Files"), /*showExt=*/false) +
+           "|" +
+           GetTypesFileMask({Type::PO, Type::POT});
 }
 
 
@@ -1988,9 +2127,53 @@ wxString Catalog::GetSourcesRootPath() const
     return GetSourcesPath(m_fileName, m_header, SourcesPath::Root);
 }
 
+bool Catalog::HasSourcesConfigured() const
+{
+    return !m_fileName.empty() &&
+           !m_header.BasePath.empty() &&
+           !m_header.SearchPaths.empty();
+}
+
 bool Catalog::HasSourcesAvailable() const
 {
-    return !GetSourcesBasePath().empty() && !m_header.SearchPaths.empty();
+    if (!HasSourcesConfigured())
+        return false;
+
+    auto basepath = GetSourcesBasePath();
+    if (!wxFileName::DirExists(basepath))
+        return false;
+
+    for (auto& p: m_header.SearchPaths)
+    {
+        if (!wxFileName::DirExists(basepath + p))
+            return false;
+    }
+
+    auto wpfile = m_header.GetHeader("X-Poedit-WPHeader");
+    if (!wpfile.empty())
+    {
+        // The following tests in this function are heuristics, so don't run
+        // them in presence of X-Poedit-WPHeader and consider the existence
+        // of that file a confirmation of correct setup (even though strictly
+        // speaking only its absence proves anything).
+        return wxFileName::FileExists(basepath + wpfile);
+    }
+
+    if (m_header.SearchPaths.size() == 1)
+    {
+        // A single path doesn't give us much in terms of detection. About the
+        // only thing we can do is to check if it is is a well known directory
+        // that is unlikely to be the root.
+        auto root = GetSourcesRootPath();
+        if (root == wxGetUserHome() ||
+            root == wxStandardPaths::Get().GetDocumentsDir() ||
+            root.EndsWith(wxString(wxFILE_SEP_PATH) + "Desktop" + wxFILE_SEP_PATH))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 #if wxUSE_GUI // TODO: better separation into another file
@@ -2025,7 +2208,7 @@ bool Catalog::Update(ProgressInfo *progress, bool summary, UpdateResultReason& r
     if (progress->Cancelled())
         reason = UpdateResultReason::CancelledByUser;
 
-    if (newcat != NULL)
+    if (newcat)
     {
         bool succ = false;
         if ( progress )
@@ -2033,7 +2216,18 @@ bool Catalog::Update(ProgressInfo *progress, bool summary, UpdateResultReason& r
 
         bool cancelledByUser = false;
         if (!summary || ShowMergeSummary(newcat, &cancelledByUser))
-            succ = Merge(newcat);
+        {
+            switch (m_fileType)
+            {
+                case Type::PO:
+                    succ = Merge(newcat);
+                    break;
+                case Type::POT:
+                    m_items = newcat->m_items;
+                    succ = true;
+                    break;
+            }
+        }
         if (!succ)
         {
             newcat.reset();

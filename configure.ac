@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([poedit], [1.8beta1], [poedit@googlegroups.com])
+AC_INIT([poedit], [1.8beta2], [poedit@googlegroups.com])
 PACKAGE_SHORT_VERSION=1.8
 AC_SUBST(PACKAGE_SHORT_VERSION)
 
@@ -49,7 +49,7 @@ AC_PROG_CXXCPP
 AC_LANG([C++])
 AX_CXX_COMPILE_STDCXX_11([], [mandatory])
 
-WXLIBS_USED="xrc,stc,html,xml,adv,core"
+WXLIBS_USED="xrc,stc,html,xml,adv,core,net"
 
 case "$USE_DEBUG" in
 yes)	DEBUG_FLAGS="-g -Wall -O0"

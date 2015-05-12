@@ -32,6 +32,7 @@
 #include <wx/arrstr.h>
 #include <wx/textfile.h>
 
+#include <initializer_list>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -425,6 +426,24 @@ typedef std::map<wxString, unsigned> CatalogItemIndex;
 class Catalog
 {
     public:
+        /// Type of the file loaded
+        enum class Type
+        {
+            PO,
+            POT
+        };
+
+        /// Capabilities of the file type
+        enum class Cap
+        {
+            Translations,    // Can translations be added (e.g. POTs can't)?
+            LanguageSetting, // Is language code saved in the file?
+            UserComments,    // Can users add comments?
+        };
+
+        /// Is this file capable of doing these things
+        bool HasCapability(Cap cap) const;
+
         /// PO file header information.
         class HeaderData
         {
@@ -556,6 +575,12 @@ class Catalog
          */
         std::string SaveToBuffer();
 
+        /// File mask for opening/saving this catalog's file type
+        wxString GetFileMask() const { return GetTypesFileMask({m_fileType}); }
+        /// File mask for opening/saving any supported file type
+        static wxString GetTypesFileMask(std::initializer_list<Type> types);
+        static wxString GetAllTypesFileMask();
+
         /// Compiles the catalog into binary MO file.
         bool CompileToMO(const wxString& mo_file,
                          int& validation_errors,
@@ -563,6 +588,12 @@ class Catalog
 
         /// Exports the catalog to HTML format
         void ExportToHTML(std::ostream& output);
+
+        /// Detect a particular common breakage of catalogs.
+        bool HasDuplicateItems() const;
+
+        /// Fixes a common invalid kind of entries, when msgids aren't unique.
+        bool FixDuplicateItems();
 
         /**
             Return base path to source code for extraction, or empty string if not configured.
@@ -578,6 +609,11 @@ class Catalog
             Returns empty string if not configured.
          */
         wxString GetSourcesRootPath() const;
+
+        /**
+            Returns true if the source code to update the PO from is available.
+         */
+        bool HasSourcesConfigured() const;
 
         /**
             Returns true if the source code to update the PO from is available.
@@ -683,7 +719,9 @@ class Catalog
         /// Returns number of errors (i.e. 0 if no errors).
         int Validate();
 
-        const wxString& GetFileName() const { return m_fileName; }
+        Type GetFileType() const { return m_fileType; }
+
+        wxString GetFileName() const { return m_fileName; }
         void SetFileName(const wxString& fn) { m_fileName = fn; }
 
     protected:
@@ -725,6 +763,7 @@ class Catalog
         CatalogDeletedDataArray m_deletedItems;
 
         bool m_isOk;
+        Type m_fileType;
         wxString m_fileName;
         HeaderData m_header;
         Language m_sourceLanguage;

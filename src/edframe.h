@@ -95,7 +95,9 @@ class PoeditFrame : public wxFrame
 
         /// Returns active PoeditFrame, if it is unused (i.e. not showing
         /// content, not having catalog loaded); NULL otherwise.
-        static PoeditFrame *UnusedActiveWindow();
+        static PoeditFrame *UnusedActiveWindow() { return UnusedWindow(true); }
+        /// Ditto, but not required to be active
+        static PoeditFrame *UnusedWindow(bool active);
 
         /// Returns true if at least one one window has unsaved changes
         static bool AnyWindowIsModified();
@@ -114,6 +116,9 @@ class PoeditFrame : public wxFrame
 
         template<typename TFunctor>
         void WriteCatalog(const wxString& catalog, TFunctor completionHandler);
+
+        void FixDuplicatesIfPresent();
+        void WarnAboutLanguageIssues();
 
         /// Did the user modify the catalog?
         bool IsModified() const { return m_modified; }
@@ -162,6 +167,7 @@ class PoeditFrame : public wxFrame
             Invalid, // no content whatsoever
             Welcome,
             PO,
+            POT,
             Empty_PO
         };
         Content m_contentType;
@@ -172,7 +178,10 @@ class PoeditFrame : public wxFrame
         /// Ensures creation of specified content view, destroying the
         /// current content if necessary
         void EnsureContentView(Content type);
-        wxWindow* CreateContentViewPO();
+        void EnsureAppropriateContentView();
+        wxWindow* CreateContentViewPO(Content type);
+        void CreateContentViewEditControls(wxWindow *p, wxBoxSizer *panelSizer);
+        void CreateContentViewTemplateControls(wxWindow *p, wxBoxSizer *panelSizer);
         wxWindow* CreateContentViewWelcome();
         wxWindow* CreateContentViewEmptyPO();
         void DestroyContentView();
@@ -218,6 +227,7 @@ class PoeditFrame : public wxFrame
 
         // navigation to another item in the list
         typedef bool (*NavigatePredicate)(const CatalogItemPtr& item);
+        long NavigateGetNextItem(const long start, int step, NavigatePredicate predicate, bool wrap, CatalogItemPtr *out_item);
         void Navigate(int step, NavigatePredicate predicate, bool wrap);
         void OnDoneAndNext(wxCommandEvent&);
         void OnPrev(wxCommandEvent&);
@@ -232,6 +242,7 @@ public: // for PoeditApp
         void OnNew(wxCommandEvent& event);
         void NewFromScratch();
         void NewFromPOT();
+        void NewFromPOT(const wxString& pot_file, Language language = Language());
 
         void OnOpen(wxCommandEvent& event);
         void OnOpenFromCrowdin(wxCommandEvent& event);
@@ -286,11 +297,15 @@ private:
 
         void OnShowHideSidebar(wxCommandEvent& event);
         void OnUpdateShowHideSidebar(wxUpdateUIEvent& event);
+        void OnShowHideStatusbar(wxCommandEvent& event);
+        void OnUpdateShowHideStatusbar(wxUpdateUIEvent& event);
 
         void OnSelectionUpdate(wxUpdateUIEvent& event);
+        void OnSelectionUpdateEditable(wxUpdateUIEvent& event);
         void OnSingleSelectionUpdate(wxUpdateUIEvent& event);
         void OnHasCatalogUpdate(wxUpdateUIEvent& event);
         void OnIsEditableUpdate(wxUpdateUIEvent& event);
+        void OnEditCommentUpdate(wxUpdateUIEvent& event);
 
 #if defined(__WXMSW__) || defined(__WXGTK__)
         void OnTextEditingCommand(wxCommandEvent& event);

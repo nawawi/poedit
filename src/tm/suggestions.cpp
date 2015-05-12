@@ -25,13 +25,13 @@
 
 #include "suggestions.h"
 
-#include "ThreadPool.h"
+#include "concurrency.h"
 
 
 class SuggestionsProviderImpl
 {
 public:
-    SuggestionsProviderImpl() : m_pool(2) {}
+    SuggestionsProviderImpl() {}
 
     void SuggestTranslation(SuggestionsBackend& backend,
                             const Language& srclang,
@@ -41,7 +41,7 @@ public:
                             SuggestionsProvider::error_func_type onError)
     {
         auto bck = &backend;
-        m_pool.enqueue([=](){
+        concurrency_queue::add([=](){
             // don't bother asking the backend if the language is invalid:
             if (!lang.IsValid())
             {
@@ -53,8 +53,24 @@ public:
         });
     }
 
-private:
-    ThreadPool m_pool;
+    std::future<SuggestionsList> SuggestTranslation(SuggestionsBackend& backend,
+                                                   const Language& srclang,
+                                                   const Language& lang,
+                                                   const std::wstring& source)
+    {
+        auto promise = std::make_shared<std::promise<SuggestionsList>>();
+
+        SuggestTranslation(backend, srclang, lang, source,
+            [=](const SuggestionsList& results) {
+                promise->set_value(results);
+            },
+            [=](std::exception_ptr e) {
+                promise->set_exception(e);
+            }
+        );
+
+        return promise->get_future();
+    }
 };
 
 
@@ -75,4 +91,13 @@ void SuggestionsProvider::SuggestTranslation(SuggestionsBackend& backend,
                                              error_func_type onError)
 {
     m_impl->SuggestTranslation(backend, srclang, lang, source, onSuccess, onError);
+}
+
+std::future<SuggestionsList>
+SuggestionsProvider::SuggestTranslation(SuggestionsBackend& backend,
+                                        const Language& srclang,
+                                        const Language& lang,
+                                        const std::wstring& source)
+{
+    return m_impl->SuggestTranslation(backend, srclang, lang, source);
 }
