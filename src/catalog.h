@@ -524,7 +524,7 @@ class Catalog
         static const int DEFAULT_WRAPPING = -2;
 
         /// Default ctor. Creates empty catalog, you have to call Load.
-        Catalog();
+        Catalog(Type type = Type::PO);
 
         /// Ctor that loads the catalog from \a po_file with Load.
         /// \a flags is CreationFlags combination.
@@ -594,6 +594,11 @@ class Catalog
 
         /// Fixes a common invalid kind of entries, when msgids aren't unique.
         bool FixDuplicateItems();
+
+        Type GetFileType() const { return m_fileType; }
+
+        wxString GetFileName() const { return m_fileName; }
+        void SetFileName(const wxString& fn);
 
         /**
             Return base path to source code for extraction, or empty string if not configured.
@@ -683,6 +688,9 @@ class Catalog
         /// Returns catalog's language (may be invalid).
         Language GetLanguage() const { return m_header.Lang; }
 
+        /// Change the catalog's language and update headers accordingly
+        void SetLanguage(Language lang);
+
         /// Is the PO file from Crowdin, i.e. sync-able?
         bool IsFromCrowdin() const
             { return m_header.HasHeader("X-Crowdin-Project") && m_header.HasHeader("X-Crowdin-File"); }
@@ -718,11 +726,6 @@ class Catalog
         /// Validates correctness of the translation by running msgfmt
         /// Returns number of errors (i.e. 0 if no errors).
         int Validate();
-
-        Type GetFileType() const { return m_fileType; }
-
-        wxString GetFileName() const { return m_fileName; }
-        void SetFileName(const wxString& fn) { m_fileName = fn; }
 
     protected:
         /// Fix commonly encountered fixable problems with loaded files
