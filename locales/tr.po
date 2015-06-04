@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
-"Report-Msgid-Bugs-To: poedit@googlegroups.com\n"
-"POT-Creation-Date: 2015-05-13 18:47+0200\n"
-"PO-Revision-Date: 2015-05-13 12:41-0400\n"
+"Report-Msgid-Bugs-To: help@poedit.net\n"
+"POT-Creation-Date: 2015-05-27 11:31+0200\n"
+"PO-Revision-Date: 2015-05-27 05:17-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Turkish\n"
 "Language: tr_TR\n"
@@ -250,6 +250,9 @@ msgstr "geçici dosyaları silme (hata ayıklama için)"
 
 msgid "handle a poedit:// URI"
 msgstr "Bir poedit:// URI'si kullan"
+
+msgid "Failed to communicate with Poedit process."
+msgstr "Poedit işlemi ile iletişim kurma başarısız."
 
 #, c-format
 msgid "Unhandled exception occurred: %s"
@@ -918,7 +921,7 @@ msgid "Translation"
 msgstr "Çeviri"
 
 msgid "ID"
-msgstr "KİMLİK"
+msgstr "Kod"
 
 #, c-format
 msgid "Source text — %s"
@@ -1458,10 +1461,10 @@ msgid "&Preferences"
 msgstr "&Tercihler"
 
 msgid "Display entry &IDs"
-msgstr "Giriş &kimliklerini görüntüle"
+msgstr "&Kayıt kodlarını görüntüle"
 
 msgid "Display Entry &IDs"
-msgstr "Giriş &Kimliklerini Görüntüle"
+msgstr "&Kayıt Kodlarını Görüntüle"
 
 msgid "Sort by &file order"
 msgstr "&Dosya düzenine göre sırala"
@@ -1678,14 +1681,17 @@ msgstr "Ekibin e-posta adresi:"
 msgid "Translation properties"
 msgstr "Çeviri özellikleri"
 
+msgid "Sources paths"
+msgstr "Kaynak yolları"
+
 msgid "Extract text from source files in the following directories:"
 msgstr "Kaynak dosyalardan metinleri şurada belirtilen dizinlere çıkart:"
 
 msgid "Base path:"
 msgstr "Temel yol:"
 
-msgid "Sources paths"
-msgstr "Kaynak yolları"
+msgid "Sources keywords"
+msgstr "Kaynak anahtar kelimeleri"
 
 msgid ""
 "Use these keywords (function names) to recognize translatable strings\n"
@@ -1696,9 +1702,6 @@ msgstr ""
 
 msgid "Learn about gettext keywords"
 msgstr "Gettext anahtar kelimeleri hakkında bilgi edinin"
-
-msgid "Sources keywords"
-msgstr "Kaynak anahtar kelimeleri"
 
 msgid "Update summary"
 msgstr "Güncelleme özeti"

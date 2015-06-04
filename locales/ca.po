@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
-"Report-Msgid-Bugs-To: poedit@googlegroups.com\n"
-"POT-Creation-Date: 2015-05-13 18:47+0200\n"
-"PO-Revision-Date: 2015-05-13 12:41-0400\n"
+"Report-Msgid-Bugs-To: help@poedit.net\n"
+"POT-Creation-Date: 2015-05-27 11:31+0200\n"
+"PO-Revision-Date: 2015-05-27 05:17-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Catalan\n"
 "Language: ca_ES\n"
@@ -252,6 +252,9 @@ msgstr "no suprimeixis els fitxers temporals (per depuració)"
 
 msgid "handle a poedit:// URI"
 msgstr "gestiona un URI poedit://"
+
+msgid "Failed to communicate with Poedit process."
+msgstr ""
 
 #, c-format
 msgid "Unhandled exception occurred: %s"
@@ -1687,14 +1690,17 @@ msgstr "Adreça electrònica de l’equip:"
 msgid "Translation properties"
 msgstr "Propietats de la traducció"
 
+msgid "Sources paths"
+msgstr "Camins de fonts"
+
 msgid "Extract text from source files in the following directories:"
 msgstr "Extreu el text dels fitxers font dels següents directoris:"
 
 msgid "Base path:"
 msgstr "Camí base:"
 
-msgid "Sources paths"
-msgstr "Camins de fonts"
+msgid "Sources keywords"
+msgstr "Paraules clau de fonts"
 
 msgid ""
 "Use these keywords (function names) to recognize translatable strings\n"
@@ -1705,9 +1711,6 @@ msgstr ""
 
 msgid "Learn about gettext keywords"
 msgstr "Apreneu sobre les paraules clau de gettext"
-
-msgid "Sources keywords"
-msgstr "Paraules clau de fonts"
 
 msgid "Update summary"
 msgstr "Actualitza resum"
@@ -1883,8 +1886,8 @@ msgid ""
 "developer."
 msgstr ""
 "Les entrades traduïbles no s'afegeixen manualment en el sistema Gettext, "
-"però automàticament\n"
-"s'extreuen des del codi font. D'aquesta manera, queden actualitzades i "
+"sinó que s'extreuen\n"
+"automàticament des del codi font. D'aquesta manera, queden actualitzades i "
 "correctes.\n"
 "Els traductors típicament usen fitxers de plantilla PO (POTs) preparats pels "
 "pel desenvolupador."

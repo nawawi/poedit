@@ -1352,6 +1352,7 @@ bool PoeditFrame::ExportCatalog(const wxString& filename)
     std::ofstream f;
     f.open(tempfile.FileName().fn_str());
     m_catalog->ExportToHTML(f);
+    f.close();
     if (!tempfile.Commit())
     {
         wxLogError(_("Couldn't save file %s."), filename);
@@ -2062,7 +2063,7 @@ void PoeditFrame::OnClearTranslation(wxCommandEvent&)
 void PoeditFrame::OnFind(wxCommandEvent&)
 {
     if (!m_findWindow)
-        m_findWindow = new FindFrame(this, m_list, m_catalog, m_textOrig, m_textTrans);
+        m_findWindow = new FindFrame(this, m_list, m_catalog, m_textOrig, m_textTrans, m_pluralNotebook);
 
     m_findWindow->ShowForFind();
 }
@@ -2070,7 +2071,7 @@ void PoeditFrame::OnFind(wxCommandEvent&)
 void PoeditFrame::OnFindAndReplace(wxCommandEvent&)
 {
     if (!m_findWindow)
-        m_findWindow = new FindFrame(this, m_list, m_catalog, m_textOrig, m_textTrans);
+        m_findWindow = new FindFrame(this, m_list, m_catalog, m_textOrig, m_textTrans, m_pluralNotebook);
 
     m_findWindow->ShowForReplace();
 }
@@ -2701,6 +2702,7 @@ void PoeditFrame::UpdateMenu()
 
     menubar->Enable(XRCID("menu_references"), nonEmpty);
     menubar->Enable(wxID_FIND, nonEmpty);
+    menubar->Enable(wxID_REPLACE, nonEmpty);
     menubar->Enable(XRCID("menu_find_next"), nonEmpty);
     menubar->Enable(XRCID("menu_find_prev"), nonEmpty);
 

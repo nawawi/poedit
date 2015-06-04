@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
-"Report-Msgid-Bugs-To: poedit@googlegroups.com\n"
-"POT-Creation-Date: 2015-05-13 18:47+0200\n"
-"PO-Revision-Date: 2015-05-13 12:41-0400\n"
+"Report-Msgid-Bugs-To: help@poedit.net\n"
+"POT-Creation-Date: 2015-05-27 11:31+0200\n"
+"PO-Revision-Date: 2015-05-27 05:17-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Swedish\n"
 "Language: sv_SE\n"
@@ -246,6 +246,9 @@ msgstr "ta inte bort temporära filer (för felsökning)"
 
 msgid "handle a poedit:// URI"
 msgstr "hantera en poedit:// URI"
+
+msgid "Failed to communicate with Poedit process."
+msgstr "Misslyckades att kommunicera med Poedit-processen."
 
 #, c-format
 msgid "Unhandled exception occurred: %s"
@@ -1678,14 +1681,17 @@ msgstr "Gruppens e-postadress:"
 msgid "Translation properties"
 msgstr "Översättningsegenskaper"
 
+msgid "Sources paths"
+msgstr "Källor sökvägar"
+
 msgid "Extract text from source files in the following directories:"
 msgstr "Extrahera text från källfilen i följande kataloger:"
 
 msgid "Base path:"
 msgstr "Rotsökväg:"
 
-msgid "Sources paths"
-msgstr "Källor sökvägar"
+msgid "Sources keywords"
+msgstr "Källor sökord"
 
 msgid ""
 "Use these keywords (function names) to recognize translatable strings\n"
@@ -1697,9 +1703,6 @@ msgstr ""
 
 msgid "Learn about gettext keywords"
 msgstr "Lär dig mer om gettext sökord"
-
-msgid "Sources keywords"
-msgstr "Källor sökord"
 
 msgid "Update summary"
 msgstr "Uppdatera sammanfattning"

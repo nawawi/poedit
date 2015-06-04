@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
-"Report-Msgid-Bugs-To: poedit@googlegroups.com\n"
-"POT-Creation-Date: 2015-05-13 18:47+0200\n"
-"PO-Revision-Date: 2015-05-13 12:41-0400\n"
+"Report-Msgid-Bugs-To: help@poedit.net\n"
+"POT-Creation-Date: 2015-05-27 11:31+0200\n"
+"PO-Revision-Date: 2015-05-27 05:17-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Portuguese\n"
 "Language: pt_PT\n"
@@ -246,6 +246,9 @@ msgstr "não eliminar ficheiros temporários (depuração)"
 
 msgid "handle a poedit:// URI"
 msgstr "gerir um URI poedit://"
+
+msgid "Failed to communicate with Poedit process."
+msgstr "Falha ao comunicar com o processo do Poedit."
 
 #, c-format
 msgid "Unhandled exception occurred: %s"
@@ -642,8 +645,8 @@ msgid ""
 "necessary."
 msgstr ""
 "O ficheiro continha itens duplicados, o que não é permitido em ficheiros PO, "
-"e que impedia a utilização do ficheiro. O Poedit corrigiu os erros, mas você "
-"deve rever as traduções dos diversos itens marcados como imprecisos e, se "
+"e que impedia a sua utilização. O Poedit corrigiu os erros, mas você deve "
+"rever as traduções dos diversos itens marcados como imprecisos e, se "
 "necessário, corrigi-los."
 
 msgid "Language of the translation isn't set."
@@ -1682,14 +1685,17 @@ msgstr "Endereço eletrónico da equipa:"
 msgid "Translation properties"
 msgstr "Propriedades da tradução"
 
+msgid "Sources paths"
+msgstr "Caminho das fontes"
+
 msgid "Extract text from source files in the following directories:"
 msgstr "Extrair texto dos ficheiros fonte nestes diretórios:"
 
 msgid "Base path:"
 msgstr "Caminho base:"
 
-msgid "Sources paths"
-msgstr "Caminho das fontes"
+msgid "Sources keywords"
+msgstr "Palavras-chave das fontes"
 
 msgid ""
 "Use these keywords (function names) to recognize translatable strings\n"
@@ -1701,9 +1707,6 @@ msgstr ""
 
 msgid "Learn about gettext keywords"
 msgstr "Saber mais sobre palavras-chaves gettext"
-
-msgid "Sources keywords"
-msgstr "Palavras-chave das fontes"
 
 msgid "Update summary"
 msgstr "Resumo da atualização"

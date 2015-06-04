@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
-"Report-Msgid-Bugs-To: poedit@googlegroups.com\n"
-"POT-Creation-Date: 2015-05-13 18:47+0200\n"
-"PO-Revision-Date: 2015-05-13 12:41-0400\n"
+"Report-Msgid-Bugs-To: help@poedit.net\n"
+"POT-Creation-Date: 2015-05-27 11:31+0200\n"
+"PO-Revision-Date: 2015-05-27 05:17-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Slovak\n"
 "Language: sk_SK\n"
@@ -23,7 +23,7 @@ msgid "Don't Show Again"
 msgstr "Nabudúce nezobrazovať"
 
 msgid "Don't show again"
-msgstr "Nezobrazovať znovu"
+msgstr "Nabudúce nezobrazovať"
 
 #, c-format
 msgid "%i line of file '%s' was not loaded correctly."
@@ -252,6 +252,9 @@ msgstr "nemazať dočasné súbory (pre ladiace účely)"
 
 msgid "handle a poedit:// URI"
 msgstr "handle a poedit:// URI"
+
+msgid "Failed to communicate with Poedit process."
+msgstr "Nie je možné komunikovať s presom programu Poedit."
 
 #, c-format
 msgid "Unhandled exception occurred: %s"
@@ -642,7 +645,7 @@ msgstr "Kontext:"
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
-msgstr ""
+msgstr "Program Poedit automaticky opraví neplatný obsah v súbore \"%s\"."
 
 msgid ""
 "The file contained duplicate items, which is not allowed in PO files and "
@@ -650,6 +653,9 @@ msgid ""
 "should review translations of any items marked as fuzzy and correct them if "
 "necessary."
 msgstr ""
+"Súbor obsahoval duplicitné položky, čo nie je v PO súboroch povolené a a "
+"zabránilo by to ich použitiu. Poedit tento problém opravil, ale mali by ste "
+"skontrolovať všetky preklady označené ako nepresné a prípadne ich opraviť."
 
 msgid "Language of the translation isn't set."
 msgstr "Jazyk prekladu nie je nastavený."
@@ -738,9 +744,9 @@ msgstr[2] "%d chýb"
 #, c-format
 msgid "%d entry"
 msgid_plural "%d entries"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d položka"
+msgstr[1] "%d položky"
+msgstr[2] "%d položiek"
 
 msgid " (unsaved)"
 msgstr " (neuložené)"
@@ -913,10 +919,10 @@ msgid "Show Sidebar"
 msgstr "Zobraziť bočný panel"
 
 msgid "Hide Status Bar"
-msgstr ""
+msgstr "Skryť stavový riadok"
 
 msgid "Show Status Bar"
-msgstr ""
+msgstr "Zobraziť stavový riadok"
 
 msgid "Source text"
 msgstr "Zdrojový text"
@@ -1271,30 +1277,36 @@ msgid ""
 "\n"
 "or use the + button"
 msgstr ""
+"<big>Ťahajte a pustite priečinky tu</big>\n"
+"\n"
+"alebo použite + tlačidlo"
 
 msgid ""
 "<big>Drag and drop folders here</big>\n"
 "\n"
 "or use the + button"
 msgstr ""
+"<big>Ťahajte a pustite priečinky tu</big>\n"
+"\n"
+"alebo použite + tlačidlo"
 
 msgid "Add Folders..."
-msgstr ""
+msgstr "Pridať priečinky..."
 
 msgid "Add folders..."
-msgstr ""
+msgstr "Pridať priečinky..."
 
 msgid "Add Files..."
-msgstr ""
+msgstr "Pridať súbory..."
 
 msgid "Add files..."
-msgstr ""
+msgstr "Pridať súbory..."
 
 msgid "Add Wildcard..."
-msgstr ""
+msgstr "Pridať zástupný reťazec..."
 
 msgid "Add wildcard..."
-msgstr ""
+msgstr "Pridať zástupný reťazec..."
 
 msgid "Paths"
 msgstr "Cesty"
@@ -1504,7 +1516,7 @@ msgid "Show sidebar"
 msgstr "Zobraziť bočný panel"
 
 msgid "Show status bar"
-msgstr ""
+msgstr "Zobraziť stavový riadok"
 
 msgid "C&atalog"
 msgstr "&Katalóg"
@@ -1679,14 +1691,17 @@ msgstr "Emailová adresa tímu:"
 msgid "Translation properties"
 msgstr "Vlastnosti prekladov"
 
+msgid "Sources paths"
+msgstr "Cesty k zdrojom"
+
 msgid "Extract text from source files in the following directories:"
 msgstr "Aktualizovať text zo zdrojových súborov v nasledovných adresároch:"
 
 msgid "Base path:"
 msgstr "Základná cesta:"
 
-msgid "Sources paths"
-msgstr "Cesty k zdrojom"
+msgid "Sources keywords"
+msgstr "Zdrojové kľúčové slová"
 
 msgid ""
 "Use these keywords (function names) to recognize translatable strings\n"
@@ -1697,9 +1712,6 @@ msgstr ""
 
 msgid "Learn about gettext keywords"
 msgstr "Zistiť informácie o gettext kľúčových slovách"
-
-msgid "Sources keywords"
-msgstr "Zdrojové kľúčové slová"
 
 msgid "Update summary"
 msgstr "Súhrn aktualizácie"

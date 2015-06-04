@@ -188,7 +188,7 @@ public:
 #elif defined(__WXMSW__)
         auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-add"), wxDefaultPosition, wxSize(19,19));
         auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-remove"), wxDefaultPosition, wxSize(19,19));
-#else defined(__WXGTK__)
+#elif defined(__WXGTK__)
         auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-add"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
         auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-remove"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
 #endif
@@ -398,18 +398,21 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
     }
 
     // my custom controls:
-    m_keywords = new wxEditableListBox(this, -1, _("Additional keywords"));
+    auto page_paths = XRCCTRL(*this, "page_paths", wxWindow);
+    auto page_keywords = XRCCTRL(*this, "page_keywords", wxWindow);
+
+    m_keywords = new wxEditableListBox(page_keywords, -1, _("Additional keywords"));
 
     m_pathsData.reset(new PathsData);
-    m_paths = new SourcePathsList(this, m_pathsData);
-    m_excludedPaths = new ExcludedPathsList(this, m_pathsData);
+    m_paths = new SourcePathsList(page_paths, m_pathsData);
+    m_excludedPaths = new ExcludedPathsList(page_paths, m_pathsData);
     m_pathsData->RefreshView = [=]{
         m_basePath->SetValue(RelativePath(m_pathsData->basepath, m_pathsData->filedir));
         m_paths->UpdateFromData();
         m_excludedPaths->UpdateFromData();
     };
 
-    m_paths->SetMinSize(wxSize(-1, PX(90)));
+    m_paths->SetMinSize(wxSize(PX(450), PX(90)));
     m_excludedPaths->SetMinSize(wxSize(-1, PX(90)));
 
 #ifdef __WXOSX__

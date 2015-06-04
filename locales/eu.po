@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
-"Report-Msgid-Bugs-To: poedit@googlegroups.com\n"
-"POT-Creation-Date: 2015-05-13 18:47+0200\n"
-"PO-Revision-Date: 2015-05-13 12:41-0400\n"
+"Report-Msgid-Bugs-To: help@poedit.net\n"
+"POT-Creation-Date: 2015-05-27 11:31+0200\n"
+"PO-Revision-Date: 2015-05-27 05:17-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Basque\n"
 "Language: eu_ES\n"
@@ -247,6 +247,9 @@ msgstr "ez ezabatu aldibaterako agiriak (garbiketarako)"
 
 msgid "handle a poedit:// URI"
 msgstr "kudeatu poedit:// URI bat"
+
+msgid "Failed to communicate with Poedit process."
+msgstr "Hutsegitea Poedit prozesuarekin harremantzean."
 
 #, c-format
 msgid "Unhandled exception occurred: %s"
@@ -634,6 +637,7 @@ msgstr "Hitzingurua:"
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
 msgstr ""
+"Poedit-ek berezgaitasunez zuzendu ditu \"%s\" agiriko eduki baliogabeak."
 
 msgid ""
 "The file contained duplicate items, which is not allowed in PO files and "
@@ -641,6 +645,10 @@ msgid ""
 "should review translations of any items marked as fuzzy and correct them if "
 "necessary."
 msgstr ""
+"Agiriak gai bikoiztuak ditu, zeina ez dago ahalbidetuta PO agirietan eta "
+"agiria erabiltzea saihestuko da. Poedit-ek arazo hau zuzendu du, baina "
+"zalantzazkoa bezala markaturiko gaien itzulpenak berrikusi behar dituzu eta "
+"zuzendu beharrezkoa bada."
 
 msgid "Language of the translation isn't set."
 msgstr "Itzulpenaren hizkuntza ez dago ezarrita."
@@ -728,8 +736,8 @@ msgstr[1] "%d akats"
 #, c-format
 msgid "%d entry"
 msgid_plural "%d entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d sarrera"
+msgstr[1] "%d sarrera"
 
 msgid " (unsaved)"
 msgstr " (gordegabe)"
@@ -901,10 +909,10 @@ msgid "Show Sidebar"
 msgstr "Erakutsi Albobarra"
 
 msgid "Hide Status Bar"
-msgstr ""
+msgstr "Ezkutatu Egoera Barra"
 
 msgid "Show Status Bar"
-msgstr ""
+msgstr "Erakutsi Egoera Barra"
 
 msgid "Source text"
 msgstr "Iturburu idazkia"
@@ -1258,30 +1266,36 @@ msgid ""
 "\n"
 "or use the + button"
 msgstr ""
+"<big>Arrastatu eta Askatu Agiritegiak Hona</big>\n"
+"\n"
+"edo erabili + botoia"
 
 msgid ""
 "<big>Drag and drop folders here</big>\n"
 "\n"
 "or use the + button"
 msgstr ""
+"<big>Arrastatu eta askatu agiritegiak hona</big>\n"
+"\n"
+"edo erabili + botoia"
 
 msgid "Add Folders..."
-msgstr ""
+msgstr "Gehitu Agiritegiak..."
 
 msgid "Add folders..."
-msgstr ""
+msgstr "Gehitu agiritegiak..."
 
 msgid "Add Files..."
-msgstr ""
+msgstr "Gehitu Agiriak..."
 
 msgid "Add files..."
-msgstr ""
+msgstr "Gehitu agiriak..."
 
 msgid "Add Wildcard..."
-msgstr ""
+msgstr "Gehitu Ordez-hizkia..."
 
 msgid "Add wildcard..."
-msgstr ""
+msgstr "Gehitu ordez-hizkia..."
 
 msgid "Paths"
 msgstr "Helburuak"
@@ -1491,7 +1505,7 @@ msgid "Show sidebar"
 msgstr "Erakutsi albobarra"
 
 msgid "Show status bar"
-msgstr ""
+msgstr "Erakutsi egoera barra"
 
 msgid "C&atalog"
 msgstr "&Katalogoa"
@@ -1665,14 +1679,17 @@ msgstr "Taldearen post@ helbidea:"
 msgid "Translation properties"
 msgstr "Itzulpenaren ezaugarriak"
 
+msgid "Sources paths"
+msgstr "Iturburuen helburuak"
+
 msgid "Extract text from source files in the following directories:"
 msgstr "Atera idazkia iturburu agirietatik hurrengo zuzenbideetan:"
 
 msgid "Base path:"
 msgstr "Ohinarri helburua:"
 
-msgid "Sources paths"
-msgstr "Iturburuen helburuak"
+msgid "Sources keywords"
+msgstr "Iturburuetako giltza-hitzak"
 
 msgid ""
 "Use these keywords (function names) to recognize translatable strings\n"
@@ -1683,9 +1700,6 @@ msgstr ""
 
 msgid "Learn about gettext keywords"
 msgstr "Jakin gehiago gettext giltza-hitzetaz"
-
-msgid "Sources keywords"
-msgstr "Iturburuetako giltza-hitzak"
 
 msgid "Update summary"
 msgstr "Eguneratu laburpena"

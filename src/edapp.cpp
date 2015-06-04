@@ -189,9 +189,36 @@ private:
 class PoeditApp::RemoteClient
 {
 public:
-    RemoteClient(PoeditApp*) : m_client()
+    RemoteClient(wxSingleInstanceChecker *instCheck) : m_instCheck(instCheck), m_client()
     {
-        m_conn.reset(m_client.MakeConnection("localhost", RemoteService(), IPC_TOPIC));
+    }
+
+    enum ConnectionStatus
+    {
+        NoOtherInstance,
+        Connected,
+        Failure
+    };
+
+    ConnectionStatus ConnectIfNeeded()
+    {
+        // Try several times in case of a race condition where one instance
+        // is exiting and not communicating, while another one is just starting.
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            if (!m_instCheck->IsAnotherRunning())
+                return NoOtherInstance;
+
+            m_conn.reset(m_client.MakeConnection("localhost", RemoteService(), IPC_TOPIC));
+            if (m_conn)
+                return Connected;
+
+            // else: Something went wrong, no connection despite other instance existing.
+            //       Try again in a little while.
+            wxMilliSleep(100);
+        }
+
+        return Failure;
     }
 
     void Activate()
@@ -214,6 +241,7 @@ public:
 private:
     void Command(const wxString cmd) { m_conn->Execute(cmd); }
 
+    wxSingleInstanceChecker *m_instCheck;
     wxClient m_client;
     std::unique_ptr<wxConnectionBase> m_conn;
 };
@@ -237,6 +265,32 @@ PoeditApp::~PoeditApp()
 wxString PoeditApp::GetAppVersion() const
 {
     return wxString::FromAscii(POEDIT_VERSION);
+}
+
+wxString PoeditApp::GetAppBuildNumber() const
+{
+#if defined(__WXOSX__)
+    NSDictionary *infoDict = [[NSBundle mainBundle] infoDictionary];
+    NSString *ver = [infoDict objectForKey:@"CFBundleVersion"];
+    return str::to_wx(ver);
+#elif defined(__WXMSW__)
+    auto exe = wxStandardPaths::Get().GetExecutablePath();
+    DWORD unusedHandle;
+    DWORD fiSize = GetFileVersionInfoSize(exe.wx_str(), &unusedHandle);
+    if (fiSize == 0)
+        return "";
+    wxCharBuffer fi(fiSize);
+    if (!GetFileVersionInfo(exe.wx_str(), unusedHandle, fiSize, fi.data()))
+        return "";
+    void *ver;
+    UINT sizeInfo;
+    if (!VerQueryValue(fi.data(), L"\\", &ver, &sizeInfo))
+        return "";
+    VS_FIXEDFILEINFO *info = (VS_FIXEDFILEINFO*)ver;
+    return wxString::Format("%d", LOWORD(info->dwFileVersionLS));
+#else
+    return "";
+#endif
 }
 
 bool PoeditApp::IsBetaVersion() const
@@ -436,6 +490,9 @@ bool PoeditApp::OnInit()
     win_sparkle_set_appcast_url(appcast.utf8_str());
     win_sparkle_set_can_shutdown_callback(&PoeditApp::WinSparkle_CanShutdown);
     win_sparkle_set_shutdown_request_callback(&PoeditApp::WinSparkle_Shutdown);
+    auto buildnum = GetAppBuildNumber();
+    if (!buildnum.empty())
+        win_sparkle_set_app_build_version(buildnum.wc_str());
     win_sparkle_init();
 #endif
 
@@ -453,6 +510,11 @@ bool PoeditApp::OnInit()
 
 int PoeditApp::OnExit()
 {
+#ifndef __WXOSX__
+    m_instanceChecker.reset();
+    m_remoteServer.reset();
+#endif
+
     // Make sure PoeditFrame instances schedules for deletion are deleted
     // early -- e.g. before wxConfig is destroyed, so they can save changes
     DeletePendingObjects();
@@ -473,11 +535,6 @@ int PoeditApp::OnExit()
 #endif
 
     u_cleanup();
-
-#ifndef __WXOSX__
-    m_instanceChecker.reset();
-    m_remoteServer.reset();
-#endif
 
     return wxApp::OnExit();
 }
@@ -749,25 +806,38 @@ bool PoeditApp::OnCmdLineParsed(wxCmdLineParser& parser)
         TempDirectory::KeepFiles();
 
 #ifndef __WXOSX__
-    if (m_instanceChecker->IsAnotherRunning())
+    RemoteClient client(m_instanceChecker.get());
+    switch (client.ConnectIfNeeded())
     {
-        RemoteClient client(this);
-        wxString poeditURI;
-        if (parser.Found(CL_HANDLE_POEDIT_URI, &poeditURI))
-            client.HandleCustomURI(poeditURI);
+        case RemoteClient::Failure:
+        {
+            wxLogError(_("Failed to communicate with Poedit process."));
+            wxLog::FlushActive();
+            return false; // terminate program
+        }
 
-        if (parser.GetParamCount() == 0)
+        case RemoteClient::Connected:
         {
-            client.Activate();
+            wxString poeditURI;
+            if (parser.Found(CL_HANDLE_POEDIT_URI, &poeditURI))
+                client.HandleCustomURI(poeditURI);
+
+            if (parser.GetParamCount() == 0)
+            {
+                client.Activate();
+            }
+            else
+            {
+                for (size_t i = 0; i < parser.GetParamCount(); i++)
+                    client.OpenFile(parser.GetParam(i));
+            }
+            return false; // terminate program
         }
-        else
-        {
-            for (size_t i = 0; i < parser.GetParamCount(); i++)
-                client.OpenFile(parser.GetParam(i));
-        }
-        return false; // terminate program
+
+        case RemoteClient::NoOtherInstance:
+            // fall through and handle normally
+            break;
     }
-    // else: fall through and handle normally
 #endif
 
     wxString poeditURI;

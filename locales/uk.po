@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
-"Report-Msgid-Bugs-To: poedit@googlegroups.com\n"
-"POT-Creation-Date: 2015-05-13 18:47+0200\n"
-"PO-Revision-Date: 2015-05-13 12:41-0400\n"
+"Report-Msgid-Bugs-To: help@poedit.net\n"
+"POT-Creation-Date: 2015-05-27 11:31+0200\n"
+"PO-Revision-Date: 2015-05-27 05:17-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Ukrainian\n"
 "Language: uk_UA\n"
@@ -253,6 +253,9 @@ msgstr "не стирати тимчасові файли (для зневадж
 msgid "handle a poedit:// URI"
 msgstr "handle a poedit:// URI"
 
+msgid "Failed to communicate with Poedit process."
+msgstr "Помилка зв’язку з процесом Poedit."
+
 #, c-format
 msgid "Unhandled exception occurred: %s"
 msgstr "Сталося непередбачене виключення: %s"
@@ -313,7 +316,7 @@ msgid "Check Document Now"
 msgstr "Перевірити документ зараз"
 
 msgid "Check Spelling While Typing"
-msgstr "Перевіряти правопис під час введення"
+msgstr "Перевіряти орфографію під час введення"
 
 msgid "Check Grammar With Spelling"
 msgstr "Перевірити граматику і правопис"
@@ -638,7 +641,7 @@ msgstr "Контекст:"
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
-msgstr ""
+msgstr "Poedit автоматично виправив хибний вміст у файлі „%s“."
 
 msgid ""
 "The file contained duplicate items, which is not allowed in PO files and "
@@ -646,6 +649,10 @@ msgid ""
 "should review translations of any items marked as fuzzy and correct them if "
 "necessary."
 msgstr ""
+"Файл містив дубльовані елементи, що не дозволяються у PO-файлах і "
+"унеможливлює використання файла. Poedit виправив цю помилку, проте Ви "
+"повинні переглянути переклади, позначені як „неточні“, та за потреби їх "
+"виправити."
 
 msgid "Language of the translation isn't set."
 msgstr "Мова перекладу не вказана."
@@ -733,9 +740,9 @@ msgstr[2] "%d помилок"
 #, c-format
 msgid "%d entry"
 msgid_plural "%d entries"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d елемент"
+msgstr[1] "%d елементи"
+msgstr[2] "%d елементів"
 
 msgid " (unsaved)"
 msgstr " (не збережено)"
@@ -906,10 +913,10 @@ msgid "Show Sidebar"
 msgstr "Показати бічну панель"
 
 msgid "Hide Status Bar"
-msgstr ""
+msgstr "Приховати панель стану"
 
 msgid "Show Status Bar"
-msgstr ""
+msgstr "Показати панель стану"
 
 msgid "Source text"
 msgstr "Оригінал"
@@ -1265,30 +1272,36 @@ msgid ""
 "\n"
 "or use the + button"
 msgstr ""
+"<big>Перетягніть теки сюди</big>\n"
+"\n"
+"або використайте кнопку „+“"
 
 msgid ""
 "<big>Drag and drop folders here</big>\n"
 "\n"
 "or use the + button"
 msgstr ""
+"<big>Перетягніть теки сюди</big>\n"
+"\n"
+"або використайте кнопку „+“"
 
 msgid "Add Folders..."
-msgstr ""
+msgstr "Додати теки..."
 
 msgid "Add folders..."
-msgstr ""
+msgstr "Додати теки..."
 
 msgid "Add Files..."
-msgstr ""
+msgstr "Додати файли..."
 
 msgid "Add files..."
-msgstr ""
+msgstr "Додати файли..."
 
 msgid "Add Wildcard..."
-msgstr ""
+msgstr "Додати шаблон..."
 
 msgid "Add wildcard..."
-msgstr ""
+msgstr "Додати шаблон..."
 
 msgid "Paths"
 msgstr "Шляхи"
@@ -1499,7 +1512,7 @@ msgid "Show sidebar"
 msgstr "Показати бічну панель"
 
 msgid "Show status bar"
-msgstr ""
+msgstr "Показати панель стану"
 
 msgid "C&atalog"
 msgstr "&Каталог"
@@ -1673,14 +1686,17 @@ msgstr "Електронна пошта команди:"
 msgid "Translation properties"
 msgstr "Властивості перекладу"
 
+msgid "Sources paths"
+msgstr "Шлях до джерела"
+
 msgid "Extract text from source files in the following directories:"
 msgstr "Шукати джерельний текст у наступних теках:"
 
 msgid "Base path:"
 msgstr "Базовий шлях:"
 
-msgid "Sources paths"
-msgstr "Шлях до джерела"
+msgid "Sources keywords"
+msgstr "Ключові слова"
 
 msgid ""
 "Use these keywords (function names) to recognize translatable strings\n"
@@ -1692,9 +1708,6 @@ msgstr ""
 
 msgid "Learn about gettext keywords"
 msgstr "Дізнатися більше про ключові слова gettext"
-
-msgid "Sources keywords"
-msgstr "Ключові слова"
 
 msgid "Update summary"
 msgstr "Підсумок про поновлення"
