@@ -2,8 +2,8 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([poedit], [1.8.1], [help@poedit.net])
-PACKAGE_SHORT_VERSION=1.8.1
+AC_INIT([poedit], [1.8.2], [help@poedit.net])
+PACKAGE_SHORT_VERSION=1.8.2
 AC_SUBST(PACKAGE_SHORT_VERSION)
 
 AC_CONFIG_AUX_DIR([admin])
@@ -97,7 +97,6 @@ AS_IF([test "x$have_cpprest" = "xyes"],
       [
           AC_DEFINE([HAVE_HTTP_CLIENT])
           CPPREST_LIBS="-lcpprest"
-          WXLIBS_USED="webview,$WXLIBS_USED"
           AC_SUBST(CPPREST_LIBS)
           PKG_CHECK_MODULES([LIBSECRET], [libsecret-1], [
               CXXFLAGS="$CXXFLAGS $LIBSECRET_CFLAGS"

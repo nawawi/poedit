@@ -24,6 +24,7 @@
  */
 
 #include <wx/wx.h>
+#include <wx/clipbrd.h>
 #include <wx/config.h>
 #include <wx/fs_zip.h>
 #include <wx/image.h>
@@ -515,6 +516,9 @@ int PoeditApp::OnExit()
     m_remoteServer.reset();
 #endif
 
+    // Keep any clipboard data available on Windows after the app terminates:
+    wxTheClipboard->Flush();
+
     // Make sure PoeditFrame instances schedules for deletion are deleted
     // early -- e.g. before wxConfig is destroyed, so they can save changes
     DeletePendingObjects();
@@ -572,7 +576,7 @@ void PoeditApp::SetupLanguage()
     // other things. It's also the common thing to do, so don't break
     // expectations needlessly:
     {
-        // supress error logging because setting locale may fail and we want to
+        // suppress error logging because setting locale may fail and we want to
         // handle that gracefully and invisibly:
         wxLogNull null;
         m_locale.reset(new wxLocale());

@@ -733,7 +733,7 @@ wxWindow* PoeditFrame::CreateContentViewPO(Content type)
     GetMenuBar()->Check(XRCID("sort_untrans_first"), m_list->sortOrder.untransFirst);
     GetMenuBar()->Check(XRCID("sort_errors_first"), m_list->sortOrder.errorsFirst);
 
-    // Call splitter splitting later, when the window is layed out, otherwise
+    // Call splitter splitting later, when the window is laid out, otherwise
     // the sizes would get truncated immediately:
     CallAfter([=]{
         // This is a hack -- windows are not maximized immediately and so we can't
@@ -2105,6 +2105,27 @@ CatalogItemPtr PoeditFrame::GetCurrentItem() const
 }
 
 
+namespace
+{
+
+// does some basic processing of user input, e.g. to remove trailing \n
+wxString PreprocessEnteredTextForItem(CatalogItemPtr item, wxString t)
+{
+    auto& orig = item->GetString();
+
+    if (!t.empty() && !orig.empty())
+    {
+        if (orig.Last() == '\n' && t.Last() != '\n')
+            t.append(1, '\n');
+        else if (orig.Last() != '\n' && t.Last() == '\n')
+            t.RemoveLast();
+    }
+
+    return t;
+}
+
+} // anonymous namespace
+
 void PoeditFrame::UpdateFromTextCtrl()
 {
     if (!m_list || !m_list->HasSingleSelection())
@@ -2126,7 +2147,7 @@ void PoeditFrame::UpdateFromTextCtrl()
         wxArrayString str;
         for (unsigned i = 0; i < m_textTransPlural.size(); i++)
         {
-            auto val = m_textTransPlural[i]->GetPlainText();
+            auto val = PreprocessEnteredTextForItem(entry, m_textTransPlural[i]->GetPlainText());
             str.Add(val);
             if ( val.empty() )
                 allTranslated = false;
@@ -2140,7 +2161,7 @@ void PoeditFrame::UpdateFromTextCtrl()
     }
     else
     {
-        auto newval = m_textTrans->GetPlainText();
+        auto newval = PreprocessEnteredTextForItem(entry, m_textTrans->GetPlainText());
 
         if ( newval.empty() )
             allTranslated = false;
@@ -2211,7 +2232,7 @@ void PoeditFrame::OnNewTranslationEntered(const CatalogItemPtr& item)
                 // Note: do *not* call tm->Commit() here, because Lucene commit is
                 // expensive. Instead, wait until the file is saved with committing
                 // the changes. This way TM updates are available immediately for use
-                // in futher translations within the file, but per-item updates
+                // in further translations within the file, but per-item updates
                 // remain inexpensive.
             }
             catch (const Exception&)

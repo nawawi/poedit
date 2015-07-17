@@ -182,6 +182,19 @@ wxTextFileType GetDesiredCRLFFormat(wxTextFileType existingCRLF)
     }
 }
 
+// Fixup some common issues with filepaths in PO files, due to old Poedit versions,
+// user misunderstanding or Poedit bugs:
+wxString FixBrokenSearchPathValue(wxString p)
+{
+    if (p.empty())
+        return p;
+    // no DOS paths please:
+    p.Replace("\\", "/");
+    if (p.Last() == '/')
+        p.RemoveLast();
+    return p;
+}
+
 } // anonymous namespace
 
 
@@ -406,7 +419,7 @@ void Catalog::HeaderData::ParseDict()
 
     // Parse extended information:
     SourceCodeCharset = GetHeader("X-Poedit-SourceCharset");
-    BasePath = GetHeader("X-Poedit-Basepath");
+    BasePath = FixBrokenSearchPathValue(GetHeader("X-Poedit-Basepath"));
 
     Keywords.Clear();
     wxString kwlist = GetHeader("X-Poedit-KeywordsList");
@@ -461,7 +474,7 @@ void Catalog::HeaderData::ParseDict()
         path.Printf("X-Poedit-SearchPath-%i", i);
         if (!HasHeader(path))
             break;
-        wxString p = GetHeader(path);
+        wxString p = FixBrokenSearchPathValue(GetHeader(path));
         if (!p.empty())
             SearchPaths.push_back(p);
         i++;
@@ -475,7 +488,7 @@ void Catalog::HeaderData::ParseDict()
         path.Printf("X-Poedit-SearchPathExcluded-%i", i);
         if (!HasHeader(path))
             break;
-        wxString p = GetHeader(path);
+        wxString p = FixBrokenSearchPathValue(GetHeader(path));
         if (!p.empty())
             SearchPathsExcluded.push_back(p);
         i++;
@@ -1125,23 +1138,16 @@ bool Catalog::HasCapability(Catalog::Cap cap) const
 }
 
 
-static wxString GetCurrentTimeRFC822()
+static inline wxString GetCurrentTimeString()
 {
-    wxDateTime timenow = wxDateTime::Now();
-    int offs = (int)wxDateTime::TimeZone(wxDateTime::Local).GetOffset();
-    wxString s;
-    s.Printf("%s%s%02i%02i",
-             timenow.Format("%Y-%m-%d %H:%M").c_str(),
-             (offs > 0) ? "+" : "-",
-             abs(offs) / 3600, (abs(offs) / 60) % 60);
-    return s;
+    return wxDateTime::Now().Format("%Y-%m-%d %H:%M%z");
 }
 
 void Catalog::CreateNewHeader()
 {
     HeaderData &dt = Header();
 
-    dt.CreationDate = GetCurrentTimeRFC822();
+    dt.CreationDate = GetCurrentTimeString();
     dt.RevisionDate = dt.CreationDate;
 
     dt.Lang = Language();
@@ -1173,7 +1179,8 @@ void Catalog::CreateNewHeader(const Catalog::HeaderData& pot_header)
     if (dt.TeamEmail == "LL@li.org")
         dt.TeamEmail.clear();
 
-    // translator should be pre-filled
+    // translator should be pre-filled & not the default "FULL NAME <EMAIL@ADDRESS>"
+    dt.DeleteHeader("Last-Translator");
     dt.Translator = wxConfig::Get()->Read("translator_name", wxEmptyString);
     dt.TranslatorEmail = wxConfig::Get()->Read("translator_email", wxEmptyString);
 
@@ -1452,7 +1459,7 @@ void SaveMultiLines(wxTextBuffer &f, const wxString& text)
         f.AddLine(tkn.GetNextToken());
 }
 
-/** Adds \n characters as neccesary for good-looking output
+/** Adds \n characters as necessary for good-looking output
  */
 wxString FormatStringForFile(const wxString& text)
 {
@@ -1794,7 +1801,7 @@ bool Catalog::DoSaveOnly(wxTextBuffer& f, wxTextFileType crlf)
     // was empty previously, the author apparently doesn't want this header
     // set, so don't mess with it. See https://sourceforge.net/tracker/?func=detail&atid=389156&aid=1900298&group_id=27043
     // for motivation:
-    auto currentTime = GetCurrentTimeRFC822();
+    auto currentTime = GetCurrentTimeString();
     switch (m_fileType)
     {
         case Type::PO:
@@ -2126,7 +2133,7 @@ bool Catalog::HasSourcesAvailable() const
 
     for (auto& p: m_header.SearchPaths)
     {
-        if (!wxFileName::DirExists(basepath + p))
+        if (!wxFileName::Exists(basepath + p))
             return false;
     }
 
