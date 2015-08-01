@@ -1151,6 +1151,9 @@ void Catalog::CreateNewHeader()
     dt.RevisionDate = dt.CreationDate;
 
     dt.Lang = Language();
+    if (m_fileType == Type::POT)
+        dt.SetHeader("Plural-Forms", "nplurals=INTEGER; plural=EXPRESSION;"); // default invalid value
+
     dt.Project = wxEmptyString;
     dt.Team = wxEmptyString;
     dt.TeamEmail = wxEmptyString;
@@ -1824,6 +1827,8 @@ bool Catalog::DoSaveOnly(wxTextBuffer& f, wxTextFileType crlf)
     SaveMultiLines(f, pohdr);
     f.AddLine(wxEmptyString);
 
+    auto pluralsCount = GetPluralFormsCount();
+
     for (auto& data: m_items)
     {
         data->SetLineNumber(int(f.GetLineCount()+1));
@@ -1853,7 +1858,7 @@ bool Catalog::DoSaveOnly(wxTextBuffer& f, wxTextFileType crlf)
             dummy = FormatStringForFile(data->GetPluralString());
             SaveMultiLines(f, _T("msgid_plural \"") + dummy + _T("\""));
 
-            for (unsigned i = 0; i < data->GetNumberOfTranslations(); i++)
+            for (unsigned i = 0; i < pluralsCount; i++)
             {
                 dummy = FormatStringForFile(data->GetTranslation(i));
                 wxString hdr = wxString::Format(_T("msgstr[%u] \""), i);
@@ -2388,13 +2393,17 @@ static unsigned GetCountFromPluralFormsHeader(const Catalog::HeaderData& header)
         form = form.BeforeFirst(_T(';'));
         if (form.BeforeFirst(_T('=')) == "nplurals")
         {
+            wxString vals = form.AfterFirst('=');
+            if (vals == "INTEGER") // POT default
+                return 2;
             long val;
-            if (form.AfterFirst(_T('=')).ToLong(&val))
+            if (vals.ToLong(&val))
                 return (unsigned)val;
         }
     }
 
-    return 0;
+    // fallback value for plural forms count should be 2, as in English:
+    return 2;
 }
 
 unsigned Catalog::GetPluralFormsCount() const
