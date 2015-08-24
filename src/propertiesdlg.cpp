@@ -43,6 +43,12 @@
 #include <wx/menu.h>
 #include <wx/notebook.h>
 
+#include <wx/nativewin.h>
+#if !wxCHECK_VERSION(3,1,0)
+  #include "wx_backports/nativewin.h"
+#endif
+
+
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -50,6 +56,7 @@
 #include "propertiesdlg.h"
 #include "hidpi.h"
 #include "language.h"
+#include "str_helpers.h"
 #include "pluralforms/pl_evaluate.h"
 #include "utility.h"
 
@@ -65,7 +72,7 @@ inline wxString NormalizedPath(const wxString& fn, wxPathFormat format)
 
 inline wxString RelativePath(const wxString& fn, const wxString& to, wxPathFormat format)
 {
-    if (fn == to)
+    if (fn == to || fn + wxFILE_SEP_PATH == to)
         return ".";
     auto f = MakeFileName(fn);
     f.MakeRelativeTo(to);
@@ -163,6 +170,69 @@ struct PropertiesDialog::PathsData
     }
 };
 
+
+#ifdef __WXOSX__
+
+@interface BasePathCtrlController : NSObject
+@end
+
+@implementation BasePathCtrlController
+- (void)pathClicked:(NSPathControl*)sender
+{
+    NSPathComponentCell *cell = [[sender cell] clickedPathComponentCell];
+    if (cell)
+        [[NSWorkspace sharedWorkspace] openURL:[cell URL]];
+}
+@end
+
+
+class PropertiesDialog::BasePathCtrl : public wxNativeWindow
+{
+public:
+    BasePathCtrl(wxWindow *parent) : wxNativeWindow()
+    {
+        m_path = [NSPathControl new];
+        m_ctrl = [BasePathCtrlController new];
+        Create(parent, wxID_ANY, m_path);
+        SetWindowVariant(wxWINDOW_VARIANT_SMALL);
+        // Do native configuration *after* Create() to undo some of what it did:
+        m_path.editable = NO;
+        [m_path setTarget:m_ctrl];
+        [m_path setAction:@selector(pathClicked:)];
+        [m_path setDoubleAction:@selector(pathClicked:)];
+    }
+
+    void SetPath(const wxString& path)
+    {
+        m_path.URL = [[NSURL alloc] initFileURLWithPath:str::to_NS(path)];
+    }
+
+private:
+    NSPathControl *m_path;
+    BasePathCtrlController *m_ctrl;
+};
+
+#else // Win/GTK+
+
+class PropertiesDialog::BasePathCtrl : public wxStaticText
+{
+public:
+    BasePathCtrl(wxWindow *parent) : wxStaticText(parent, wxID_ANY, "", wxDefaultPosition, wxDefaultSize,
+                                                  wxST_ELLIPSIZE_MIDDLE | wxST_NO_AUTORESIZE)
+    {
+    #ifdef __WXMSW__
+        SetBackgroundColour(*wxWHITE);
+        SetForegroundColour(wxColour("#58595C"));
+    #endif
+    }
+
+    void SetPath(const wxString& path)
+    {
+        SetLabel(path);
+    }
+};
+
+#endif
 
 class PropertiesDialog::PathsList : public wxPanel
 {
@@ -300,7 +370,7 @@ protected:
         menu->Bind(wxEVT_MENU, [=](wxCommandEvent&){
             wxDirDialog dlg(this,
                             OSX_OR_OTHER("", _("Select directory")),
-                            m_data->filedir,
+                            m_data->basepath,
                             wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
             if (dlg.ShowModal() == wxID_OK)
                 Add(dlg.GetPath());
@@ -310,7 +380,7 @@ protected:
         menu->Bind(wxEVT_MENU, [=](wxCommandEvent&){
             wxFileDialog dlg(this,
                              "",
-                             m_data->filedir,
+                             m_data->basepath,
                              "",
                              wxFileSelectorDefaultWildcardStr,
                              wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_MULTIPLE);
@@ -387,7 +457,6 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
 #else
     m_pluralFormsExpr->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
-    m_basePath = XRCCTRL(*this, "basepath", wxTextCtrl);
 
     if (!m_hasLang)
     {
@@ -396,7 +465,8 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
                        (wxWindow*)m_pluralFormsCustom,
                        (wxWindow*)m_pluralFormsExpr,
                        XRCCTRL(*this, "language_label", wxWindow),
-                       XRCCTRL(*this, "plural_forms_label", wxWindow) })
+                       XRCCTRL(*this, "plural_forms_label", wxWindow),
+                       XRCCTRL(*this, "plural_forms_help", wxWindow) })
         {
             w->GetContainingSizer()->Hide(w);
         }
@@ -409,10 +479,11 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
     m_keywords = new wxEditableListBox(page_keywords, -1, _("Additional keywords"));
 
     m_pathsData.reset(new PathsData);
+    m_basePath = new BasePathCtrl(page_paths);
     m_paths = new SourcePathsList(page_paths, m_pathsData);
     m_excludedPaths = new ExcludedPathsList(page_paths, m_pathsData);
     m_pathsData->RefreshView = [=]{
-        m_basePath->SetValue(RelativePath(m_pathsData->basepath, m_pathsData->filedir, wxPATH_NATIVE));
+        m_basePath->SetPath(m_pathsData->basepath);
         m_paths->UpdateFromData();
         m_excludedPaths->UpdateFromData();
     };
@@ -429,6 +500,7 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
     }
 #endif // __WXOSX__
 
+    wxXmlResource::Get()->AttachUnknownControl("basepath", m_basePath);
     wxXmlResource::Get()->AttachUnknownControl("keywords", m_keywords);
     wxXmlResource::Get()->AttachUnknownControl("paths", m_paths);
     wxXmlResource::Get()->AttachUnknownControl("excluded_paths", m_excludedPaths);
@@ -462,6 +534,11 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
         wxID_OK);
     CallAfter([=]{
         m_project->SetFocus();
+    });
+
+    auto openBasepath = XRCCTRL(*this, "open_basepath", wxBitmapButton);
+    openBasepath->Bind(wxEVT_BUTTON, [=](wxCommandEvent&){
+        wxLaunchDefaultApplication(m_pathsData->basepath);
     });
 }
 
