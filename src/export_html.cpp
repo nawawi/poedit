@@ -325,11 +325,11 @@ table.metadata td {
   width: 100%;
 }
 .graph div { float: left; }
-.graph div:first-child { border-radius: 3px 0 0 3px; }
-.graph div:last-child { border-radius: 0 3px 3px 0; }
-.percent-done    { background-color: #BFEE3F; height: 10px; }
-.percent-fuzzy   { background-color: #FEEE43; height: 10px; }
-.percent-untrans { background-color: #F1F5F5; height: 10px; }
+.graph div:first-child { border-top-left-radius: 3px; border-bottom-left-radius: 3px; }
+.graph div:last-child { border-top-right-radius: 3px; border-bottom-right-radius: 3px; }
+.percent-done    { background-color: #71DD46; height: 10px; }
+.percent-fuzzy   { background-color: #FFD300; height: 10px; }
+.percent-untrans { background-color: #F1F1F1; height: 10px; }
 .legend {
   font-size: smaller;
   color: #aaa;
