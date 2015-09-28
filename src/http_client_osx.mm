@@ -184,7 +184,7 @@ public:
         [m_native enqueueHTTPRequestOperation:operation];
     }
 
-    void post(const std::string& url, const multipart_form_data& data, response_func_t handler)
+    void post(const std::string& url, const http_body_data& data, response_func_t handler)
     {
         NSMutableURLRequest *request = [m_native requestWithMethod:@"POST"
                                                               path:str::to_NS(url)
@@ -195,12 +195,10 @@ public:
         [request setValue:[NSString stringWithFormat:@"%lu", body.size()] forHTTPHeaderField:@"Content-Length"];
         [request setHTTPBody:[NSData dataWithBytes:body.data() length:body.size()]];
 
-        AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-
-        [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *op, id responseObject)
+        AFHTTPRequestOperation *operation = [m_native HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *op, id responseObject)
         {
-            #pragma unused(op,responseObject)
-            handler(json_dict());
+            #pragma unused(op)
+            handler(make_json_dict(responseObject));
         }
         failure:^(AFHTTPRequestOperation *op, NSError *e)
         {
@@ -230,6 +228,9 @@ private:
         if (desc.empty())
         {
             desc = str::to_utf8([e localizedDescription]);
+            // Fixup some common cases to be more readable
+            if (status_code == 503 && desc == "Expected status code in (200-299), got 503")
+                desc = "Service Unavailable";
         }
 
         m_owner.on_error_response(status_code, desc);
@@ -270,7 +271,7 @@ void http_client::download(const std::string& url, const std::wstring& output_fi
     m_impl->download(url, output_file, handler);
 }
 
-void http_client::post(const std::string& url, const multipart_form_data& data, response_func_t handler)
+void http_client::post(const std::string& url, const http_body_data& data, response_func_t handler)
 {
     m_impl->post(url, data, handler);
 }
