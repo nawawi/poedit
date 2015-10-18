@@ -252,6 +252,7 @@
 		B209005D19CAD64400D6382E /* SuggestionTM.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SuggestionTM.png; sourceTree = "<group>"; };
 		B209005F19CAD64A00D6382E /* SuggestionError.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SuggestionError.png; sourceTree = "<group>"; };
 		B20960F219928C8500A2EB13 /* GettextToolsDummy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GettextToolsDummy.c; path = macosx/GettextToolsDummy.c; sourceTree = SOURCE_ROOT; };
+		B212CAFF1BCBCFC00066AA94 /* build.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = build.xml; path = deps/build.xml; sourceTree = "<group>"; };
 		B2132FD819B3672000326B16 /* customcontrols.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = customcontrols.cpp; sourceTree = "<group>"; };
 		B2132FD919B3672000326B16 /* customcontrols.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = customcontrols.h; sourceTree = "<group>"; };
 		B2138D0E1A23AACE008C6F85 /* pa */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pa; path = pa.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -425,7 +426,6 @@
 		B28F1CE216F629D30018AF7E /* export_html.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = export_html.cpp; sourceTree = "<group>"; };
 		B28F1CE316F629D30018AF7E /* pl_evaluate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pl_evaluate.cpp; path = pluralforms/pl_evaluate.cpp; sourceTree = "<group>"; };
 		B28F1CE416F629D30018AF7E /* pl_evaluate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pl_evaluate.h; path = pluralforms/pl_evaluate.h; sourceTree = "<group>"; };
-		B28F1CE516F629D30018AF7E /* digits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = digits.h; sourceTree = "<group>"; };
 		B29A1C311A9F8C0A00BC3006 /* poedit-sync.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "poedit-sync.png"; sourceTree = "<group>"; };
 		B29A1C321A9F8C0A00BC3006 /* poedit-sync@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "poedit-sync@2x.png"; sourceTree = "<group>"; };
 		B29A9D391A2DE19E00195189 /* az */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = az; path = az.lproj/MoveApplication.strings; sourceTree = "<group>"; };
@@ -670,7 +670,6 @@
 				B2132FD919B3672000326B16 /* customcontrols.h */,
 				B28F1CB916F629D30018AF7E /* digger.cpp */,
 				B28F1CBA16F629D30018AF7E /* digger.h */,
-				B28F1CE516F629D30018AF7E /* digits.h */,
 				B28F1CAE16F629D30018AF7E /* edapp.cpp */,
 				B28F1CAF16F629D30018AF7E /* edapp.h */,
 				B28F1CB016F629D30018AF7E /* edframe.cpp */,
@@ -842,6 +841,7 @@
 				B24ACD6716F6201F00399242 /* InfoPlist.strings */,
 				B24ACD6C16F6201F00399242 /* Poedit-Prefix.pch */,
 				B2E83708170C97ED00F31559 /* copy-translations.sh */,
+				B212CAFF1BCBCFC00066AA94 /* build.xml */,
 			);
 			name = "Supporting Files";
 			sourceTree = SOURCE_ROOT;
@@ -966,7 +966,7 @@
 /* Begin PBXLegacyTarget section */
 		B27115F8170830A800B936D5 /* ant_external_deps */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) -Dconfig=$(CONFIGURATION) -Dbuilddir=$(DEPS_BUILD_DIR)";
+			buildArgumentsString = "$(ACTION) -verbose -Dconfig=$(CONFIGURATION) -Dbuilddir=$(DEPS_BUILD_DIR)";
 			buildConfigurationList = B27115F9170830A800B936D5 /* Build configuration list for PBXLegacyTarget "ant_external_deps" */;
 			buildPhases = (
 			);
@@ -1073,7 +1073,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = PO;
-				LastUpgradeCheck = 0610;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "Václav Slavík";
 				TargetAttributes = {
 					B2CE6D191ACFCD95007E6863 = {
@@ -1617,6 +1617,7 @@
 				);
 				INFOPLIST_FILE = "macosx/GettextTools-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				PRODUCT_BUNDLE_IDENTIFIER = "net.poedit.Poedit.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				WRAPPER_EXTENSION = bundle;
@@ -1634,6 +1635,7 @@
 				GCC_PREFIX_HEADER = "";
 				INFOPLIST_FILE = "macosx/GettextTools-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				PRODUCT_BUNDLE_IDENTIFIER = "net.poedit.Poedit.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				WRAPPER_EXTENSION = bundle;
@@ -1646,6 +1648,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -1654,6 +1657,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEPS_BUILD_DIR = "$(OBJROOT)/Deps.build/$(CONFIGURATION)";
+				ENABLE_TESTABILITY = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
@@ -1704,6 +1708,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -1770,6 +1775,7 @@
 					"-ldb_cxx",
 				);
 				POEDIT_FEATURES = "USE_SPARKLE HAVE_CLD2 HAVE_HTTP_CLIENT";
+				PRODUCT_BUNDLE_IDENTIFIER = "net.poedit.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1792,6 +1798,7 @@
 					"-ldb_cxx",
 				);
 				POEDIT_FEATURES = "USE_SPARKLE HAVE_CLD2 HAVE_HTTP_CLIENT";
+				PRODUCT_BUNDLE_IDENTIFIER = "net.poedit.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -1852,6 +1859,7 @@
 					"-licui18n",
 				);
 				POEDIT_FEATURES = HAVE_CLD2;
+				PRODUCT_BUNDLE_IDENTIFIER = "net.poedit.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				WRAPPER_EXTENSION = qlgenerator;
@@ -1890,6 +1898,7 @@
 					"-licui18n",
 				);
 				POEDIT_FEATURES = HAVE_CLD2;
+				PRODUCT_BUNDLE_IDENTIFIER = "net.poedit.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				WRAPPER_EXTENSION = qlgenerator;
