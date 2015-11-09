@@ -2,8 +2,8 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([poedit], [1.8.5], [help@poedit.net])
-PACKAGE_SHORT_VERSION=1.8.5
+AC_INIT([poedit], [1.8.6], [help@poedit.net])
+PACKAGE_SHORT_VERSION=1.8.6
 AC_SUBST(PACKAGE_SHORT_VERSION)
 
 AC_CONFIG_AUX_DIR([admin])
@@ -111,7 +111,7 @@ AM_CONDITIONAL([HAVE_CPPREST], [test "x$have_cpprest" != "xno"])
 
 
 
-WX_CONFIG_CHECK([3.0.0], [WXFOUND=1], [WXFOUND=0], [$WXLIBS_USED], [--unicode])
+WX_CONFIG_CHECK([3.0.1], [WXFOUND=1], [WXFOUND=0], [$WXLIBS_USED], [--unicode])
 
 if test "$WXFOUND" != 1; then
     AC_MSG_ERROR([
