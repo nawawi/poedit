@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2015 Vaclav Slavik
+ *  Copyright (C) 1999-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -1583,7 +1583,7 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
                 finalFile.Write(outputCrlf);
         }
 
-        if (!wxRenameFile(po_file_temp2, po_file, /*overwrite=*/true))
+        if (!TempOutputFileFor::ReplaceFile(po_file_temp2, po_file))
             msgcat_ok = false;
     }
 
@@ -1593,7 +1593,7 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
     }
     else
     {
-        if ( !wxRenameFile(po_file_temp, po_file, /*overwrite=*/true) )
+        if ( !po_file_temp_obj.Commit() )
         {
             wxLogError(_("Couldn't save file %s."), po_file.c_str());
         }
@@ -1685,7 +1685,7 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
                 [NSFileCoordinator removeFilePresenter:presenter];
             }
 #else // !__WXOSX__
-            if ( !wxRenameFile(mo_file_temp, mo_file, /*overwrite=*/true) )
+            if ( !mo_file_temp_obj.Commit() )
             {
                 wxLogError(_("Couldn't save file %s."), mo_file.c_str());
                 mo_compilation_status = CompilationStatus::Error;
@@ -1774,7 +1774,7 @@ bool Catalog::CompileToMO(const wxString& mo_file,
         mo_compilation_status = CompilationStatus::Success;
     }
 
-    if ( !wxRenameFile(mo_file_temp, mo_file, /*overwrite=*/true) )
+    if ( !mo_file_temp_obj.Commit() )
     {
         wxLogError(_("Couldn't save file %s."), mo_file.c_str());
         return false;
@@ -1846,8 +1846,8 @@ bool Catalog::DoSaveOnly(wxTextBuffer& f, wxTextFileType crlf)
         wxString dummy = data->GetFlags();
         if (!dummy.empty())
             f.AddLine(dummy);
-        for (unsigned i = 0; i < data->GetOldMsgid().GetCount(); i++)
-            f.AddLine("#| " + data->GetOldMsgid()[i]);
+        for (unsigned i = 0; i < data->GetOldMsgidRaw().GetCount(); i++)
+            f.AddLine("#| " + data->GetOldMsgidRaw()[i]);
         if ( data->HasContext() )
         {
             SaveMultiLines(f, _T("msgctxt \"") + FormatStringForFile(data->GetContext()) + _T("\""));
@@ -2058,7 +2058,7 @@ int Catalog::DoValidate(const wxString& po_file)
 void Catalog::SetFileName(const wxString& fn)
 {
     wxFileName f(fn);
-    f.Normalize();
+    f.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE);
     m_fileName = f.GetFullPath();
 }
 
@@ -2094,7 +2094,7 @@ wxString GetSourcesPath(const wxString& fileName, const Catalog::HeaderData& hea
     }
 
     wxFileName root = wxFileName::DirName(basepath);
-    root.Normalize();
+    root.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE);
 
     if (kind == SourcesPath::Root)
     {
@@ -2664,4 +2664,22 @@ wxArrayString CatalogItem::GetReferences() const
     }
 
     return refs;
+}
+
+wxString CatalogItem::GetOldMsgid() const
+{
+    wxString s;
+    for (auto line: m_oldMsgid)
+    {
+        if (line.length() < 2)
+            continue;
+        if (line.Last() == '"')
+            line.RemoveLast();
+        if (line[0] == '"')
+            line.Remove(0, 1);
+        if (line.StartsWith("msgid \""))
+            line.Remove(0, 7);
+        s += UnescapeCString(line);
+    }
+    return s;
 }

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2001-2015 Vaclav Slavik
+ *  Copyright (C) 2001-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -244,11 +244,9 @@ FindFrame::~FindFrame()
 
 void FindFrame::Reset(const CatalogPtr& c)
 {
-    if (!m_listCtrl)
-        return;
-
     m_catalog = c;
     m_position = -1;
+    m_lastItem.reset();
 
     m_btnPrev->Enable(!ms_text.empty());
     m_btnNext->Enable(!ms_text.empty());
@@ -307,16 +305,14 @@ void FindFrame::OnModeChanged()
 void FindFrame::OnTextChange(wxCommandEvent& e)
 {
     ms_text = m_searchField->GetValue();
-    m_lastItem.reset();
-
     Reset(m_catalog);
-
     e.Skip();
 }
 
 
 void FindFrame::OnCheckbox(wxCommandEvent&)
 {
+    Reset(m_catalog);
     wxConfig::Get()->Write("find_in_orig", m_findInOrig->GetValue());
     wxConfig::Get()->Write("find_in_trans", m_findInTrans->GetValue());
     wxConfig::Get()->Write("find_in_comments", m_findInComments->GetValue());

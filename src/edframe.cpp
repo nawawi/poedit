@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2015 Vaclav Slavik
+ *  Copyright (C) 1999-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -300,6 +300,7 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
    EVT_MENU           (XRCID("show_statusbar"),    PoeditFrame::OnShowHideStatusbar)
    EVT_UPDATE_UI      (XRCID("show_statusbar"),    PoeditFrame::OnUpdateShowHideStatusbar)
    EVT_MENU           (XRCID("menu_copy_from_src"), PoeditFrame::OnCopyFromSource)
+   EVT_MENU           (XRCID("menu_copy_from_singular"), PoeditFrame::OnCopyFromSingular)
    EVT_MENU           (XRCID("menu_clear"),       PoeditFrame::OnClearTranslation)
    EVT_MENU           (XRCID("menu_references"),  PoeditFrame::OnReferencesMenu)
    EVT_MENU           (wxID_FIND,                 PoeditFrame::OnFind)
@@ -315,6 +316,8 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
    EVT_MENU           (XRCID("go_next_page"),       PoeditFrame::OnNextPage)
    EVT_MENU           (XRCID("go_prev_unfinished"), PoeditFrame::OnPrevUnfinished)
    EVT_MENU           (XRCID("go_next_unfinished"), PoeditFrame::OnNextUnfinished)
+   EVT_MENU           (XRCID("go_prev_pluralform"), PoeditFrame::OnPrevPluralForm)
+   EVT_MENU           (XRCID("go_next_pluralform"), PoeditFrame::OnNextPluralForm)
    EVT_MENU_RANGE     (ID_POPUP_REFS, ID_POPUP_REFS + 999, PoeditFrame::OnReference)
    EVT_COMMAND        (wxID_ANY, EVT_SUGGESTION_SELECTED, PoeditFrame::OnSuggestion)
    EVT_MENU           (XRCID("menu_auto_translate"), PoeditFrame::OnAutoTranslateAll)
@@ -336,10 +339,13 @@ BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
    EVT_UPDATE_UI(XRCID("go_next_page"),       PoeditFrame::OnSingleSelectionUpdate)
    EVT_UPDATE_UI(XRCID("go_prev_unfinished"), PoeditFrame::OnSingleSelectionUpdate)
    EVT_UPDATE_UI(XRCID("go_next_unfinished"), PoeditFrame::OnSingleSelectionUpdate)
+   EVT_UPDATE_UI(XRCID("go_prev_pluralform"), PoeditFrame::OnSingleSelectionWithPluralsUpdate)
+   EVT_UPDATE_UI(XRCID("go_next_pluralform"), PoeditFrame::OnSingleSelectionWithPluralsUpdate)
 
    EVT_UPDATE_UI(XRCID("menu_fuzzy"),         PoeditFrame::OnSelectionUpdateEditable)
-   EVT_UPDATE_UI(XRCID("menu_copy_from_src"), PoeditFrame::OnSelectionUpdateEditable)
    EVT_UPDATE_UI(XRCID("menu_clear"),         PoeditFrame::OnSelectionUpdateEditable)
+   EVT_UPDATE_UI(XRCID("menu_copy_from_src"), PoeditFrame::OnSelectionUpdateEditable)
+   EVT_UPDATE_UI(XRCID("menu_copy_from_singular"), PoeditFrame::OnSingleSelectionWithPluralsUpdate)
    EVT_UPDATE_UI(XRCID("menu_comment"),       PoeditFrame::OnEditCommentUpdate)
 
    // handling of open files:
@@ -1000,22 +1006,27 @@ void PoeditFrame::InitSpellchecker()
 #ifndef __WXMSW__ // language choice is automatic, per-keyboard on Windows, can't fail
     if ( enabledInitially && report_problem )
     {
-        AttentionMessage msg
-        (
-            "missing-spell-dict",
-            AttentionMessage::Warning,
-            wxString::Format
+        // Some languages don't have a reasonable spellchecking method or hunspell support:
+        const bool notCapable = lang.Lang() == "zh" || lang.Lang() == "ja";
+        if (!notCapable)
+        {
+            AttentionMessage msg
             (
-                // TRANSLATORS: %s is language name in its basic form (as you
-                // would see e.g. in a list of supported languages). You may need
-                // to rephrase it, e.g. to an equivalent of "for language %s".
-                _(L"Spellchecking is disabled, because the dictionary for %s isn’t installed."),
-                lang.LanguageDisplayName()
-            )
-        );
-        msg.AddAction(_("Install"), []{ ShowSpellcheckerHelp(); });
-        msg.AddDontShowAgain();
-        m_attentionBar->ShowMessage(msg);
+                "missing-spell-dict",
+                AttentionMessage::Warning,
+                wxString::Format
+                (
+                    // TRANSLATORS: %s is language name in its basic form (as you
+                    // would see e.g. in a list of supported languages). You may need
+                    // to rephrase it, e.g. to an equivalent of "for language %s".
+                    _(L"Spellchecking is disabled, because the dictionary for %s isn’t installed."),
+                    lang.LanguageDisplayName()
+                )
+            );
+            msg.AddAction(_("Install"), []{ ShowSpellcheckerHelp(); });
+            msg.AddDontShowAgain();
+            m_attentionBar->ShowMessage(msg);
+        }
     }
 #endif // !__WXMSW__
 }
@@ -1323,8 +1334,7 @@ void PoeditFrame::OnCompileMO(wxCommandEvent&)
         wxConfig::Get()->Write("last_file_path", wxPathOnly(fn));
         int validation_errors = 0;
         Catalog::CompilationStatus compilation_status = Catalog::CompilationStatus::NotDone;
-        if (!m_catalog->CompileToMO(fn, validation_errors, compilation_status))
-            return;
+        m_catalog->CompileToMO(fn, validation_errors, compilation_status);
 
         if (validation_errors)
         {
@@ -2043,6 +2053,14 @@ void PoeditFrame::OnIDsFlag(wxCommandEvent&)
     m_list->SetDisplayLines(m_displayIDs);
 }
 
+void PoeditFrame::OnCopyFromSingular(wxCommandEvent&)
+{
+    auto current = dynamic_cast<TranslationTextCtrl*>(wxWindow::FindFocus());
+    if (!current || !m_textTransSingularForm)
+        return;
+
+    current->SetPlainTextUserWritten(m_textTransSingularForm->GetPlainText());
+}
 
 void PoeditFrame::OnCopyFromSource(wxCommandEvent&)
 {
@@ -3709,6 +3727,14 @@ void PoeditFrame::OnSingleSelectionUpdate(wxUpdateUIEvent& event)
     event.Enable(m_catalog && m_list && m_list->HasSingleSelection());
 }
 
+void PoeditFrame::OnSingleSelectionWithPluralsUpdate(wxUpdateUIEvent& event)
+{
+    // Enable only if a single item with plural forms is selected
+    event.Enable(m_catalog && m_list && m_list->HasSingleSelection() &&
+                 m_pluralNotebook && m_pluralNotebook->IsShown() &&
+                 std::find(m_textTransPlural.begin(), m_textTransPlural.end(), FindFocus()) != m_textTransPlural.end());
+}
+
 void PoeditFrame::OnHasCatalogUpdate(wxUpdateUIEvent& event)
 {
     event.Enable(m_catalog != nullptr);
@@ -3885,4 +3911,16 @@ void PoeditFrame::OnNextPage(wxCommandEvent&)
         return;
     auto pos = std::min(m_list->GetFirstSelected()+10, long(m_list->GetItemCount())-1);
     m_list->SelectOnly(pos);
+}
+
+void PoeditFrame::OnPrevPluralForm(wxCommandEvent&)
+{
+    m_pluralNotebook->AdvanceSelection(/*forward=*/false);
+    m_textTransPlural[m_pluralNotebook->GetSelection()]->SetFocus();
+}
+
+void PoeditFrame::OnNextPluralForm(wxCommandEvent&)
+{
+    m_pluralNotebook->AdvanceSelection(/*forward=*/true);
+    m_textTransPlural[m_pluralNotebook->GetSelection()]->SetFocus();
 }

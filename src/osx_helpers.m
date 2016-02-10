@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2007-2015 Vaclav Slavik
+ *  Copyright (C) 2007-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -48,6 +48,10 @@ void Sparkle_Initialize(bool checkForBeta)
     UserDefaults_RemoveValue("SUCheckAtStartup");
 
     @autoreleasepool {
+        // For Preferences window, have default in sync with Info.plist:
+        NSDictionary *sparkleDefaults = @{ @"SUEnableAutomaticChecks": @YES };
+        [[NSUserDefaults standardUserDefaults] registerDefaults:sparkleDefaults];
+
         SUUpdater *updater = [SUUpdater sharedUpdater];
 
         /* TODO: Use feedParametersForUpdater delegate method and append ?beta=1 instead.

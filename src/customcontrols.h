@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2014-2015 Vaclav Slavik
+ *  Copyright (C) 2014-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,8 @@
 
 #ifndef Poedit_customcontrols_h
 #define Poedit_customcontrols_h
+
+#include "language.h"
 
 #include <wx/stattext.h>
 #include <wx/hyperlink.h>
@@ -54,6 +56,8 @@ class AutoWrappingText : public wxStaticText
 public:
     AutoWrappingText(wxWindow *parent, const wxString& label);
 
+    void SetLanguage(Language lang) { m_language = lang; }
+
     void SetAlignment(int align);
     void SetAndWrapLabel(const wxString& label);
 
@@ -62,6 +66,7 @@ protected:
 
     wxString m_text;
     int m_wrapWidth;
+    Language m_language;
 };
 
 /// Like AutoWrappingText, but allows selecting (OS X) or at least copying (Windows)

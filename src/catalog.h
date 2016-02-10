@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2015 Vaclav Slavik
+ *  Copyright (C) 1999-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -269,7 +269,8 @@ class CatalogItem
         }
 
         void SetOldMsgid(const wxArrayString& data) { m_oldMsgid = data; }
-        const wxArrayString& GetOldMsgid() const { return m_oldMsgid; }
+        const wxArrayString& GetOldMsgidRaw() const { return m_oldMsgid; }
+        wxString GetOldMsgid() const;
         bool HasOldMsgid() const { return !m_oldMsgid.empty(); }
 
         // Validity (syntax-checking) status of the entry:

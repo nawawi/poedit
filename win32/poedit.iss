@@ -1,7 +1,7 @@
 ﻿;
 ;   This file is part of Poedit (http://poedit.net)
 ;
-;   Copyright (C) 1999-2015 Vaclav Slavik
+;   Copyright (C) 1999-2016 Vaclav Slavik
 ;
 ;   Permission is hereby granted, free of charge, to any person obtaining a
 ;   copy of this software and associated Docsumentation files (the "Software"),
@@ -30,8 +30,8 @@
 
 #include "../" + CONFIG + "/git_build_number.h"
 
-#define VERSION          "1.8.6"
-#define VERSION_FULL     "1.8.6"
+#define VERSION          "1.8.7"
+#define VERSION_FULL     "1.8.7"
 #define VERSION_WIN      VERSION + "." + Str(POEDIT_GIT_BUILD_NUMBER)
 
 #ifndef CRT_REDIST
@@ -67,10 +67,10 @@ InternalCompressLevel=ultra
 AppID={{68EB2C37-083A-4303-B5D8-41FA67E50B8F}
 VersionInfoVersion={#VERSION_WIN}
 VersionInfoTextVersion={#VERSION_FULL}
-AppCopyright=Copyright © 1999-2015 Vaclav Slavik
+AppCopyright=Copyright © 1999-2016 Vaclav Slavik
 AppPublisher=Vaclav Slavik
-AppSupportURL=http://poedit.net/support.php
-AppUpdatesURL=http://poedit.net/download.php
+AppSupportURL=http://poedit.net/support
+AppUpdatesURL=http://poedit.net/download
 AppVersion={#VERSION_FULL}
 AppContact=help@poedit.net
 UninstallDisplayIcon={app}\Poedit.exe
@@ -85,7 +85,7 @@ SignTool={#SIGNTOOL}
 #endif
 VersionInfoCompany=Vaclav Slavik
 VersionInfoDescription=Poedit Installer
-VersionInfoCopyright=Copyright © 1999-2015 Vaclav Slavik
+VersionInfoCopyright=Copyright © 1999-2016 Vaclav Slavik
 VersionInfoProductName=Poedit
 VersionInfoProductVersion={#VERSION_WIN}
 VersionInfoProductTextVersion={#VERSION_FULL}
@@ -115,9 +115,14 @@ Type: filesandordirs; Name: "{app}\doc"
 Type: filesandordirs; Name: "{app}\share"
 
 [Registry]
+; Install global settings:
+Root: "HKLM"; Subkey: "Software\Vaclav Slavik\Poedit\WinSparkle"; ValueType: string; ValueName: "CheckForUpdates"; ValueData: "1"; Flags: noerror
+
 ; Uninstall Poedit settings on uninstall:
-Root: "HKCU"; Subkey: "Software\Vaclav Slavik"; Flags: uninsdeletekeyifempty dontcreatekey
+Root: "HKLM"; Subkey: "Software\Vaclav Slavik\Poedit"; Flags: noerror uninsdeletekey
+Root: "HKLM"; Subkey: "Software\Vaclav Slavik"; Flags: noerror uninsdeletekeyifempty
 Root: "HKCU"; Subkey: "Software\Vaclav Slavik\Poedit"; Flags: uninsdeletekey dontcreatekey
+Root: "HKCU"; Subkey: "Software\Vaclav Slavik"; Flags: uninsdeletekeyifempty dontcreatekey
 
 ; Associate files with Poedit:
 Root: "HKCR"; Subkey: ".po"; ValueType: string; ValueData: "Poedit.PO"; Flags: noerror

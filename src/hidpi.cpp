@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2015 Vaclav Slavik
+ *  Copyright (C) 2015-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -84,8 +84,14 @@ wxBitmap LoadScaledBitmap(const wxString& name)
             LoadPNGImage(img, filename);
         }
 
-        img.Rescale(img.GetWidth() * imgScale, img.GetHeight() * imgScale,
-                    imgScale == 2.0 ? wxIMAGE_QUALITY_NEAREST : wxIMAGE_QUALITY_BICUBIC);
+        wxImageResizeQuality quality;
+        if (imgScale == 2.0)
+            quality = wxIMAGE_QUALITY_NEAREST;
+        else if (imgScale == 1.5)
+            quality = wxIMAGE_QUALITY_BILINEAR;
+        else
+            quality = wxIMAGE_QUALITY_BICUBIC;
+        img.Rescale(img.GetWidth() * imgScale, img.GetHeight() * imgScale, quality);
         return wxBitmap(img);
     }
     // else: load normally

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2010-2015 Vaclav Slavik
+ *  Copyright (C) 2010-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -151,7 +151,7 @@ wxFileName MakeFileName(const wxString& path);
 
 inline wxFileName MakeFileName(wxFileName fn)
 {
-    fn.Normalize();
+    fn.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE);
     return fn;
 }
 
@@ -195,7 +195,6 @@ public:
 private:
     int m_counter;
     wxString m_dir;
-    wxArrayString m_files;
 
     static bool ms_keepFiles;
 };
@@ -214,6 +213,12 @@ public:
 
     /// Renames temp file to the final one (passed to ctor).
     bool Commit();
+
+    /// Rename file to replace another *while preserving destination
+    /// file's permissions*.
+    /// Make this helper publicly accessible for code that can't
+    /// use TempOutputFileFor directly.
+    static bool ReplaceFile(const wxString& temp, const wxString& dest);
 
 #ifdef __WXOSX__
     wxString m_tempDir;

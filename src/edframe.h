@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2015 Vaclav Slavik
+ *  Copyright (C) 1999-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -236,6 +236,8 @@ class PoeditFrame : public wxFrame
         void OnNextPage(wxCommandEvent&);
         void OnPrevUnfinished(wxCommandEvent&);
         void OnNextUnfinished(wxCommandEvent&);
+        void OnPrevPluralForm(wxCommandEvent&);
+        void OnNextPluralForm(wxCommandEvent&);
 
         // Message handlers:
 public: // for PoeditApp
@@ -282,6 +284,7 @@ private:
         void OnFuzzyFlag(wxCommandEvent& event);
         void OnIDsFlag(wxCommandEvent& event);
         void OnCopyFromSource(wxCommandEvent& event);
+        void OnCopyFromSingular(wxCommandEvent& event);
         void OnClearTranslation(wxCommandEvent& event);
         void OnFind(wxCommandEvent& event);
         void OnFindAndReplace(wxCommandEvent& event);
@@ -304,6 +307,7 @@ private:
         void OnSelectionUpdate(wxUpdateUIEvent& event);
         void OnSelectionUpdateEditable(wxUpdateUIEvent& event);
         void OnSingleSelectionUpdate(wxUpdateUIEvent& event);
+        void OnSingleSelectionWithPluralsUpdate(wxUpdateUIEvent& event);
         void OnHasCatalogUpdate(wxUpdateUIEvent& event);
         void OnIsEditableUpdate(wxUpdateUIEvent& event);
         void OnEditCommentUpdate(wxUpdateUIEvent& event);

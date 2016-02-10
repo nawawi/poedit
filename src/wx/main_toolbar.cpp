@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2014-2015 Vaclav Slavik
+ *  Copyright (C) 2014-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -38,6 +38,15 @@ public:
         m_tb = wxXmlResource::Get()->LoadToolBar(parent, "toolbar");
         m_idFuzzy = XRCID("menu_fuzzy");
         m_idUpdate = XRCID("toolbar_update");
+
+#ifdef __WXMSW__
+        // De-uglify the toolbar a bit on Windows 10:
+        int osmajor = 0;
+        if (wxGetOsVersion(&osmajor, nullptr) == wxOS_WINDOWS_NT && osmajor == 10)
+        {
+            m_tb->SetBackgroundColour(*wxWHITE);
+        }
+#endif
     }
 
     bool IsFuzzy() const override

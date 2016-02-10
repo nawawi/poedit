@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2015 Vaclav Slavik
+ *  Copyright (C) 2015-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -55,7 +55,7 @@
 namespace
 {
 
-wxString WrapTextAtWidth(const wxString& text_, int width, wxWindow *wnd)
+wxString WrapTextAtWidth(const wxString& text_, int width, Language lang, wxWindow *wnd)
 {
     if (text_.empty())
         return text_;
@@ -65,7 +65,9 @@ wxString WrapTextAtWidth(const wxString& text_, int width, wxWindow *wnd)
     if (!iter)
     {
         UErrorCode err = U_ZERO_ERROR;
-        iter.reset(icu::BreakIterator::createLineInstance(icu::Locale(), err));
+        iter.reset(icu::BreakIterator::createLineInstance(lang.IsValid() ? lang.ToIcu() : icu::Locale(), err));
+        if (!iter)
+            iter.reset(icu::BreakIterator::createLineInstance(icu::Locale::getEnglish(), err));
     }
 
     iter->setText(text);
@@ -148,7 +150,7 @@ void AutoWrappingText::SetAndWrapLabel(const wxString& label)
     wxWindowUpdateLocker lock(this);
     m_text = label;
     m_wrapWidth = GetSize().x;
-    SetLabelText(WrapTextAtWidth(label, m_wrapWidth, this));
+    SetLabelText(WrapTextAtWidth(label, m_wrapWidth, m_language, this));
 
     InvalidateBestSize();
     SetMinSize(wxDefaultSize);
@@ -165,7 +167,7 @@ void AutoWrappingText::OnSize(wxSizeEvent& e)
     wxWindowUpdateLocker lock(this);
 
     m_wrapWidth = w;
-    SetLabel(WrapTextAtWidth(m_text, w, this));
+    SetLabel(WrapTextAtWidth(m_text, w, m_language, this));
 
     InvalidateBestSize();
     SetMinSize(wxDefaultSize);

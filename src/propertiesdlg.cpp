@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2000-2015 Vaclav Slavik
+ *  Copyright (C) 2000-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -66,7 +66,7 @@ namespace
 inline wxString NormalizedPath(const wxString& fn, wxPathFormat format)
 {
     auto f = MakeFileName(fn);
-    f.Normalize();
+    f.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE);
     return f.GetFullPath(format);
 }
 

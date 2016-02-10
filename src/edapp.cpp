@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 1999-2015 Vaclav Slavik
+ *  Copyright (C) 1999-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -71,6 +71,7 @@
 #include "extractor.h"
 #include "chooselang.h"
 #include "customcontrols.h"
+#include "gexecute.h"
 #include "hidpi.h"
 #include "icons.h"
 #include "version.h"
@@ -313,6 +314,11 @@ extern void InitXmlResource();
 
 bool PoeditApp::OnInit()
 {
+#ifdef __WXMSW__
+    // remove the current directory from the default DLL search order
+    SetDllDirectory(L"");
+#endif
+
     SetVendorName("Vaclav Slavik");
     SetAppName("Poedit");
 
@@ -550,7 +556,10 @@ void PoeditApp::SetupLanguage()
 {
 #if defined(__WXMSW__)
 	wxFileTranslationsLoader::AddCatalogLookupPathPrefix(wxStandardPaths::Get().GetResourcesDir() + "\\Translations");
-#elif !defined(__WXOSX__)
+    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(GetGettextPackagePath() + "/share/locale");
+#elif defined(__WXOSX__)
+    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(GetGettextPackagePath() + "/share/locale");
+#else // UNIX
     wxFileTranslationsLoader::AddCatalogLookupPathPrefix(wxStandardPaths::Get().GetInstallPrefix() + "/share/locale");
 #endif
 
@@ -600,7 +609,7 @@ void PoeditApp::SetupLanguage()
     const wxLanguageInfo *info = wxLocale::FindLanguageInfo(bestTrans);
     g_layoutDirection = info ? info->LayoutDirection : wxLayout_Default;
 
-#ifdef _WXMSW__
+#ifdef __WXMSW__
     win_sparkle_set_lang(bestTrans.utf8_str());
 #endif
 }
@@ -671,8 +680,9 @@ void PoeditApp::SetDefaultExtractors(wxConfigBase *cfg)
         { "C/C++",      "*.c;*.cpp;*.cc;*.C;*.c++;*.cxx;*.h;*.hpp;*.hxx;*.hh" },
         { "C#",         "*.cs" },
         { "EmacsLisp",  "*.el" },
-        { "GSettings",  "gschema.xml" },
+        { "GSettings",  "*.gschema.xml" },
         { "Glade",      "*.glade;*.glade2;*.ui" },
+        { "AppData",    "*.appdata.xml" },
         { "Java",       "*.java" },
         { "JavaScript", "*.js" },
         { "Lisp",       "*.lisp" },
@@ -1046,7 +1056,7 @@ void PoeditApp::OnAbout(wxCommandEvent&)
     about.SetVersion(wxGetApp().GetAppVersion());
     about.SetDescription(_("Poedit is an easy to use translations editor."));
 #endif
-    about.SetCopyright(L"Copyright \u00a9 1999-2015 Václav Slavík");
+    about.SetCopyright(L"Copyright \u00a9 1999-2016 Václav Slavík");
 #ifdef __WXGTK__ // other ports would show non-native about dlg
     about.SetWebSite("http://poedit.net");
 #endif
@@ -1064,6 +1074,16 @@ void PoeditApp::OnManager(wxCommandEvent&)
 
 void PoeditApp::OnQuit(wxCommandEvent&)
 {
+#ifdef __WXOSX__
+    // Native apps don't quit if there's any modal window or a sheet open; wx
+    // only refuses to quit if a app-modal window is open:
+    for (NSWindow *w in [NSApp windows])
+    {
+        if (w.sheet && w.visible && w.preventsApplicationTerminationWhenModal)
+            return;
+    }
+#endif
+
     // The Close() calls below may not terminate immediately, they may ask for
     // confirmation window-modally on OS X. So change the behavior to terminate
     // the app when the last window is closed now, instead of calling
@@ -1295,6 +1315,9 @@ void PoeditApp::OSXOnWillFinishLaunching()
 {
     wxApp::OSXOnWillFinishLaunching();
     CreateFakeOpenRecentMenu();
+    // We already create the menu item, this would cause duplicates "thanks" to the weird
+    // way wx's menubar works on OS X:
+    [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
 }
 
 // Handle Cmd+W closure of windows globally here

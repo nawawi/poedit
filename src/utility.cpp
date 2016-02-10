@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2010-2015 Vaclav Slavik
+ *  Copyright (C) 2010-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -26,6 +26,7 @@
 #include "utility.h"
 
 #include <stdio.h>
+
 #include <wx/filename.h>
 #include <wx/log.h>
 #include <wx/config.h>
@@ -36,6 +37,11 @@
 
 #ifdef __WXOSX__
     #include <Foundation/Foundation.h>
+#endif
+#ifdef __UNIX__
+    #include <sys/types.h>
+    #include <sys/stat.h>
+    #include <unistd.h>
 #endif
 
 #include "str_helpers.h"
@@ -82,7 +88,7 @@ wxFileName MakeFileName(const wxString& path)
         fn.AssignDir(path);
     else
         fn.Assign(path);
-    fn.Normalize();
+    fn.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE);
     return fn;
 }
 
@@ -135,47 +141,40 @@ TempDirectory::TempDirectory() : m_counter(0)
 
 TempDirectory::~TempDirectory()
 {
-    if ( m_dir.empty() )
-        return;
-
     Clear();
-
-    wxLogTrace("poedit.tmp", "removing temp dir %s", m_dir.c_str());
-    wxFileName::Rmdir(m_dir);
 }
 
 void TempDirectory::Clear()
 {
+    if ( m_dir.empty() )
+        return;
+
     if ( ms_keepFiles )
     {
         wxLogTrace("poedit.tmp", "keeping temp files in %s", m_dir.c_str());
         return;
     }
 
-    for ( wxArrayString::const_iterator i = m_files.begin(); i != m_files.end(); ++i )
-    {
-        if ( wxFileName::FileExists(*i) )
-        {
-            wxLogTrace("poedit.tmp", "removing temp file %s", i->c_str());
-            wxRemoveFile(*i);
-        }
-    }
+    wxLogTrace("poedit.tmp", "removing temp dir %s", m_dir.c_str());
+    wxFileName::Rmdir(m_dir, wxPATH_RMDIR_RECURSIVE);
+
+    m_dir.clear();
 }
 
 wxString TempDirectory::CreateFileName(const wxString& suffix)
 {
+    wxASSERT( !m_dir.empty() );
     wxString s = wxString::Format("%s%c%d%s",
                                   m_dir.c_str(), wxFILE_SEP_PATH,
                                   m_counter++,
                                   suffix.c_str());
-    m_files.push_back(s);
     wxLogTrace("poedit.tmp", "new temp file %s", s.c_str());
     return s;
 }
 
 
 // ----------------------------------------------------------------------
-// TempOutputFile
+// TempOutputFileFor
 // ----------------------------------------------------------------------
 
 TempOutputFileFor::TempOutputFileFor(const wxString& filename) : m_filenameFinal(filename)
@@ -232,7 +231,44 @@ TempOutputFileFor::TempOutputFileFor(const wxString& filename) : m_filenameFinal
 
 bool TempOutputFileFor::Commit()
 {
-    return wxRenameFile(m_filenameTmp, m_filenameFinal, /*overwrite=*/true);
+    return ReplaceFile(m_filenameTmp, m_filenameFinal);
+}
+
+bool TempOutputFileFor::ReplaceFile(const wxString& temp, const wxString& dest)
+{
+#ifdef __WXOSX__
+    NSURL *tempURL = [NSURL fileURLWithPath:str::to_NS(temp)];
+    NSURL *destURL = [NSURL fileURLWithPath:str::to_NS(dest)];
+    NSURL *resultingURL = nil;
+    return [[NSFileManager defaultManager] replaceItemAtURL:destURL
+                                              withItemAtURL:tempURL
+                                             backupItemName:nil
+                                                    options:0
+                                           resultingItemURL:&resultingURL
+                                                     error:nil];
+#else // !__WXOSX__
+  #ifdef __UNIX__
+    auto destPath = dest.fn_str();
+    bool overwrite = false;
+    struct stat st;
+
+    if ((overwrite = wxFileExists(dest)) == true)
+    {
+        if (stat(destPath, &st) != 0)
+            overwrite = false;
+    }
+  #endif
+
+    if (!wxRenameFile(temp, dest, /*overwrite=*/true))
+        return false;
+
+  #ifdef __UNIX__
+    chown(destPath, st.st_uid, st.st_gid);
+    chmod(destPath, st.st_mode);
+  #endif
+
+    return true;
+#endif // !__WXOSX__
 }
 
 TempOutputFileFor::~TempOutputFileFor()

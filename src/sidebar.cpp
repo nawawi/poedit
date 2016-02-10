@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (http://poedit.net)
  *
- *  Copyright (C) 2014-2015 Vaclav Slavik
+ *  Copyright (C) 2014-2016 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -145,8 +145,7 @@ public:
 
     void Update(const CatalogItemPtr& item) override
     {
-        auto txt = wxJoin(item->GetOldMsgid(), ' ', '\0');
-        m_text->SetAndWrapLabel(txt);
+        m_text->SetAndWrapLabel(item->GetOldMsgid());
     }
 
 private:
@@ -207,6 +206,7 @@ public:
     {
         auto text = CommentDialog::RemoveStartHash(item->GetComment());
         text.Trim();
+        m_comment->SetLanguage(m_parent->GetCurrentLanguage());
         m_comment->SetAndWrapLabel(text);
     }
 
@@ -289,7 +289,7 @@ public:
         }
     }
 
-    void SetValue(int index, const Suggestion& s, bool isRTL, const wxBitmap& icon, const wxString& tooltip)
+    void SetValue(int index, const Suggestion& s, Language lang, bool isRTL, const wxBitmap& icon, const wxString& tooltip)
     {
         m_value = s;
 
@@ -326,6 +326,7 @@ public:
             isRTL = !isRTL;
 
         m_text->SetAlignment(isRTL ? wxALIGN_RIGHT : wxALIGN_LEFT);
+        m_text->SetLanguage(lang);
         m_text->SetAndWrapLabel(text);
 
 #ifndef __WXOSX__
@@ -503,11 +504,12 @@ void SuggestionsSidebarBlock::UpdateSuggestions(const SuggestionsList& hits)
     m_innerSizer->Layout();
 
     // update shown suggestions:
-    bool isRTL = m_parent->GetCurrentLanguage().IsRTL();
+    auto lang = m_parent->GetCurrentLanguage();
+    bool isRTL = lang.IsRTL();
     for (size_t i = 0; i < m_suggestions.size(); ++i)
     {
         auto s = m_suggestions[i];
-        m_suggestionsWidgets[i]->SetValue((int)i, s, isRTL, GetIconForSuggestion(s), GetTooltipForSuggestion(s));
+        m_suggestionsWidgets[i]->SetValue((int)i, s, lang, isRTL, GetIconForSuggestion(s), GetTooltipForSuggestion(s));
     }
 
     m_innerSizer->Layout();
