@@ -47,6 +47,10 @@
 #include <wx/dnd.h>
 #include <wx/windowptr.h>
 
+#ifdef __WXMSW__
+#include <Dwmapi.h> 
+#endif
+
 #ifdef __WXOSX__
 #import <AppKit/NSDocumentController.h>
 #include "osx_helpers.h"
@@ -571,6 +575,20 @@ PoeditFrame::PoeditFrame() :
     NSWindow *wnd = (NSWindow*)GetWXWindow();
     [wnd setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 #endif
+
+#ifdef __WXMSW__
+    if (IsWindows10OrGreater())
+    {
+        // This is a terrible, terrible hack to reduce a 2px line between menu
+        // and toolbar to 1px only.
+        MARGINS margins;
+        margins.cxLeftWidth = 0;
+        margins.cxRightWidth = 0;
+        margins.cyBottomHeight = 0;
+        margins.cyTopHeight = PX(20);
+        DwmExtendFrameIntoClientArea(GetHWND(), &margins);
+    }
+#endif
 }
 
 
@@ -670,7 +688,11 @@ wxWindow* PoeditFrame::CreateContentViewPO(Content type)
                                 wxLC_REPORT,
                                 m_displayIDs);
 
-    m_bottomPanel = new wxPanel(m_splitter);
+    m_bottomPanel = new wxPanel(m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxNO_BORDER | DoubleBufferingWindowStyle());
+#ifdef __WXMSW__
+    if (!IsWindowsXP())
+	    m_bottomPanel->SetDoubleBuffered(true);
+#endif
 
     wxStaticText *labelSource =
         new wxStaticText(m_bottomPanel, -1, _("Source text:"));
@@ -1165,14 +1187,24 @@ void PoeditFrame::OnCloseWindow(wxCloseEvent& event)
     if (event.CanVeto() && NeedsToAskIfCanDiscardCurrentDoc())
     {
 #ifdef __WXOSX__
-        // Veto the event by default, the window-modally ask for permission.
+        // Veto the event by default, then window-modally ask for permission.
         // If it turns out that the window can be closed, the completion handler
         // will do it:
         event.Veto();
-#endif
         DoIfCanDiscardCurrentDoc([=]{
             Destroy();
         });
+#else // !__WXOSX__
+        // DoIfCanDiscardCurentDoc() doesn't have on-failure callback and
+        // so we instead veto preemtively and then un-veto it. Note that this
+        // only works because on non-OSX platforms the question dialog is
+        // modal and the code below called immediately.
+        event.Veto();
+        DoIfCanDiscardCurrentDoc([=, &event]{
+            event.Veto(false);
+            Destroy();
+        });
+#endif
     }
     else // can't veto
     {
