@@ -11,6 +11,7 @@
 *.sdf
 *.opensdf
 /ipch/
+/Poedit.VC.opendb
 Makefile
 Makefile.in
 admin/config.guess
@@ -27,9 +28,7 @@ docs/poedit.1
 Release/
 Debug/
 
-/deps/bin-win
-/deps/bin-osx
-/deps/.ant-targets-build.xml
+/deps/build.vars.local.ninja
 /deps/db/build_windows/Win32/
 /deps/custom_build/Debug*
 /deps/custom_build/Release*

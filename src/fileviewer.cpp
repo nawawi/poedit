@@ -1,5 +1,5 @@
 /*
- *  This file is part of Poedit (http://poedit.net)
+ *  This file is part of Poedit (https://poedit.net)
  *
  *  Copyright (C) 1999-2016 Vaclav Slavik
  *
@@ -320,6 +320,9 @@ wxFileName FileViewer::GetFilename(wxString ref) const
 void FileViewer::ShowReferences(CatalogPtr catalog, CatalogItemPtr item, int defaultReference)
 {
     m_basePath = catalog->GetSourcesBasePath();
+    if (m_basePath.empty())
+        m_basePath = wxPathOnly(catalog->GetFileName());
+
     m_references = item->GetReferences();
 
     m_file->Clear();
