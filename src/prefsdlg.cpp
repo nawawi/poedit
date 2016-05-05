@@ -49,6 +49,10 @@
 #include <wx/xrc/xmlres.h>
 #include <wx/numformatter.h>
 
+#if !wxCHECK_VERSION(3,1,0)
+    #define CenterVertical() Center()
+#endif
+
 #include "prefsdlg.h"
 #include "edapp.h"
 #include "edframe.h"
@@ -62,6 +66,7 @@
 #include "spellchecking.h"
 #include "utility.h"
 #include "customcontrols.h"
+#include "unicode_helpers.h"
 
 #ifdef __WXMSW__
 #include <winsparkle.h>
@@ -164,15 +169,15 @@ public:
         sizer->Add(translator, wxSizerFlags().Expand());
 
         auto nameLabel = new wxStaticText(this, wxID_ANY, _("Name:"));
-        translator->Add(nameLabel, wxSizerFlags().Center().Right().BORDER_OSX(wxTOP, 1));
+        translator->Add(nameLabel, wxSizerFlags().CenterVertical().Right().BORDER_OSX(wxTOP, 1));
         m_userName = new wxTextCtrl(this, wxID_ANY);
         m_userName->SetHint(_("Your Name"));
-        translator->Add(m_userName, wxSizerFlags(1).Expand().Center());
+        translator->Add(m_userName, wxSizerFlags(1).Expand().CenterVertical());
         auto emailLabel = new wxStaticText(this, wxID_ANY, _("Email:"));
-        translator->Add(emailLabel, wxSizerFlags().Center().Right().BORDER_OSX(wxTOP, 1));
+        translator->Add(emailLabel, wxSizerFlags().CenterVertical().Right().BORDER_OSX(wxTOP, 1));
         m_userEmail = new wxTextCtrl(this, wxID_ANY);
         m_userEmail->SetHint(_("your_email@example.com"));
-        translator->Add(m_userEmail, wxSizerFlags(1).Expand().Center());
+        translator->Add(m_userEmail, wxSizerFlags(1).Expand().CenterVertical());
         translator->AddSpacer(PX(1));
         translator->Add(new ExplanationLabel(this, _("Your name and email address are only used to set the Last-Translator header of GNU gettext files.")), wxSizerFlags(1).Expand().PXBorder(wxRIGHT));
 #ifdef __WXOSX__
@@ -219,10 +224,10 @@ public:
         m_fontText = new wxFontPickerCtrl(this, wxID_ANY);
         m_fontText->SetMinSize(wxSize(PX(120), -1));
 
-        appearance->Add(m_useFontList, wxSizerFlags().Center().Left());
-        appearance->Add(m_fontList, wxSizerFlags().Center().Expand());
-        appearance->Add(m_useFontText, wxSizerFlags().Center().Left());
-        appearance->Add(m_fontText, wxSizerFlags().Center().Expand());
+        appearance->Add(m_useFontList, wxSizerFlags().CenterVertical().Left());
+        appearance->Add(m_fontList, wxSizerFlags().CenterVertical().Expand());
+        appearance->Add(m_useFontText, wxSizerFlags().CenterVertical().Left());
+        appearance->Add(m_fontText, wxSizerFlags().CenterVertical().Expand());
 
 #if NEED_CHOOSELANG_UI 
         m_uiLanguage = new wxButton(this, wxID_ANY, _("Change UI language"));
@@ -602,7 +607,7 @@ public:
         m_list->Clear();
         for (const auto& item: m_extractors.Data)
         {
-            auto index = m_list->Append(item.Name);
+            auto index = m_list->Append(bidi::platform_mark_direction(item.Name));
             m_list->Check(index, item.Enabled);
         }
 
@@ -635,12 +640,12 @@ private:
 
         {
             const Extractor& nfo = m_extractors.Data[num];
-            extractor_language->SetValue(nfo.Name);
-            extractor_extensions->SetValue(nfo.Extensions);
-            extractor_command->SetValue(nfo.Command);
-            extractor_keywords->SetValue(nfo.KeywordItem);
-            extractor_files->SetValue(nfo.FileItem);
-            extractor_charset->SetValue(nfo.CharsetItem);
+            extractor_language->SetValue(bidi::platform_mark_direction(nfo.Name));
+            extractor_extensions->SetValue(bidi::mark_direction(nfo.Extensions, TextDirection::LTR));
+            extractor_command->SetValue(bidi::mark_direction(nfo.Command, TextDirection::LTR));
+            extractor_keywords->SetValue(bidi::mark_direction(nfo.KeywordItem, TextDirection::LTR));
+            extractor_files->SetValue(bidi::mark_direction(nfo.FileItem, TextDirection::LTR));
+            extractor_charset->SetValue(bidi::mark_direction(nfo.CharsetItem, TextDirection::LTR));
         }
 
         dlg->Bind
@@ -663,12 +668,12 @@ private:
             if (retcode == wxID_OK)
             {
                 Extractor& nfo = m_extractors.Data[num];
-                nfo.Name = extractor_language->GetValue().Strip(wxString::both);
-                nfo.Extensions = extractor_extensions->GetValue().Strip(wxString::both);
-                nfo.Command = extractor_command->GetValue().Strip(wxString::both);
-                nfo.KeywordItem = extractor_keywords->GetValue().Strip(wxString::both);
-                nfo.FileItem = extractor_files->GetValue().Strip(wxString::both);
-                nfo.CharsetItem = extractor_charset->GetValue().Strip(wxString::both);
+                nfo.Name = bidi::strip_control_chars(extractor_language->GetValue().Strip(wxString::both));
+                nfo.Extensions = bidi::strip_control_chars(extractor_extensions->GetValue().Strip(wxString::both));
+                nfo.Command = bidi::strip_control_chars(extractor_command->GetValue().Strip(wxString::both));
+                nfo.KeywordItem = bidi::strip_control_chars(extractor_keywords->GetValue().Strip(wxString::both));
+                nfo.FileItem = bidi::strip_control_chars(extractor_files->GetValue().Strip(wxString::both));
+                nfo.CharsetItem = bidi::strip_control_chars(extractor_charset->GetValue().Strip(wxString::both));
                 m_list->SetString(num, nfo.Name);
             }
             completionHandler(retcode == wxID_OK);
@@ -978,6 +983,11 @@ public:
 
 std::unique_ptr<PoeditPreferencesEditor> PoeditPreferencesEditor::Create()
 {
+#if 0
+    // TRANSLATORS: Title of the preferences window on Windows and Linux. "%s" is replaced with "Poedit" when running.
+    _("%s Preferences");
+#endif
+
     std::unique_ptr<PoeditPreferencesEditor> p(new PoeditPreferencesEditor);
     p->AddPage(new GeneralPage);
     p->AddPage(new TMPage);

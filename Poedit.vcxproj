@@ -62,8 +62,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>deps\wx\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rpcrt4.lib;advapi32.lib;shlwapi.lib;ws2_32.lib;comctl32.lib;Winhttp.lib;wininet.lib;httpapi.lib;crypt32.lib;version.lib;Dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>Dwmapi.dll</DelayLoadDLLs>
+      <AdditionalDependencies>rpcrt4.lib;advapi32.lib;shlwapi.lib;ws2_32.lib;comctl32.lib;Winhttp.lib;wininet.lib;httpapi.lib;crypt32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>deps\wx\include\msvc;deps\wx\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -92,8 +91,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>deps\wx\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rpcrt4.lib;advapi32.lib;shlwapi.lib;ws2_32.lib;comctl32.lib;Winhttp.lib;wininet.lib;httpapi.lib;crypt32.lib;version.lib;Dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>Dwmapi.dll</DelayLoadDLLs>
+      <AdditionalDependencies>rpcrt4.lib;advapi32.lib;shlwapi.lib;ws2_32.lib;comctl32.lib;Winhttp.lib;wininet.lib;httpapi.lib;crypt32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>deps\wx\include\msvc;deps\wx\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -142,6 +140,7 @@
     <ClCompile Include="src\tm\suggestions.cpp" />
     <ClCompile Include="src\tm\tm_migrate.cpp" />
     <ClCompile Include="src\tm\transmem.cpp" />
+    <ClCompile Include="src\unicode_helpers.cpp" />
     <ClCompile Include="src\utility.cpp" />
     <ClCompile Include="src\welcomescreen.cpp" />
     <ClCompile Include="src\wx\main_toolbar.cpp" />
@@ -191,6 +190,7 @@
     <ClInclude Include="src\text_control.h" />
     <ClInclude Include="src\tm\suggestions.h" />
     <ClInclude Include="src\tm\transmem.h" />
+    <ClInclude Include="src\unicode_helpers.h" />
     <ClInclude Include="src\utility.h" />
     <ClInclude Include="src\version.h" />
     <ClInclude Include="src\welcomescreen.h" />
@@ -279,6 +279,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="Poedit.Targets">
       <SubType>Designer</SubType>
     </None>
