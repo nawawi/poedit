@@ -44,8 +44,8 @@
     #include <boost/locale/encoding_utf.hpp>
 #endif
 
-#include <wx/buffer.h>
 #include <wx/string.h>
+#include <wx/buffer.h>
 
 /**
     Defines conversions between various string types.
@@ -127,6 +127,11 @@ inline wxString to_wx(NSString *str)
 inline NSString *to_NS(const std::string& utf8str)
 {
     return [NSString stringWithUTF8String:utf8str.c_str()];
+}
+
+inline NSString *to_NS(const char *utf8str)
+{
+    return [NSString stringWithUTF8String:utf8str];
 }
 
 inline std::string to_utf8(NSString *str)

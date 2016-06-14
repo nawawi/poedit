@@ -20,6 +20,10 @@ remove_unsupported_languages()
 
     rm -f locales/win/windows_strings-Esperanto.rc
     rm -f locales/win/windows_strings-Kabyle.rc  # Win10 supports, but no LCID
+
+    # No LTR support on OS X yet:
+    rm -rf */osx/ar.lproj
+    rm -rf */osx/he.lproj
 }
 
 # Crowdin tools create empty .strings files for all translations, even the ones
@@ -50,6 +54,12 @@ fixup_windows_rc_files()
         lang=`echo $stripped | cut -d_ -f1`
         lang="${lang/KAZAKH/KAZAK}"
         sublang=`echo $stripped | cut -s -d_ -f2`
+        if [ "$lang" = "BOSNIAN" ] ; then
+            sublang="BOSNIA_HERZEGOVINA_LATIN"
+        fi
+        if [ "$lang" = "CROATIAN" ] ; then
+            sublang="CROATIA"
+        fi
         if [ -n "$sublang" ] ; then
             code="LANG_${lang}, SUBLANG_${lang}_${sublang}"
         else
