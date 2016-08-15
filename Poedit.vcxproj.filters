@@ -87,9 +87,6 @@
     <ClCompile Include="src\tm\transmem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tm\tm_migrate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\language.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -138,19 +135,16 @@
     <ClCompile Include="src\http_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\wx_backports\wx_generic_activityindicator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\keychain\keytar_win.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\concurrency.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\wx_backports\wx_msw_nativewin.cpp">
+    <ClCompile Include="src\unicode_helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\unicode_helpers.cpp">
+    <ClCompile Include="src\windows\win10_menubar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -291,6 +285,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\unicode_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\windows\win10_menubar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\json.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

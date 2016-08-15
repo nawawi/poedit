@@ -92,10 +92,6 @@ struct PoeditApp::RecentMenuData
 };
 #endif
 
-#ifndef DONT_MIGRATE_LEGACY_TM
-extern bool MigrateLegacyTranslationMemory();
-#endif
-
 
 #ifndef __WXOSX__
 
@@ -369,26 +365,6 @@ bool PoeditApp::OnInit()
     if (!wxFileName::DirExists(configDir))
         wxFileName::Mkdir(configDir, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
     wxString configFile = configDir + "/config";
-
-    // Move legacy config locations to XDG compatible ones:
-    if (!wxFileExists(configFile))
-    {
-        wxString oldconfig = wxGetHomeDir() + "/.poedit";
-        if (wxDirExists(oldconfig))
-        {
-            if (wxFileExists(oldconfig + "/config"))
-                wxRenameFile(oldconfig + "/config", configFile);
-            {
-                wxLogNull null;
-                wxRmdir(oldconfig);
-            }
-        }
-        else if (wxFileExists(oldconfig))
-        {
-            // even older dotfile
-            wxRenameFile(oldconfig, configDir + "/config");
-        }
-    }
 #endif // __UNIX__
 
 #if defined(__WXOSX__)
@@ -397,15 +373,6 @@ bool PoeditApp::OnInit()
     #define CFG_FILE configFile
 #else
     #define CFG_FILE wxEmptyString
-#endif
-
-#ifdef __WXOSX__
-    // upgrade from the old location of config file:
-    wxString oldcfgfile = wxStandardPaths::Get().GetUserConfigDir() + "/poedit.cfg";
-    if (wxFileExists(oldcfgfile) && !wxFileExists(CFG_FILE))
-    {
-        wxRenameFile(oldcfgfile, CFG_FILE);
-    }
 #endif
 
     wxConfigBase::Set(
@@ -454,12 +421,6 @@ bool PoeditApp::OnInit()
     FileHistory().Load(*wxConfig::Get());
 #endif
 
-#ifndef DONT_MIGRATE_LEGACY_TM
-    // NB: It's important to do this before TM is used for the first time.
-    if ( !MigrateLegacyTranslationMemory() )
-        return false;
-#endif
-
 #ifdef __WXMSW__
     AssociateFileTypeIfNeeded();
 #endif
@@ -491,8 +452,6 @@ bool PoeditApp::OnInit()
         // Beta versions use unstable feed.
         appcast = "https://poedit.net/updates/win/appcast/beta";
     }
-    if (!wxPlatformInfo().CheckOSVersion(6,0)) // XP doesn't support SNI
-        appcast.Replace("https://", "http://");
 
     win_sparkle_set_appcast_url(appcast.utf8_str());
     win_sparkle_set_can_shutdown_callback(&PoeditApp::WinSparkle_CanShutdown);

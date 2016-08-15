@@ -19,13 +19,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -51,7 +51,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>HAVE_CLD2;HAVE_HTTP_CLIENT;XML_STATIC;_NO_ASYNCRTIMP;WIN32;_DEBUG;DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;deps\custom_build\config;deps\wx\include;deps\boost;deps\winsparkle\include;deps\lucene;deps\lucene\LucenePlusPlus\include;deps\cld2;deps\expat\lib;deps\icu4c\include;deps\icu4c\source\i18n;deps\casablanca\Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;deps\custom_build\config;deps\wx\include;deps\boost;deps\winsparkle\include;deps\lucene;deps\lucene\LucenePlusPlus\include;deps\cld2;deps\icu4c\include;deps\icu4c\source\i18n;deps\casablanca\Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <DisableSpecificWarnings>4800</DisableSpecificWarnings>
@@ -62,7 +62,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>deps\wx\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rpcrt4.lib;advapi32.lib;shlwapi.lib;ws2_32.lib;comctl32.lib;Winhttp.lib;wininet.lib;httpapi.lib;crypt32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>rpcrt4.lib;advapi32.lib;shlwapi.lib;ws2_32.lib;comctl32.lib;Winhttp.lib;wininet.lib;httpapi.lib;bcrypt.lib;crypt32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>mCtrl.dll</DelayLoadDLLs>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>deps\wx\include\msvc;deps\wx\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -79,7 +80,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>HAVE_CLD2;HAVE_HTTP_CLIENT;XML_STATIC;_NO_ASYNCRTIMP;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;deps\custom_build\config;deps\wx\include;deps\boost;deps\winsparkle\include;deps\lucene;deps\lucene\LucenePlusPlus\include;deps\cld2;deps\expat\lib;deps\icu4c\include;deps\icu4c\source\i18n;deps\casablanca\Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;deps\custom_build\config;deps\wx\include;deps\boost;deps\winsparkle\include;deps\lucene;deps\lucene\LucenePlusPlus\include;deps\cld2;deps\icu4c\include;deps\icu4c\source\i18n;deps\casablanca\Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4800</DisableSpecificWarnings>
       <PrecompiledHeaderFile>Poedit-Prefix.pch</PrecompiledHeaderFile>
@@ -91,7 +92,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>deps\wx\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>rpcrt4.lib;advapi32.lib;shlwapi.lib;ws2_32.lib;comctl32.lib;Winhttp.lib;wininet.lib;httpapi.lib;crypt32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>rpcrt4.lib;advapi32.lib;shlwapi.lib;ws2_32.lib;comctl32.lib;Winhttp.lib;wininet.lib;httpapi.lib;bcrypt.lib;crypt32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>mCtrl.dll</DelayLoadDLLs>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>deps\wx\include\msvc;deps\wx\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -138,14 +140,15 @@
     <ClCompile Include="src\syntaxhighlighter.cpp" />
     <ClCompile Include="src\text_control.cpp" />
     <ClCompile Include="src\tm\suggestions.cpp" />
-    <ClCompile Include="src\tm\tm_migrate.cpp" />
     <ClCompile Include="src\tm\transmem.cpp" />
     <ClCompile Include="src\unicode_helpers.cpp" />
     <ClCompile Include="src\utility.cpp" />
     <ClCompile Include="src\welcomescreen.cpp" />
+    <ClCompile Include="src\windows\win10_menubar.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">deps/mctrl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">deps/mctrl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="src\wx\main_toolbar.cpp" />
-    <ClCompile Include="src\wx_backports\wx_generic_activityindicator.cpp" />
-    <ClCompile Include="src\wx_backports\wx_msw_nativewin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\attentionbar.h" />
@@ -169,6 +172,7 @@
     <ClInclude Include="src\hidpi.h" />
     <ClInclude Include="src\http_client.h" />
     <ClInclude Include="src\icons.h" />
+    <ClInclude Include="src\json.h" />
     <ClInclude Include="src\keychain\keytar.h" />
     <ClInclude Include="src\language.h" />
     <ClInclude Include="src\languagectrl.h" />
@@ -194,6 +198,7 @@
     <ClInclude Include="src\utility.h" />
     <ClInclude Include="src\version.h" />
     <ClInclude Include="src\welcomescreen.h" />
+    <ClInclude Include="src\windows\win10_menubar.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="locales\win\windows_strings.rc" />
@@ -227,8 +232,8 @@
     <ProjectReference Include="deps\custom_build\cld2.vcxproj">
       <Project>{0f2968c8-6b72-52c5-857d-c1bbda8e9dd0}</Project>
     </ProjectReference>
-    <ProjectReference Include="deps\custom_build\expat.vcxproj">
-      <Project>{8d88ae38-ff38-5a85-83d1-bb6816ed2f58}</Project>
+    <ProjectReference Include="deps\custom_build\mctrl.vcxproj">
+      <Project>{c3f44d23-c639-5285-94a4-70f3a2a46541}</Project>
     </ProjectReference>
     <ProjectReference Include="deps\custom_build\wx_adv.vcxproj">
       <Project>{24c45343-fd20-5c92-81c1-35a2ae841e79}</Project>

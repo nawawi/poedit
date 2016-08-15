@@ -43,16 +43,19 @@
 
 #ifdef _WIN32
     #include <windows.h>
-    #include <wininet.h>
+    #include <winhttp.h>
     #include <netlistmgr.h>
     #pragma comment(lib, "ole32.lib")
-#endif
 
-using namespace web;
+    // can't include both winhttp.h and wininet.h, so put a declaration here
+    //#include <wininet.h>
+    EXTERN_C DECLSPEC_IMPORT BOOL STDAPICALLTYPE InternetGetConnectedState(__out LPDWORD lpdwFlags, __reserved DWORD dwReserved);
+#endif
 
 namespace
 {
 
+using namespace web;
 using utility::string_t;
 using utility::conversions::to_string_t;
 
@@ -99,72 +102,12 @@ public:
 
 } // anonymous namespace
 
-struct json_dict::native
-{
-    native(const web::json::value& x) : val(x) {}
-
-    web::json::value val;
-
-    const web::json::value& get(const std::string& key)
-    {
-        return val.at(to_string_t(key));
-    }
-};
-
-static inline json_dict make_json_dict(const web::json::value& x)
-{
-    return std::make_shared<json_dict::native>(x);
-}
-
-bool json_dict::is_null(const char *name) const
-{
-    return m_native->get(name).is_null();
-}
-
-json_dict json_dict::subdict(const char *name) const
-{
-    return make_json_dict(m_native->get(name));
-}
-
-std::string json_dict::utf8_string(const char *name) const
-{
-    return str::to_utf8(m_native->get(name).as_string());
-}
-
-std::wstring json_dict::wstring(const char *name) const
-{
-    return str::to_wstring(m_native->get(name).as_string());
-}
-
-int json_dict::number(const char *name) const
-{
-    return m_native->get(name).as_integer();
-}
-
-double json_dict::double_number(const char *name) const
-{
-    return m_native->get(name).as_double();
-}
-
-void json_dict::iterate_array(const char *name, std::function<void(const json_dict&)> on_item) const
-{
-    auto& val = m_native->get(name);
-    if (!val.is_array())
-        return;
-    auto size = val.size();
-    for (size_t i = 0; i < size; ++i)
-    {
-        on_item(make_json_dict(val.at(i)));
-    }
-}
-
-
 
 class http_client::impl
 {
 public:
     impl(http_client& owner, const std::string& url_prefix, int flags)
-        : m_owner(owner), m_native(sanitize_url(url_prefix, flags))
+        : m_owner(owner), m_native(sanitize_url(url_prefix, flags), get_client_config())
     {
         #define make_wide_str(x) make_wide_str_(x)
         #define make_wide_str_(x) L ## x
@@ -205,7 +148,7 @@ public:
             if (SUCCEEDED(hr))
                 return result & (NLM_CONNECTIVITY_IPV4_INTERNET|NLM_CONNECTIVITY_IPV6_INTERNET);
         }
-        // XP or manager fallback (IPv6 ignorant):
+        // manager fallback (IPv6 ignorant):
         DWORD flags;
         return ::InternetGetConnectedState(&flags, 0);
     #else
@@ -232,7 +175,7 @@ public:
         .then([=](http::http_response response)
         {
             handle_error(response);
-            handler(make_json_dict(response.extract_json().get()));
+            handler(::json::parse(response.extract_utf8string().get()));
         })
         .then([=](pplx::task<void> t)
         {
@@ -273,7 +216,7 @@ public:
             try
             {
                 t.get();
-                handler(json_dict());
+                handler(::json());
             }
             catch (...)
             {
@@ -299,7 +242,7 @@ public:
         .then([=](http::http_response response)
         {
             handle_error(response);
-            handler(make_json_dict(response.extract_json().get()));
+            handler(::json::parse(response.extract_utf8string().get()));
         })
         .then([=](pplx::task<void> t)
         {
@@ -324,7 +267,7 @@ private:
         {
             try
             {
-                auto json = make_json_dict(r.extract_json().get());
+                auto json = ::json::parse(r.extract_utf8string().get());
                 msg = m_owner.parse_json_error(json);
             }
             catch (...) {} // report original error if parsing broken
@@ -335,44 +278,52 @@ private:
         throw http::http_exception(status_code, msg);
     }
 
-    // convert to wstring and make WinXP ready
-    static string_t sanitize_url(const std::string& url, int flags)
+    // convert to wstring
+    static string_t sanitize_url(const std::string& url, int /*flags*/)
     {
-        (void)flags;
+        return to_string_t(url);
+    }
+
+    // prepare WinHttp configuration
+    static http::client::http_client_config get_client_config()
+    {
+        http::client::http_client_config c;
     #ifdef _WIN32
-        if (flags & http_client::uses_sni)
+        // WinHttp doesn't share WinInet/MSIE's proxy settings and has its own,
+        // but many users don't have properly configured both. Adopting proxy
+        // settings like this in desktop software is recommended behavior, see
+        // https ://blogs.msdn.microsoft.com/ieinternals/2013/10/11/understanding-web-proxy-configuration/
+        WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ieConfig = { 0 };
+        if (WinHttpGetIEProxyConfigForCurrentUser(&ieConfig))
         {
-            // Windows XP doesn't support SNI and so can't connect over SSL to
-            // hosts that use it. The use of SNI is increasingly common and some
-            // APIs Poedit needs to connect to use it. To keep things simple, just
-            // disable SSL on Windows XP.
-            if (is_windows_xp())
+            if (ieConfig.fAutoDetect)
             {
-                if (boost::starts_with(url, "https://"))
-                    return U("http://") + string_t(url.begin() + 8, url.end());
+                c.set_proxy(web_proxy::use_auto_discovery);
+            }
+            if (ieConfig.lpszProxy)
+            {
+                // Explicitly add // to the URL to work around a bug in C++ REST SDK's
+                // parsing of proxies with port number in their address
+                // (see https://github.com/Microsoft/cpprestsdk/issues/57)
+                c.set_proxy(uri(L"//" + std::wstring(ieConfig.lpszProxy)));
             }
         }
     #endif
-        return to_string_t(url);
+        return c;
     }
 
 private:
 #ifdef _WIN32
-    static bool is_windows_xp()
-    {
-        OSVERSIONINFOEX info;
-        ZeroMemory(&info, sizeof(info));
-        info.dwOSVersionInfoSize = sizeof(info);
-        GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&info));
-        return (info.dwMajorVersion < 6); // XP
-    }
-
     static std::wstring windows_version()
     {
-        OSVERSIONINFOEX info;
-        ZeroMemory(&info, sizeof(info));
+        OSVERSIONINFOEX info = { 0 };
         info.dwOSVersionInfoSize = sizeof(info);
-        GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&info));
+
+        NTSTATUS(WINAPI *fRtlGetVersion)(LPOSVERSIONINFOEXW);
+        fRtlGetVersion = reinterpret_cast<decltype(fRtlGetVersion)>(GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion"));
+        if (fRtlGetVersion)
+            fRtlGetVersion(&info);
+
         return std::to_wstring(info.dwMajorVersion) + L"." + std::to_wstring(info.dwMinorVersion);
     }
 

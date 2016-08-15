@@ -460,10 +460,10 @@ private:
 // Frame class:
 
 PoeditFrame::PoeditFrame() :
-    wxFrame(NULL, -1, _("Poedit"),
-            wxDefaultPosition, wxDefaultSize,
-            wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE,
-            "mainwin"),
+    PoeditFrameBase(NULL, -1, _("Poedit"),
+                    wxDefaultPosition, wxDefaultSize,
+                    wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE,
+                    "mainwin"),
     m_contentType(Content::Invalid),
     m_contentView(nullptr),
     m_catalog(nullptr),
@@ -670,10 +670,9 @@ wxWindow* PoeditFrame::CreateContentViewPO(Content type)
                                 wxLC_REPORT,
                                 m_displayIDs);
 
-    m_bottomPanel = new wxPanel(m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxNO_BORDER | DoubleBufferingWindowStyle());
+    m_bottomPanel = new wxPanel(m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxNO_BORDER | wxFULL_REPAINT_ON_RESIZE);
 #ifdef __WXMSW__
-    if (!IsWindowsXP())
-	    m_bottomPanel->SetDoubleBuffered(true);
+    m_bottomPanel->SetDoubleBuffered(true);
 #endif
 
     wxStaticText *labelSource =
@@ -2451,15 +2450,17 @@ void PoeditFrame::ReadCatalog(const CatalogPtr& cat)
         UpdateTitle();
         UpdateTextLanguage();
 
-#ifdef HAVE_HTTP_CLIENT
-        m_toolbar->EnableSyncWithCrowdin(m_catalog->IsFromCrowdin());
-#endif
-
         NoteAsRecentFile();
 
         if (cat->HasCapability(Catalog::Cap::Translations))
             WarnAboutLanguageIssues();
     }
+
+    // Can't do this with the window being frozen, because positioning the toolbar
+    // in presence of mCtrl menubar would not size & repaint properly:
+#ifdef HAVE_HTTP_CLIENT
+    m_toolbar->EnableSyncWithCrowdin(m_catalog->IsFromCrowdin());
+#endif
 
     FixDuplicatesIfPresent();
 }
@@ -2831,9 +2832,6 @@ void PoeditFrame::UpdateMenu()
     }
 #endif
 
-    auto goMenuPos = menubar->FindMenu(_("Go"));
-    if (goMenuPos != wxNOT_FOUND)
-        menubar->EnableTop(goMenuPos, editable);
     for (int i = 0; i < 10; i++)
     {
         menubar->Enable(ID_BOOKMARK_SET + i, editable);

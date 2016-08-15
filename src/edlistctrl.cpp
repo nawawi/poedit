@@ -162,8 +162,8 @@ PoeditListCtrl::PoeditListCtrl(wxWindow *parent,
 
     m_displayIDs = dispIDs;
 
-    m_isRTL = false;
-    m_appIsRTL = (wxTheApp->GetLayoutDirection() == wxLayout_RightToLeft);
+    m_sourceTextDir = m_transTextDir = TextDirection::LTR;
+    m_appTextDir = (wxTheApp->GetLayoutDirection() == wxLayout_RightToLeft) ? TextDirection::RTL : TextDirection::LTR;
 
     sortOrder = SortOrder::Default();
 
@@ -186,30 +186,29 @@ PoeditListCtrl::PoeditListCtrl(wxWindow *parent,
     wxVisualAttributes visual = GetDefaultAttributes();
     wxColour shaded = visual.colBg;
 
-#ifdef __WXMSW__
+#if defined(__WXMSW__)
     // On Windows 7, shaded list items make it impossible to see the selection,
     // so use different color for it (see bug #336).
-    if (IsWindows7OrGreater())
     {
         shaded.Set(int(0.99 * shaded.Red()),
                    int(0.99 * shaded.Green()),
                    shaded.Blue());
     }
-    else
-#endif // __WXMSW__
-#ifdef __WXOSX__
+#else // !__WXMSW__
+  #ifdef __WXOSX__
     if ( shaded == *wxWHITE )
     {
         // use standard shaded color from finder/databrowser:
         shaded.Set("#f0f5fd");
     }
     else
-#endif // __WXOSX__
+  #endif // __WXOSX__
     {
         shaded.Set(int(DARKEN_FACTOR * shaded.Red()),
                    int(DARKEN_FACTOR * shaded.Green()),
                    int(DARKEN_FACTOR * shaded.Blue()));
     }
+#endif // !__WXMSW__
 
     m_attrNormal[1].SetBackgroundColour(shaded);
     m_attrUntranslated[1].SetBackgroundColour(shaded);
@@ -255,7 +254,7 @@ PoeditListCtrl::PoeditListCtrl(wxWindow *parent,
         const wxUxThemeEngine* theme = wxUxThemeEngine::GetIfActive();
         if (theme)
         {
-            wxUxThemeHandle hTheme(this, L"ItemsView::Header");
+            wxUxThemeHandle hTheme(this->GetParent(), L"ItemsView::Header");
             COLORREF clr;
             HRESULT hr = theme->GetThemeColor(hTheme, HP_HEADERITEM, 0, TMT_TEXTCOLOR, &clr);
             if (SUCCEEDED(hr))
@@ -328,7 +327,7 @@ void PoeditListCtrl::CreateColumns()
         m_colId = -1;
 
 #ifdef __WXMSW__
-    if (m_appIsRTL)
+    if (m_appTextDir == TextDirection::RTL)
     {
         // another wx quirk: if we truly need left alignment, we must lie under RTL locales
         wxListItem colInfoOrig;
@@ -406,13 +405,15 @@ void PoeditListCtrl::ReadCatalog(bool resetSizeAndSelection)
 
     auto srclang = m_catalog->GetSourceLanguage();
     auto lang = m_catalog->GetLanguage();
+    m_sourceTextDir = srclang.Direction();
+    m_transTextDir = lang.Direction();
+
     auto isRTL = lang.IsRTL();
 #ifdef __WXMSW__
     // a quirk of wx API: if the current locale is RTL, the meaning of L and R is reversed
-    if (m_appIsRTL)
+    if (m_appTextDir == TextDirection::RTL)
         isRTL = !isRTL;
 #endif
-    m_isRTL = isRTL;
 
     wxListItem colInfo;
     colInfo.SetMask(wxLIST_MASK_TEXT);
@@ -513,20 +514,26 @@ wxString PoeditListCtrl::OnGetItemText(long item, long column) const
             orig = d->GetString();
 
         orig = orig.substr(0, GetMaxColChars());
+#ifdef __WXMSW__
+        orig.Replace("\n", " ");
+#endif
 
         // Add RTL Unicode mark to render bidi texts correctly
-        if (m_appIsRTL)
-            return bidi::LRE + orig;
+        if (m_appTextDir != m_sourceTextDir)
+            return bidi::mark_direction(orig, m_sourceTextDir);
         else
             return orig;
     }
     else if (column == m_colTrans)
     {
         auto trans = d->GetTranslation().substr(0, GetMaxColChars());
+#ifdef __WXMSW__
+        trans.Replace("\n", " ");
+#endif
 
         // Add RTL Unicode mark to render bidi texts correctly
-        if (m_isRTL && !m_appIsRTL)
-            return bidi::RLE + trans;
+        if (m_appTextDir != m_transTextDir)
+            return bidi::mark_direction(trans, m_transTextDir);
         else
             return trans;
     }

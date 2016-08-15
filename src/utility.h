@@ -78,30 +78,7 @@ inline bool IsWindows10OrGreater()
     return wxGetOsVersion(&osmajor, nullptr) == wxOS_WINDOWS_NT && osmajor >= 10;
 }
 
-inline bool IsWindowsXP()
-{
-    int osmajor = 0;
-    wxGetOsVersion(&osmajor, nullptr);
-    return osmajor < 6;
-}
-
-inline bool IsWindows7OrGreater()
-{
-    int verMaj, verMin;
-    wxGetOsVersion(&verMaj, &verMin);
-    return verMaj > 6 || (verMaj == 6 && verMin >= 1);
-}
-
 #endif // __WXMSW__
-
-inline int DoubleBufferingWindowStyle()
-{
-#ifdef __WXMSW__
-    return IsWindowsXP() ? 0 : wxFULL_REPAINT_ON_RESIZE;
-#else
-    return 0;
-#endif
-}
 
 // ----------------------------------------------------------------------
 // Misc helpers

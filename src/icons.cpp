@@ -32,6 +32,7 @@
 #include "icons.h"
 #include "edapp.h"
 #include "hidpi.h"
+#include "utility.h"
 
 #ifndef __WXOSX__
 
@@ -61,6 +62,9 @@ wxString GetGnomeStockId(const wxString& id)
 // Check if a given icon needs mirroring in right-to-left locales:
 bool ShouldBeMirorredInRTL(const wxArtID& id, const wxArtClient& client)
 {
+    // Silence warning about unused parameter in some of the builds
+    (void)client;
+
     static std::set<wxString> s_directional = {
         "ContributeOn",
         "poedit-status-comment",
@@ -125,10 +129,16 @@ wxBitmap PoeditArtProvider::CreateBitmap(const wxArtID& id,
     if (wxTheApp->GetLayoutDirection() == wxLayout_RightToLeft)
         mirror = ShouldBeMirorredInRTL(id, client);
 
+    int padding = 0;
+#ifdef __WXMSW__
+    if (IsWindows10OrGreater())
+        padding = 2;
+#endif
+
     wxString icon;
     icon.Printf("%s/%s", iconsdir.c_str(), id.c_str());
     wxLogTrace("poedit.icons", "loading from %s", icon.c_str());
-    return LoadScaledBitmap(icon, mirror);
+    return LoadScaledBitmap(icon, mirror, padding);
 }
 
 #endif // !__WXOSX__

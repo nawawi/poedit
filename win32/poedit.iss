@@ -30,8 +30,8 @@
 
 #include "../" + CONFIG + "/git_build_number.h"
 
-#define VERSION          "1.8.8"
-#define VERSION_FULL     "1.8.8"
+#define VERSION          "2.0"
+#define VERSION_FULL     "2.0beta1"
 #define VERSION_WIN      VERSION + "." + Str(POEDIT_GIT_BUILD_NUMBER)
 
 #ifndef CRT_REDIST
@@ -78,7 +78,7 @@ AppVersion={#VERSION_FULL}
 AppContact=help@poedit.net
 UninstallDisplayIcon={app}\Poedit.exe
 UninstallDisplayName=Poedit
-MinVersion=0,5.01.2600sp3
+MinVersion=0,6.1.7600
 WizardSmallImageFile=artwork\windows\installer_wizard_image.bmp
 AppPublisherURL=https://poedit.net/
 DisableProgramGroupPage=true
@@ -96,7 +96,6 @@ DisableDirPage=auto
 
 [Files]
 Source: {#CONFIG}\Poedit.exe; DestDir: {app}; Flags: ignoreversion
-Source: {#CONFIG}\dump-legacy-tm.exe; DestDir: {app}; Flags: ignoreversion
 Source: {#CONFIG}\*.dll; DestDir: {app}; Flags: ignoreversion
 Source: {#CONFIG}\icudt*.dat; DestDir: {app}
 Source: deps\gettext\COPYING; DestDir: {app}\Docs; DestName: GNU_Gettext_COPYING.txt
