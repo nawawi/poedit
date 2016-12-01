@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2016-05-24 15:02+0200\n"
-"PO-Revision-Date: 2016-05-24 08:57-0400\n"
+"POT-Creation-Date: 2016-10-13 10:38+0200\n"
+"PO-Revision-Date: 2016-10-13 03:51-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Chinese Simplified\n"
 "Language: zh_CN\n"
@@ -202,7 +202,7 @@ msgstr "了解更多"
 
 #, c-format
 msgid "Failed command: %s"
-msgstr "失败的命令: %s"
+msgstr "命令失败: %s"
 
 msgid "Failed to merge gettext catalogs."
 msgstr "合并 gettext 编目失败。"
@@ -267,24 +267,24 @@ msgstr "关于 %s"
 msgid "Version %s"
 msgstr "版本 %s"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Services"
 msgstr "服务"
 
-#. TRANSLATORS: OS X item in app menu, %s is replaced with "Poedit"
+#. TRANSLATORS: macOS item in app menu, %s is replaced with "Poedit"
 #, c-format
 msgid "Hide %s"
 msgstr "隐藏 %s"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Hide Others"
 msgstr "隐藏其他"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Show All"
 msgstr "全部显示"
 
-#. TRANSLATORS: OS X item in app menu, %s is replaced with "Poedit"
+#. TRANSLATORS: macOS item in app menu, %s is replaced with "Poedit"
 #, c-format
 msgid "Quit %s"
 msgstr "退出 %s"
@@ -515,16 +515,6 @@ msgstr "创建新的翻译"
 
 msgid "Create new translation"
 msgstr "创建新的翻译"
-
-msgid "Upgrade to Windows 10 (for free) to enable spellchecking in Poedit."
-msgstr "免费升级到 Windows 10 使 Poedit 可以检查拼写。"
-
-msgid ""
-"Poedit needs Windows 8 or newer for spellchecking, but you only have Windows "
-"7. Microsoft is offering free upgrades to Windows 10 until July 29, 2016."
-msgstr ""
-"Poedit 需要 Windows 8 或更高版本才能进行拼写检查，但您正在运行 Windows 7。微"
-"软提供了免费升级到 Windows 10 的机会，直至2016年7月29日。"
 
 #. TRANSLATORS: %s is language name in its basic form (as you
 #. would see e.g. in a list of supported languages). You may need
@@ -1174,7 +1164,7 @@ msgstr "重置翻译记忆库将无可挽回地删除其中存储的所有翻译
 msgid "Cancel"
 msgstr "取消"
 
-#. TRANSLATORS: This is abbreviation of "Translation Memory" used in Preferences on OS X.
+#. TRANSLATORS: This is abbreviation of "Translation Memory" used in Preferences on macOS.
 #. Long text looks weird there, too short (like TM) too, but less so. "General" is about ideal
 #. length there.
 msgid "TM"
@@ -1783,7 +1773,7 @@ msgstr "翻译建议："
 msgid "No matches found"
 msgstr "未找到匹配项"
 
-#. TRANSLATORS: This is shown when no translation suggestions can be found in the TM (OS X, Linux).
+#. TRANSLATORS: This is shown when no translation suggestions can be found in the TM (macOS, Linux).
 msgid "No Matches Found"
 msgstr "未找到匹配项"
 

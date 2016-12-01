@@ -29,9 +29,6 @@
 
 #include <wx/msw/uxtheme.h>
 #include <wx/nativewin.h>
-#if !wxCHECK_VERSION(3,1,0)
-  #include "wx_backports/nativewin.h"
-#endif
 
 #include <mCtrl/menubar.h>
 
@@ -59,7 +56,7 @@ public:
             MC_WC_MENUBAR,
             _T(""),
             WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | CCS_NORESIZE | CCS_NOPARENTALIGN,
-            0, 0, 400, 23*2,
+            0, 0, 1000, 23*2,
             (HWND)this->GetHWND(),
             (HMENU) -1,
             wxGetInstance(),
@@ -111,6 +108,7 @@ public:
         SIZE size;
         if (::SendMessage(m_mctrlHandle, TB_GETMAXSIZE, 0, (LPARAM) &size))
         {
+            sizeBest.x = size.cx;
             sizeBest.y = size.cy + 1;
             CacheBestSize(sizeBest);
         }
@@ -222,6 +220,21 @@ bool wxFrameWithWindows10Menubar::MSWTranslateMessage(WXMSG *msg)
         return true;
 
     return false;
+}
+
+WXLRESULT wxFrameWithWindows10Menubar::MSWWindowProc(WXUINT message, WXWPARAM wParam, WXLPARAM lParam)
+{
+    if (IsUsed())
+    {
+        // mCtrl doesn't play nice with the wxMSW's menus interaction where accelerators are updated
+        // when a menu is opened (which works because TranslateAccelerators() normally sends a fake
+        // event for that... if there's a normal menu). We need to refresh menus before accelerators
+        // are used so that e.g. disabled state is accurately updated.
+        if (message == WM_COMMAND && HIWORD(wParam) == 1/*accel*/)
+            GetMenuBar()->UpdateMenus();
+    }
+
+    return wxFrame::MSWWindowProc(message, wParam, lParam);
 }
 
 void wxFrameWithWindows10Menubar::InternalSetMenuBar()

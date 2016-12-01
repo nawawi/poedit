@@ -128,7 +128,7 @@ long DoExecuteGettext(const wxString& cmdline_, wxArrayString& gstderr)
 
 #ifdef __WXOSX__
     // Hack alert! On Windows, relocation works, but building with it is too
-    // messy/broken on OS X, so just use some custom hacks instead:
+    // messy/broken on macOS, so just use some custom hacks instead:
     auto sharedir = GetGettextPackagePath() + "/share";
     env.env["POEDIT_LOCALEDIR"] = sharedir + "/locale";
     env.env["GETTEXTDATADIR"] = sharedir + "/gettext";
@@ -139,7 +139,7 @@ long DoExecuteGettext(const wxString& cmdline_, wxArrayString& gstderr)
     wxScopedPtr<wxProcess> process(new wxProcess);
     process->Redirect();
 
-    long retcode = wxExecute(cmdline, wxEXEC_BLOCK, process.get(), &env);
+    long retcode = wxExecute(cmdline, wxEXEC_BLOCK | wxEXEC_NODISABLE | wxEXEC_NOEVENTS, process.get(), &env);
 
 	wxInputStream *std_err = process->GetErrorStream();
     if ( std_err && !ReadOutput(*std_err, gstderr) )

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2016-05-24 15:02+0200\n"
-"PO-Revision-Date: 2016-05-24 08:24-0400\n"
+"POT-Creation-Date: 2016-08-01 19:26+0200\n"
+"PO-Revision-Date: 2016-05-24 10:03-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Basque\n"
 "Language: eu_ES\n"
@@ -277,24 +277,24 @@ msgstr "Honi buruz %s"
 msgid "Version %s"
 msgstr "Bertsioa %s"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Services"
 msgstr "Zerbitzuak"
 
-#. TRANSLATORS: OS X item in app menu, %s is replaced with "Poedit"
+#. TRANSLATORS: macOS item in app menu, %s is replaced with "Poedit"
 #, c-format
 msgid "Hide %s"
 msgstr "Ezkutatu %s"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Hide Others"
 msgstr "Ezkutatu Besteak"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Show All"
 msgstr "Erakutsi Denak"
 
-#. TRANSLATORS: OS X item in app menu, %s is replaced with "Poedit"
+#. TRANSLATORS: macOS item in app menu, %s is replaced with "Poedit"
 #, c-format
 msgid "Quit %s"
 msgstr "Utzi %s"
@@ -527,17 +527,6 @@ msgstr "Sortu Itzulpen Berria"
 
 msgid "Create new translation"
 msgstr "Sortu itzulpen berria"
-
-msgid "Upgrade to Windows 10 (for free) to enable spellchecking in Poedit."
-msgstr "Goratu Windows 10-era (dohainik) idaz-egiaztapena gaitzeko Poedit-en."
-
-msgid ""
-"Poedit needs Windows 8 or newer for spellchecking, but you only have Windows "
-"7. Microsoft is offering free upgrades to Windows 10 until July 29, 2016."
-msgstr ""
-"Poedit-ek Windows 8 edo berriagoa behar du idaz-egiaztapenerako, baina zuk "
-"Windows 7 besterik ez duzu. Microsoft-ek Windows 10-en dohaineko goratzeak "
-"eskaintzen ditu 2016-ko Uztailak 29-ra arte."
 
 #. TRANSLATORS: %s is language name in its basic form (as you
 #. would see e.g. in a list of supported languages). You may need
@@ -1223,7 +1212,7 @@ msgstr ""
 msgid "Cancel"
 msgstr "Ezeztatu"
 
-#. TRANSLATORS: This is abbreviation of "Translation Memory" used in Preferences on OS X.
+#. TRANSLATORS: This is abbreviation of "Translation Memory" used in Preferences on macOS.
 #. Long text looks weird there, too short (like TM) too, but less so. "General" is about ideal
 #. length there.
 msgid "TM"
@@ -1837,7 +1826,7 @@ msgstr "Itzulpen iradokizunak:"
 msgid "No matches found"
 msgstr "Ez da bat datorrenik aurkitu"
 
-#. TRANSLATORS: This is shown when no translation suggestions can be found in the TM (OS X, Linux).
+#. TRANSLATORS: This is shown when no translation suggestions can be found in the TM (macOS, Linux).
 msgid "No Matches Found"
 msgstr "Ez Da Bat Datorrenik Aurkitu"
 

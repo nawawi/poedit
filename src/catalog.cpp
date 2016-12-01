@@ -40,6 +40,8 @@
 #include <algorithm>
 
 #include "catalog.h"
+
+#include "configuration.h"
 #include "digger.h"
 #include "gexecute.h"
 #include "progressinfo.h"
@@ -950,15 +952,23 @@ class LoadParser : public CatalogParser
         LoadParser(Catalog& c, wxTextFile *f)
               : CatalogParser(f),
                 FileIsValid(false),
-                m_catalog(c), m_nextId(1), m_seenHeaderAlready(false) {}
+                m_catalog(c), m_nextId(1), m_seenHeaderAlready(false), m_collectMsgidText(true) {}
 
         // true if the file is valid, i.e. has at least some data
         bool FileIsValid;
 
         Language GetMsgidLanguage()
         {
-            auto utf8 = m_allMsgidText.utf8_str();
-            return Language::TryDetectFromText(utf8.data(), utf8.length(), Language::English());
+            auto x_srclang = m_catalog.m_header.GetHeader("X-Source-Language");
+            if (!x_srclang.empty())
+            {
+                return Language::TryParse(str::to_utf8(x_srclang));
+            }
+            else
+            {
+                auto utf8 = m_allMsgidText.utf8_str();
+                return Language::TryDetectFromText(utf8.data(), utf8.length(), Language::English());
+            }
         }
 
     protected:
@@ -991,6 +1001,7 @@ class LoadParser : public CatalogParser
         bool m_seenHeaderAlready;
 
         // collected text of msgids, with newlines, for language detection
+        bool m_collectMsgidText;
         wxString m_allMsgidText;
 };
 
@@ -1019,6 +1030,7 @@ bool LoadParser::OnEntry(const wxString& msgid,
             // gettext header:
             m_catalog.m_header.FromString(mtranslations[0]);
             m_catalog.m_header.Comment = comment;
+            m_collectMsgidText = m_catalog.m_header.GetHeader("X-Source-Language").empty();
             m_seenHeaderAlready = true;
         }
         // else: ignore duplicate header in malformed files
@@ -1054,12 +1066,15 @@ bool LoadParser::OnEntry(const wxString& msgid,
         m_catalog.AddItem(d);
 
         // collect text for language detection:
-        m_allMsgidText.append(msgid);
-        m_allMsgidText.append('\n');
-        if (!msgid_plural.empty())
+        if (m_collectMsgidText)
         {
-            m_allMsgidText.append(msgid_plural);
+            m_allMsgidText.append(msgid);
             m_allMsgidText.append('\n');
+            if (!msgid_plural.empty())
+            {
+                m_allMsgidText.append(msgid_plural);
+                m_allMsgidText.append('\n');
+            }
         }
     }
     return true;
@@ -2289,7 +2304,7 @@ bool Catalog::Merge(const CatalogPtr& refcat)
     DoSaveOnly(tmp2, wxTextFileType_Unix);
 
     wxString flags("-q --force-po");
-    if (wxConfig::Get()->ReadBool("use_tm_when_updating", false) == false)
+    if (Config::MergeBehavior() == Merge_None)
     {
         flags += " --no-fuzzy-matching";
     }
@@ -2527,6 +2542,18 @@ wxString CatalogItem::GetFlags() const
         return wxEmptyString;
 }
 
+wxString CatalogItem::GetFormatFlag() const
+{
+    auto pos = m_moreFlags.find("-format");
+    if (pos == wxString::npos)
+        return wxString();
+    auto space = m_moreFlags.find_last_of(" \t", pos);
+    if (space == wxString::npos)
+        return m_moreFlags.substr(0, pos);
+    else
+        return m_moreFlags.substr(space+1, pos-space-1);
+}
+
 void CatalogItem::SetFuzzy(bool fuzzy)
 {
     if (!fuzzy && m_isFuzzy)
@@ -2595,7 +2622,7 @@ void CatalogItem::SetTranslationFromSource()
 {
     m_validity = Val_Unknown;
     m_isFuzzy = false;
-    m_isAutomatic = false;
+    m_isPreTranslated = false;
     m_isTranslated = true;
 
     auto iter = m_translations.begin();
@@ -2622,7 +2649,7 @@ void CatalogItem::SetTranslationFromSource()
 void CatalogItem::ClearTranslation()
 {
     m_isFuzzy = false;
-    m_isAutomatic = false;
+    m_isPreTranslated = false;
     m_isTranslated = false;
     for (auto& t: m_translations)
     {

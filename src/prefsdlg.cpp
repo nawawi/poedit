@@ -57,6 +57,7 @@
 #include "edapp.h"
 #include "edframe.h"
 #include "catalog.h"
+#include "configuration.h"
 #include "crowdin_gui.h"
 #include "hidpi.h"
 #include "tm/transmem.h"
@@ -73,7 +74,7 @@
 #endif
 
 #ifdef USE_SPARKLE
-#include "osx_helpers.h"
+#include "macos_helpers.h"
 #endif // USE_SPARKLE
 
 #if defined(USE_SPARKLE) || defined(__WXMSW__)
@@ -169,12 +170,12 @@ public:
         sizer->Add(translator, wxSizerFlags().Expand());
 
         auto nameLabel = new wxStaticText(this, wxID_ANY, _("Name:"));
-        translator->Add(nameLabel, wxSizerFlags().CenterVertical().Right().BORDER_OSX(wxTOP, 1));
+        translator->Add(nameLabel, wxSizerFlags().CenterVertical().Right().BORDER_MACOS(wxTOP, 1));
         m_userName = new wxTextCtrl(this, wxID_ANY);
         m_userName->SetHint(_("Your Name"));
         translator->Add(m_userName, wxSizerFlags(1).Expand().CenterVertical());
         auto emailLabel = new wxStaticText(this, wxID_ANY, _("Email:"));
-        translator->Add(emailLabel, wxSizerFlags().CenterVertical().Right().BORDER_OSX(wxTOP, 1));
+        translator->Add(emailLabel, wxSizerFlags().CenterVertical().Right().BORDER_MACOS(wxTOP, 1));
         m_userEmail = new wxTextCtrl(this, wxID_ANY);
         m_userEmail->SetHint(_("your_email@example.com"));
         translator->Add(m_userEmail, wxSizerFlags(1).Expand().CenterVertical());
@@ -359,7 +360,7 @@ public:
     {
         wxSizer *topsizer = new wxBoxSizer(wxVERTICAL);
 #ifdef __WXOSX__
-        topsizer->SetMinSize(PX(430), -1); // for OS X look
+        topsizer->SetMinSize(PX(430), -1); // for macOS look
 #endif
 
         wxSizer *sizer = new wxBoxSizer(wxVERTICAL);
@@ -387,18 +388,30 @@ public:
         sizer->Add(buttonsSizer, wxSizerFlags().Expand().Border(wxLEFT|wxRIGHT, PX(30)));
         sizer->AddSpacer(PX(10));
 
-        m_useTMWhenUpdating = new wxCheckBox(this, wxID_ANY, _("Consult TM when updating from sources"));
-        sizer->Add(m_useTMWhenUpdating, wxSizerFlags().Expand().PXBorder(wxTOP|wxBOTTOM));
+        // TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
+        m_mergeUse = new wxCheckBox(this, wxID_ANY, _("When updating from sources"));
+        wxString mergeValues[] = {
+            // TRANSLATORS: Preceded by "When updating from sources"
+            _("fuzzy match within the file"),
+            // TRANSLATORS: Preceded by "When updating from sources"
+            _("pre-translate from TM")
+        };
+        m_mergeBehavior = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, WXSIZEOF(mergeValues), mergeValues);
 
-        auto explainTxt = _("If enabled, Poedit will try to fill in new entries using your previous\n"
-                            "translations stored in the translation memory. If the TM is\n"
-                            "near-empty, it will not be very effective. The more translations\n"
-                            "you edit and the larger the TM grows, the better it gets.");
+        auto mergeSizer = new wxBoxSizer(wxHORIZONTAL);
+        mergeSizer->Add(m_mergeUse, wxSizerFlags().Center());
+        mergeSizer->AddSpacer(PX(5));
+        mergeSizer->Add(m_mergeBehavior, wxSizerFlags().Center().BORDER_MACOS(wxTOP, PX(1)).BORDER_WIN(wxBOTTOM, 1));
+        sizer->Add(mergeSizer, wxSizerFlags().PXBorder(wxTOP|wxBOTTOM));
+
+        auto explainTxt = _(L"Poedit can attempt to fill in new entries from only previous translations in "
+                            L"the file or from your entire translation memory. Using the TM won’t be very effective if "
+                            L"it’s near-empty, but it will get better as you add more translations to it.");
         auto explain = new ExplanationLabel(this, explainTxt);
         sizer->Add(explain, wxSizerFlags().Expand().Border(wxLEFT, PX(ExplanationLabel::CHECKBOX_INDENT)));
 
         auto learnMore = new LearnMoreLink(this, "https://poedit.net/trac/wiki/Doc/TranslationMemory");
-        sizer->AddSpacer(PX(5));
+        sizer->AddSpacer(PX(3));
         sizer->Add(learnMore, wxSizerFlags().Border(wxLEFT, PX(ExplanationLabel::CHECKBOX_INDENT + LearnMoreLink::EXTRA_INDENT)));
         sizer->AddSpacer(PX(10));
 
@@ -408,7 +421,8 @@ public:
         clear->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
 
-        m_useTMWhenUpdating->Bind(wxEVT_UPDATE_UI, &TMPageWindow::OnUpdateUI, this);
+        m_mergeBehavior->Bind(wxEVT_UPDATE_UI, [=](wxUpdateUIEvent& e){ e.Enable(m_mergeUse->GetValue() == true); });
+
         m_stats->Bind(wxEVT_UPDATE_UI, &TMPageWindow::OnUpdateUI, this);
         import->Bind(wxEVT_UPDATE_UI, &TMPageWindow::OnUpdateUI, this);
         clear->Bind(wxEVT_UPDATE_UI, &TMPageWindow::OnUpdateUI, this);
@@ -420,22 +434,32 @@ public:
 
         if (wxPreferencesEditor::ShouldApplyChangesImmediately())
         {
-            m_useTMWhenUpdating->Bind(wxEVT_CHECKBOX, [=](wxCommandEvent&){ TransferDataFromWindow(); });
+            m_mergeUse->Bind(wxEVT_CHECKBOX, [=](wxCommandEvent&){ TransferDataFromWindow(); });
+            m_mergeBehavior->Bind(wxEVT_CHOICE, [=](wxCommandEvent&){ TransferDataFromWindow(); });
             // Some settings directly affect the UI, so need a more expensive handler:
             m_useTM->Bind(wxEVT_CHECKBOX, &TMPageWindow::TransferDataFromWindowAndUpdateUI, this);
         }
     }
 
-    void InitValues(const wxConfigBase& cfg) override
+    void InitValues(const wxConfigBase&) override
     {
-        m_useTM->SetValue(cfg.ReadBool("use_tm", true));
-        m_useTMWhenUpdating->SetValue(cfg.ReadBool("use_tm_when_updating", false));
+        m_useTM->SetValue(Config::UseTM());
+        auto merge = Config::MergeBehavior();
+        m_mergeUse->SetValue(merge != Merge_None);
+        m_mergeBehavior->SetSelection(merge == Merge_UseTM ? 1 : 0);
     }
 
-    void SaveValues(wxConfigBase& cfg) override
+    void SaveValues(wxConfigBase&) override
     {
-        cfg.Write("use_tm", m_useTM->GetValue());
-        cfg.Write("use_tm_when_updating", m_useTMWhenUpdating->GetValue());
+        Config::UseTM(m_useTM->GetValue());
+        if (m_mergeUse->GetValue() == true)
+        {
+            Config::MergeBehavior(m_mergeBehavior->GetSelection() == 1 ? Merge_UseTM : Merge_FuzzyMatch);
+        }
+        else
+        {
+            Config::MergeBehavior(Merge_None);
+        }
     }
 
 private:
@@ -443,7 +467,7 @@ private:
     {
         wxString sDocs("--");
         wxString sFileSize("--");
-        if (wxConfig::Get()->ReadBool("use_tm", true))
+        if (Config::UseTM())
         {
             try
             {
@@ -531,7 +555,9 @@ private:
         e.Enable(m_useTM->GetValue());
     }
 
-    wxCheckBox *m_useTM, *m_useTMWhenUpdating;
+    wxCheckBox *m_useTM;
+    wxCheckBox *m_mergeUse;
+    wxChoice *m_mergeBehavior;
     wxStaticText *m_stats;
 };
 
@@ -541,7 +567,7 @@ public:
     wxString GetName() const override
     {
 #if defined(__WXOSX__) || defined(__WXGTK__)
-        // TRANSLATORS: This is abbreviation of "Translation Memory" used in Preferences on OS X.
+        // TRANSLATORS: This is abbreviation of "Translation Memory" used in Preferences on macOS.
         // Long text looks weird there, too short (like TM) too, but less so. "General" is about ideal
         // length there.
         return _("TM");
@@ -825,7 +851,7 @@ public:
     UpdatesPageWindow(wxWindow *parent) : PrefsPanel(parent)
     {
         wxSizer *topsizer = new wxBoxSizer(wxVERTICAL);
-        topsizer->SetMinSize(PX(400), -1); // for OS X look, wouldn't fit the toolbar otherwise
+        topsizer->SetMinSize(PX(400), -1); // for macOS look, wouldn't fit the toolbar otherwise
 
         wxSizer *sizer = new wxBoxSizer(wxVERTICAL);
         topsizer->Add(sizer, wxSizerFlags().Expand().PXDoubleBorderAll());
@@ -906,7 +932,7 @@ public:
         m_crlf = new wxChoice(this, wxID_ANY);
         m_crlf->Append(_("Unix (recommended)"));
         m_crlf->Append(_("Windows"));
-        crlfbox->Add(m_crlf, wxSizerFlags(1).Center().BORDER_OSX(wxLEFT, PX(3)).BORDER_WIN(wxLEFT, PX(5)));
+        crlfbox->Add(m_crlf, wxSizerFlags(1).Center().BORDER_MACOS(wxLEFT, PX(3)).BORDER_WIN(wxLEFT, PX(5)));
 
         /// TRANSLATORS: Followed by text control for entering number; wraps text at given width
         m_wrap = new wxCheckBox(this, wxID_ANY, _("Wrap at:"));
@@ -918,7 +944,7 @@ public:
         m_wrapWidth = new wxSpinCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(PX(50),-1));
     #endif
         m_wrapWidth->SetRange(10, 1000);
-        crlfbox->Add(m_wrapWidth, wxSizerFlags().Center().BORDER_OSX(wxLEFT, PX(3)));
+        crlfbox->Add(m_wrapWidth, wxSizerFlags().Center().BORDER_MACOS(wxLEFT, PX(3)));
 
         m_keepFmt = new wxCheckBox(this, wxID_ANY, _("Preserve formatting of existing files"));
         sizer->Add(m_keepFmt, wxSizerFlags().PXBorder(wxTOP));

@@ -101,8 +101,6 @@ Source: {#CONFIG}\icudt*.dat; DestDir: {app}
 Source: deps\gettext\COPYING; DestDir: {app}\Docs; DestName: GNU_Gettext_COPYING.txt
 Source: COPYING; DestDir: {app}\Docs; DestName: Copying.txt
 Source: NEWS; DestDir: {app}\Docs; DestName: News.txt
-Source: artwork\windows\xp\*.ico; DestDir: {app}\Resources; OnlyBelowVersion: 0,6.0.6000
-Source: artwork\windows\vista\*.ico; DestDir: {app}\Resources; MinVersion: 0,6.0.6000
 Source: {#CRT_REDIST}\*.dll; DestDir: {app}
 Source: {#UCRT_REDIST}\*.dll; DestDir: {app}; OnlyBelowVersion: 0,10.0
 Source: "{#CONFIG}\Resources\*"; DestDir: "{app}\Resources"; Flags: recursesubdirs
@@ -132,20 +130,17 @@ Root: "HKCR"; Subkey: ".po"; ValueType: string; ValueData: "Poedit.PO"; Flags: n
 Root: "HKCR"; Subkey: "Poedit.PO"; ValueType: string; ValueData: "PO Translation"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.PO"; ValueType: string; ValueName: "FriendlyTypeName"; ValueData: "@{app}\Poedit.exe,-222"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.PO\Shell\Open\Command"; ValueType: string; ValueData: """{app}\Poedit.exe"" ""%1"""; Flags: uninsdeletevalue noerror
-Root: "HKCR"; Subkey: "Poedit.PO\DefaultIcon"; ValueType: string; ValueData: "{app}\Resources\poedit-translation-generic.ico"; Flags: uninsdeletekey noerror
 
 Root: "HKCR"; Subkey: ".mo"; ValueType: string; ValueData: "Poedit.MO"; Flags: noerror
 Root: "HKCR"; Subkey: ".gmo"; ValueType: string; ValueData: "Poedit.MO"; Flags: noerror
 Root: "HKCR"; Subkey: "Poedit.MO"; ValueType: string; ValueData: "Compiled Translation"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.MO"; ValueType: string; ValueName: "FriendlyTypeName"; ValueData: "@{app}\Poedit.exe,-223"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.MO\Shell\Open\Command"; ValueType: string; ValueData: """{app}\Poedit.exe"" ""%1"""; Flags: uninsdeletevalue noerror
-Root: "HKCR"; Subkey: "Poedit.MO\DefaultIcon"; ValueType: string; ValueData: "{app}\Resources\poedit-translation-generic.ico"; Flags: uninsdeletekey noerror
 
 Root: "HKCR"; Subkey: ".pot"; ValueType: string; ValueData: "Poedit.POT"; Flags: noerror
 Root: "HKCR"; Subkey: "Poedit.POT"; ValueType: string; ValueData: "Translation Template"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.POT"; ValueType: string; ValueName: "FriendlyTypeName"; ValueData: "@{app}\Poedit.exe,-224"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.POT\Shell\Open\Command"; ValueType: string; ValueData: """{app}\Poedit.exe"" ""%1"""; Flags: uninsdeletevalue noerror
-Root: "HKCR"; Subkey: "Poedit.POT\DefaultIcon"; ValueType: string; ValueData: "{app}\Resources\poedit-translation-generic.ico"; Flags: uninsdeletekey noerror
 
 ; Remove old, incorrectly done, association keys when upgrading:
 Root: "HKCR"; Subkey: "GettextFile"; ValueType: none; Flags: uninsdeletekey noerror dontcreatekey deletekey
@@ -213,6 +208,8 @@ dutch.OpenAfterInstall=Poedit starten na installatie
 finnish.OpenAfterInstall=Avaa Poedit asentamisen jälkeen
 french.OpenAfterInstall=Ouvrir Poedit après l'installation
 german.OpenAfterInstall=Poedit nach Abschluss der Installation öffnen
+greek.OpenAfterInstall=Άνοιξε το Poedit μετά την εγκατάσταση
+hebrew.OpenAfterInstall=פתח את Poedit לאחר ההתקנה
 hungarian.OpenAfterInstall=Poedit megnyitása telepítés után
 italian.OpenAfterInstall=Apri Poedit dopo l'installazione
 japanese.OpenAfterInstall=インストール後 Poedit を開く
@@ -220,5 +217,8 @@ norwegian.OpenAfterInstall=Åpne Poedit etter installasjon
 polish.OpenAfterInstall=Otwórz program Poedit po zakończeniu instalacji
 portuguese.OpenAfterInstall=Abrir Poedit após a instalação
 russian.OpenAfterInstall=Открыть Poedit после окончания установки
+serbiancyrillic.OpenAfterInstall=Отвори Poedit након инсталације
+slovenian.OpenAfterInstall=Po namestitvi odpri Poedit
 spanish.OpenAfterInstall=Abrir Poedit tras la instalación
 turkish.OpenAfterInstall=Kurulumdan sonra Poedit'i aç
+ukrainian.OpenAfterInstall=Відкриті Poedit після установки

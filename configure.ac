@@ -47,7 +47,7 @@ AC_PROG_CXX
 AC_PROG_CXXCPP
 
 AC_LANG([C++])
-AX_CXX_COMPILE_STDCXX_11([], [mandatory])
+AX_CXX_COMPILE_STDCXX([14], [], [mandatory])
 
 WXLIBS_USED="xrc,stc,html,xml,adv,core,net"
 
@@ -60,6 +60,7 @@ esac
 AX_BOOST_BASE([1.60], [], [AC_MSG_ERROR([Boost libraries are required])])
 AX_BOOST_SYSTEM
 AX_BOOST_REGEX
+AX_BOOST_THREAD
 CXXFLAGS="$CXXFLAGS $BOOST_CPPFLAGS"
 
 
@@ -70,7 +71,6 @@ AC_ARG_WITH([cpprest],
 AS_IF([test "x$with_cpprest" != "xno"],
       [
       AX_BOOST_IOSTREAMS
-      AX_BOOST_THREAD
 
       have_cpprest=no
       dnl C++11 check above modified CXXFLAGS, but AC_CHECK_HEADERS needs
@@ -105,6 +105,7 @@ AS_IF([test "x$with_cpprest" != "xno"],
 AS_IF([test "x$have_cpprest" = "xyes"],
       [
           AC_DEFINE([HAVE_HTTP_CLIENT])
+          AC_DEFINE([HAVE_PPL])
           CPPREST_LIBS="-lcpprest $BOOST_IOSTREAMS_LIB $BOOST_THREAD_LIB $BOOST_SYSTEM_LIB -lssl -lcrypto"
           AC_SUBST(CPPREST_LIBS)
           PKG_CHECK_MODULES([LIBSECRET], [libsecret-1], [

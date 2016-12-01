@@ -53,9 +53,6 @@ class WXDLLIMPEXP_FWD_CORE wxStaticText;
   typedef wxFrame PoeditFrameBase;
 #endif
 
-class ListHandler;
-class TextctrlHandler;
-class TransTextctrlHandler;
 class SourceTextCtrl;
 class TranslationTextCtrl;
 
@@ -234,7 +231,7 @@ class PoeditFrame : public PoeditFrameBase
 
         // navigation to another item in the list
         typedef bool (*NavigatePredicate)(const CatalogItemPtr& item);
-        long NavigateGetNextItem(const long start, int step, NavigatePredicate predicate, bool wrap, CatalogItemPtr *out_item);
+        int NavigateGetNextItem(const int start, int step, NavigatePredicate predicate, bool wrap, CatalogItemPtr *out_item);
         void Navigate(int step, NavigatePredicate predicate, bool wrap);
         void OnDoneAndNext(wxCommandEvent&);
         void OnPrev(wxCommandEvent&);
@@ -277,8 +274,8 @@ private:
         void OnUpdateSmartUpdate(wxUpdateUIEvent& event);
 
         void OnValidate(wxCommandEvent& event);
-        void OnListSel(wxListEvent& event);
-        void OnListRightClick(wxMouseEvent& event);
+        void OnListSel(wxDataViewEvent& event);
+        void OnListRightClick(wxDataViewEvent& event);
         void OnListFocus(wxFocusEvent& event);
         void OnSplitterSashMoving(wxSplitterEvent& event);
         void OnSidebarSplitterSashMoving(wxSplitterEvent& event);
@@ -325,17 +322,17 @@ private:
 #endif
 
         void OnSuggestion(wxCommandEvent& event);
-        void OnAutoTranslateAll(wxCommandEvent& event);
+        void OnPreTranslateAll(wxCommandEvent& event);
 
-        enum AutoTranslateFlags
+        enum PreTranslateFlags
         {
-            AutoTranslate_OnlyExact       = 0x01,
-            AutoTranslate_ExactNotFuzzy   = 0x02,
-            AutoTranslate_OnlyGoodQuality = 0x04
+            PreTranslate_OnlyExact       = 0x01,
+            PreTranslate_ExactNotFuzzy   = 0x02,
+            PreTranslate_OnlyGoodQuality = 0x04
         };
-        bool AutoTranslateCatalog(int *matchesCount, int flags);
+        bool PreTranslateCatalog(int *matchesCount, int flags);
         template<typename T>
-        bool AutoTranslateCatalog(int *matchesCount, const T& range, int flags);
+        bool PreTranslateCatalog(int *matchesCount, const T& range, int flags);
 
         void OnPurgeDeleted(wxCommandEvent& event);
 
@@ -406,10 +403,6 @@ private:
         bool m_displayIDs;
         bool m_dontAutoclearFuzzyStatus;
         bool m_setSashPositionsWhenMaximized;
-
-        friend class ListHandler;
-        friend class TextctrlHandler;
-        friend class TransTextctrlHandler;
 };
 
 

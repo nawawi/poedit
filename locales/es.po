@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2016-05-24 15:02+0200\n"
-"PO-Revision-Date: 2016-05-24 08:26-0400\n"
+"POT-Creation-Date: 2016-08-01 19:26+0200\n"
+"PO-Revision-Date: 2016-05-24 10:05-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -277,24 +277,24 @@ msgstr "Acerca de %s"
 msgid "Version %s"
 msgstr "Versión %s"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Services"
 msgstr "Servicios"
 
-#. TRANSLATORS: OS X item in app menu, %s is replaced with "Poedit"
+#. TRANSLATORS: macOS item in app menu, %s is replaced with "Poedit"
 #, c-format
 msgid "Hide %s"
 msgstr "Ocultar %s"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Hide Others"
 msgstr "Ocultar el resto"
 
-#. TRANSLATORS: OS X item in app menu
+#. TRANSLATORS: macOS item in app menu
 msgid "Show All"
 msgstr "Mostrar todo"
 
-#. TRANSLATORS: OS X item in app menu, %s is replaced with "Poedit"
+#. TRANSLATORS: macOS item in app menu, %s is replaced with "Poedit"
 #, c-format
 msgid "Quit %s"
 msgstr "Salir de %s"
@@ -526,19 +526,6 @@ msgstr "Crear traducción nueva"
 
 msgid "Create new translation"
 msgstr "Crear traducción nueva"
-
-msgid "Upgrade to Windows 10 (for free) to enable spellchecking in Poedit."
-msgstr ""
-"Actualice a Windows 10 (gratis) para activar la corrección ortográfica de "
-"Poedit."
-
-msgid ""
-"Poedit needs Windows 8 or newer for spellchecking, but you only have Windows "
-"7. Microsoft is offering free upgrades to Windows 10 until July 29, 2016."
-msgstr ""
-"Poedit necesita Windows 8 o posterior para esta funcionalidad, no disponible "
-"en Windows 7. Microsoft ha ofrecido actualizaciones gratuitas a Windows 10 "
-"hasta el 29 de julio de 2016."
 
 #. TRANSLATORS: %s is language name in its basic form (as you
 #. would see e.g. in a list of supported languages). You may need
@@ -1230,7 +1217,7 @@ msgstr ""
 msgid "Cancel"
 msgstr "Cancelar"
 
-#. TRANSLATORS: This is abbreviation of "Translation Memory" used in Preferences on OS X.
+#. TRANSLATORS: This is abbreviation of "Translation Memory" used in Preferences on macOS.
 #. Long text looks weird there, too short (like TM) too, but less so. "General" is about ideal
 #. length there.
 msgid "TM"
@@ -1848,7 +1835,7 @@ msgstr "Sugerencias de traducción:"
 msgid "No matches found"
 msgstr "No se hallaron coincidencias"
 
-#. TRANSLATORS: This is shown when no translation suggestions can be found in the TM (OS X, Linux).
+#. TRANSLATORS: This is shown when no translation suggestions can be found in the TM (macOS, Linux).
 msgid "No Matches Found"
 msgstr "No se hallaron coincidencias"
 

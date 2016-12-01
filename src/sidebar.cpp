@@ -29,6 +29,7 @@
 #include "customcontrols.h"
 #include "commentdlg.h"
 #include "concurrency.h"
+#include "configuration.h"
 #include "errors.h"
 #include "hidpi.h"
 #include "utility.h"
@@ -39,7 +40,6 @@
 
 #include <wx/app.h>
 #include <wx/button.h>
-#include <wx/config.h>
 #include <wx/dcclient.h>
 #include <wx/menu.h>
 #include <wx/sizer.h>
@@ -133,7 +133,7 @@ public:
         : SidebarBlock(parent, _("Previous source text:"))
     {
         m_innerSizer->AddSpacer(PX(2));
-        m_innerSizer->Add(new ExplanationLabel(parent, _("The old source text (before it changed during an update) that the fuzzy translation corresponds to.")),
+        m_innerSizer->Add(new ExplanationLabel(parent, _("The old source text (before it changed during an update) that the now-inaccurate translation corresponds to.")),
                      wxSizerFlags().Expand());
         m_innerSizer->AddSpacer(PX(5));
         m_text = new SelectableAutoWrappingText(parent, "");
@@ -318,7 +318,7 @@ public:
         m_text->SetAndWrapLabel(text);
 
 #ifndef __WXOSX__
-        // FIXME: Causes weird issues on OS X: tooltips appearing on the main list control,
+        // FIXME: Causes weird issues on macOS: tooltips appearing on the main list control,
         //        over toolbar, where the mouse just was etc.
         m_icon->SetToolTip(tooltip);
         m_text->SetToolTip(tooltip);
@@ -351,7 +351,7 @@ private:
     void OnMouseMove(wxMouseEvent& e)
     {
         auto rectWin = GetClientRect();
-        rectWin.Deflate(1); // work around off-by-one issue on OS X
+        rectWin.Deflate(1); // work around off-by-one issue on macOS
         auto evtWin = static_cast<wxWindow*>(e.GetEventObject());
         auto mpos = e.GetPosition();
         if (evtWin != this)
@@ -406,7 +406,7 @@ SuggestionsSidebarBlock::SuggestionsSidebarBlock(Sidebar *parent, wxMenu *menu)
                                      // TRANSLATORS: This is shown when no translation suggestions can be found in the TM (Windows).
                                      _("No matches found")
                                 #else
-                                     // TRANSLATORS: This is shown when no translation suggestions can be found in the TM (OS X, Linux).
+                                     // TRANSLATORS: This is shown when no translation suggestions can be found in the TM (macOS, Linux).
                                      _("No Matches Found")
                                 #endif
                                      );
@@ -546,12 +546,17 @@ void SuggestionsSidebarBlock::UpdateSuggestionsMenu()
         if (index >= SUGGESTIONS_MENU_ENTRIES)
             break;
 
-        auto text = wxString::Format(formatMask, s.text, index+1);
+        wxString text = s.text;
+        text.Replace("\t", " ");
+        text.Replace("\n", " ");
+        if (text.length() > 100)
+            text = text.substr(0, 100) + L"…";
 
         auto item = m_suggestionMenuItems[index];
         m_suggestionsMenu->Append(item);
 
-        item->SetItemLabel(text);
+        auto label = wxControl::EscapeMnemonics(wxString::Format(formatMask, text, index+1));
+        item->SetItemLabel(label);
         item->SetBitmap(GetIconForSuggestion(s));
 
         index++;
@@ -616,7 +621,7 @@ void SuggestionsSidebarBlock::Show(bool show)
 bool SuggestionsSidebarBlock::ShouldShowForItem(const CatalogItemPtr&) const
 {
     return m_parent->FileHasCapability(Catalog::Cap::Translations) &&
-           wxConfig::Get()->ReadBool("use_tm", true);
+           Config::UseTM();
 }
 
 void SuggestionsSidebarBlock::Update(const CatalogItemPtr& item)
