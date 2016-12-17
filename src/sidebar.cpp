@@ -27,6 +27,7 @@
 
 #include "catalog.h"
 #include "customcontrols.h"
+#include "colorscheme.h"
 #include "commentdlg.h"
 #include "concurrency.h"
 #include "configuration.h"
@@ -50,7 +51,6 @@
 
 #include <algorithm>
 
-#define SIDEBAR_BACKGROUND      wxColour("#EDF0F4")
 #define GRAY_LINES_COLOR        wxColour(220,220,220)
 #define GRAY_LINES_COLOR_DARK   wxColour(180,180,180)
 
@@ -60,7 +60,7 @@ class SidebarSeparator : public wxWindow
 public:
     SidebarSeparator(wxWindow *parent)
         : wxWindow(parent, wxID_ANY),
-          m_sides(SIDEBAR_BACKGROUND),
+          m_sides(ColorScheme::Get(Color::SidebarBackground)),
           m_center(GRAY_LINES_COLOR_DARK)
     {
         Bind(wxEVT_PAINT, &SidebarSeparator::OnPaint, this);
@@ -70,6 +70,8 @@ public:
     {
         return wxSize(-1, 1);
     }
+
+    bool AcceptsFocus() const override { return false; }
 
 private:
     void OnPaint(wxPaintEvent&)
@@ -257,14 +259,18 @@ private:
 
 wxDEFINE_EVENT(EVT_SUGGESTION_SELECTED, wxCommandEvent);
 
-class SuggestionWidget : public wxPanel
+class SuggestionWidget : public wxWindow
 {
 public:
-    SuggestionWidget(wxWindow *parent) : wxPanel(parent, wxID_ANY)
+    SuggestionWidget(wxWindow *parent, bool isFirst) : wxWindow(parent, wxID_ANY)
     {
         m_icon = new wxStaticBitmap(this, wxID_ANY, wxNullBitmap);
         m_text = new AutoWrappingText(this, "TEXT");
         m_info = new InfoStaticText(this);
+
+        m_isPerfect = isFirst
+                      ? new wxStaticBitmap(this, wxID_ANY, wxArtProvider::GetBitmap("SuggestionPerfectMatch"))
+                      : nullptr;
 
         auto top = new wxBoxSizer(wxHORIZONTAL);
         auto right = new wxBoxSizer(wxVERTICAL);
@@ -272,7 +278,11 @@ public:
         top->Add(m_icon, wxSizerFlags().Top().PXBorder(wxTOP|wxBOTTOM));
         top->Add(right, wxSizerFlags(1).Expand().PXBorder(wxLEFT));
         right->Add(m_text, wxSizerFlags().Expand().Border(wxTOP, PX(4)));
-        right->Add(m_info, wxSizerFlags().Expand().Border(wxTOP|wxBOTTOM, PX(2)));
+        auto infoSizer = new wxBoxSizer(wxHORIZONTAL);
+        infoSizer->Add(m_info);
+        if (m_isPerfect)
+            infoSizer->Add(m_isPerfect, wxSizerFlags().Center().Border(wxLEFT, PX(2)));
+        right->Add(infoSizer, wxSizerFlags().Expand().Border(wxTOP|wxBOTTOM, PX(2)));
         SetSizerAndFit(top);
 
         // setup mouse hover highlighting:
@@ -292,7 +302,8 @@ public:
     {
         m_value = s;
 
-        auto percent = wxString::Format("%d%%", int(100 * s.score));
+        int percent = int(100 * s.score);
+        auto percentStr = wxString::Format("%d%%", percent);
 
         index++;
         if (index < 10)
@@ -303,14 +314,17 @@ public:
             // TRANSLATORS: This is the key shortcut used in menus on Windows, some languages call them differently
             auto shortcut = wxString::Format("%s%d", _("Ctrl+"), index);
         #endif
-            m_info->SetLabel(wxString::Format(L"%s • %s", shortcut, percent));
+            m_info->SetLabel(wxString::Format(L"%s • %s", shortcut, percentStr));
         }
         else
         {
-            m_info->SetLabel(percent);
+            m_info->SetLabel(percentStr);
         }
 
         m_icon->SetBitmap(icon);
+
+        if (m_isPerfect)
+            m_isPerfect->GetContainingSizer()->Show(m_isPerfect, percent == 100);
 
         auto text = wxControl::EscapeMnemonics(bidi::mark_direction(s.text, lang));
 
@@ -330,6 +344,8 @@ public:
         SetMinSize(wxDefaultSize);
         SetMinSize(GetBestSize());
     }
+    
+    bool AcceptsFocus() const override { return false; }
 
 private:
     class InfoStaticText : public wxStaticText
@@ -373,6 +389,7 @@ private:
     wxStaticBitmap *m_icon;
     AutoWrappingText *m_text;
     wxStaticText *m_info;
+    wxStaticBitmap *m_isPerfect;
     wxColour m_bg, m_bgHighlight;
 };
 
@@ -427,6 +444,9 @@ SuggestionsSidebarBlock::SuggestionsSidebarBlock(Sidebar *parent, wxMenu *menu)
 
 SuggestionsSidebarBlock::~SuggestionsSidebarBlock()
 {
+    ClearSuggestionsMenu();
+    for (auto i : m_suggestionMenuItems)
+        delete i;
 }
 
 wxBitmap SuggestionsSidebarBlock::GetIconForSuggestion(const Suggestion&) const
@@ -484,7 +504,7 @@ void SuggestionsSidebarBlock::UpdateSuggestions(const SuggestionsList& hits)
     // create any necessary controls:
     while (m_suggestions.size() > m_suggestionsWidgets.size())
     {
-        auto w = new SuggestionWidget(m_parent);
+        auto w = new SuggestionWidget(m_parent, /*isFirst=*/m_suggestionsWidgets.empty());
         m_suggestionsSizer->Add(w, wxSizerFlags().Expand());
         m_suggestionsWidgets.push_back(w);
     }
@@ -722,7 +742,7 @@ Sidebar::Sidebar(wxWindow *parent, wxMenu *suggestionsMenu)
       m_catalog(nullptr),
       m_selectedItem(nullptr)
 {
-    SetBackgroundColour(SIDEBAR_BACKGROUND);
+    SetBackgroundColour(ColorScheme::Get(Color::SidebarBackground));
 #ifdef __WXMSW__
     SetDoubleBuffered(true);
 #endif
@@ -840,11 +860,8 @@ void Sidebar::OnPaint(wxPaintEvent&)
 {
     wxPaintDC dc(this);
 
-    dc.SetPen(wxPen(GRAY_LINES_COLOR));
-#ifndef __WXMSW__
-    dc.DrawLine(0, 0, 0, dc.GetSize().y-1);
-#endif
-#ifndef __WXOSX__
+#ifdef __WXOSX__
+    dc.SetPen(ColorScheme::Get(Color::ToolbarSeparator));
     dc.DrawLine(0, 0, dc.GetSize().x - 1, 0);
 #endif
 }
