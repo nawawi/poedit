@@ -192,6 +192,7 @@ SwitchButton::SwitchButton(wxWindow *parent, wxWindowID winid, const wxString& l
     SetFont(GetFont().Bold());
     SetBackgroundColour(parent->GetBackgroundColour());
     MakeOwnerDrawn();
+    Bind(wxEVT_LEFT_DOWN, &SwitchButton::OnMouseClick, this);
 #endif
 }
 
@@ -206,6 +207,14 @@ void SwitchButton::SetColors(const wxColour& on, const wxColour& offLabel)
 }
 
 #ifdef __WXMSW__
+
+void SwitchButton::OnMouseClick(wxMouseEvent& e)
+{
+    // normal click handling moves focus to the switch (which is a button
+    // underneath), which we'd rather not do
+    SetValue(!GetValue());
+}
+
 
 wxSize SwitchButton::DoGetBestSize() const
 {
@@ -323,7 +332,7 @@ bool SwitchButton::MSWOnDraw(WXDRAWITEMSTRUCT *wxdis)
 {
     NSSize size = self.attributedTitle.size;
     size.width += 28;
-    size.height = 22;
+    size.height = 24;
     [self setFrameSize:size];
 }
 

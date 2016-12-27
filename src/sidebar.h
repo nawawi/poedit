@@ -113,7 +113,7 @@ protected:
     void ClearMessage();
     void SetMessage(const wxString& icon, const wxString& text);
 
-    virtual void ReportError(SuggestionsBackend *backend, std::exception_ptr e);
+    virtual void ReportError(SuggestionsBackend *backend, dispatch::exception_ptr e);
     virtual void ClearSuggestions();
     virtual void UpdateSuggestions(const SuggestionsList& hits);
     virtual void OnQueriesFinished();
@@ -160,7 +160,7 @@ protected:
     
     Contains TM suggestions, comments and possibly other auxiliary stuff.
  */
-class Sidebar : public wxPanel
+class Sidebar : public wxWindow
 {
 public:
     Sidebar(wxWindow *parent, wxMenu *suggestionsMenu);
@@ -186,6 +186,8 @@ public:
 
     /// Set max height of the upper (not input-aligned) part.
     void SetUpperHeight(int size);
+
+    bool AcceptsFocus() const override { return false; }
 
 protected:
     void DoEnable(bool enable) override;

@@ -275,7 +275,7 @@ public:
         auto top = new wxBoxSizer(wxHORIZONTAL);
         auto right = new wxBoxSizer(wxVERTICAL);
         top->AddSpacer(PX(2));
-        top->Add(m_icon, wxSizerFlags().Top().PXBorder(wxTOP|wxBOTTOM));
+        top->Add(m_icon, wxSizerFlags().Top().Border(wxTOP|wxBOTTOM, PX(6)));
         top->Add(right, wxSizerFlags(1).Expand().PXBorder(wxLEFT));
         right->Add(m_text, wxSizerFlags().Expand().Border(wxTOP, PX(4)));
         auto infoSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -476,7 +476,7 @@ void SuggestionsSidebarBlock::SetMessage(const wxString& icon, const wxString& t
     m_parent->Layout();
 }
 
-void SuggestionsSidebarBlock::ReportError(SuggestionsBackend*, std::exception_ptr e)
+void SuggestionsSidebarBlock::ReportError(SuggestionsBackend*, dispatch::exception_ptr e)
 {
     SetMessage("SuggestionError", DescribeException(e));
 }
@@ -723,7 +723,7 @@ void SuggestionsSidebarBlock::QueryProvider(SuggestionsBackend& backend, const C
         if (--self->m_pendingQueries == 0)
             self->OnQueriesFinished();
     })
-    .catch_all([weakSelf,queryId,backendPtr](std::exception_ptr e)
+    .catch_all([weakSelf,queryId,backendPtr](dispatch::exception_ptr e)
     {
         auto self = weakSelf.lock();
         // maybe this call is already out of date:
@@ -738,7 +738,7 @@ void SuggestionsSidebarBlock::QueryProvider(SuggestionsBackend& backend, const C
 
 
 Sidebar::Sidebar(wxWindow *parent, wxMenu *suggestionsMenu)
-    : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxNO_BORDER | wxFULL_REPAINT_ON_RESIZE),
+    : wxWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxNO_BORDER | wxFULL_REPAINT_ON_RESIZE),
       m_catalog(nullptr),
       m_selectedItem(nullptr)
 {
