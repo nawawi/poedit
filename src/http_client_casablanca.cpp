@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2016 Vaclav Slavik
+ *  Copyright (C) 2014-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -35,6 +35,8 @@
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+
+#include <boost/throw_exception.hpp>
 
 #include <cpprest/asyncrt_utils.h>
 #include <cpprest/http_client.h>
@@ -239,7 +241,7 @@ private:
     // handle non-OK responses:
     void handle_error(http::http_response r)
     {
-        if (r.status_code() == http::status_codes::OK)
+        if (r.status_code() >= 200 && r.status_code() < 300)
             return; // not an error
 
         int status_code = r.status_code();
@@ -256,7 +258,7 @@ private:
         if (msg.empty())
             msg = str::to_utf8(r.reason_phrase());
         m_owner.on_error_response(status_code, msg);
-        throw http::http_exception(status_code, msg);
+        BOOST_THROW_EXCEPTION(http::http_exception(status_code, msg));
     }
 
     // convert to wstring

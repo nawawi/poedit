@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2010-2016 Vaclav Slavik
+ *  Copyright (C) 2010-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -42,6 +42,7 @@
 #include <boost/chrono/duration.hpp>
 #include <boost/thread/executor.hpp>
 #include <boost/thread/future.hpp>
+#include <boost/throw_exception.hpp>
 
 #if !defined(HAVE_DISPATCH) && !defined(USE_PPL_DISPATCH)
     #include <boost/thread/executors/basic_thread_pool.hpp>
@@ -267,11 +268,11 @@ inline auto call_and_unwrap_if_future(F&& f, Args&&... args) -> typename future_
 // Tasks (aka futures)
 // ----------------------------------------------------------------------
 
-using boost::current_exception;
 using boost::exception_ptr;
 using boost::future_status;
 template<typename T> using promise = boost::promise<T>;
 
+exception_ptr current_exception();
 
 // Can't use std::current_exception with boost::promise, must use boost
 // version instead. This helper takes care of it.
@@ -377,7 +378,7 @@ public:
                                  if (weak)
                                      return detail::call_and_unwrap_if_future(f, cch::unpack_arg(std::move(x)));
                                  else
-                                     throw detail::window_dismissed();
+                                     BOOST_THROW_EXCEPTION(detail::window_dismissed());
                              });
     };
 
@@ -455,7 +456,7 @@ public:
                                      detail::call_and_unwrap_if_future(f);
                                  }
                                  else
-                                     throw detail::window_dismissed();
+                                     BOOST_THROW_EXCEPTION(detail::window_dismissed());
 
                              });
     };
@@ -517,6 +518,11 @@ template<typename T>
 auto make_ready_future(T&& value) -> future<T>
 {
   return boost::make_ready_future(std::forward<T>(value));
+}
+
+inline future<void> make_ready_future()
+{
+  return boost::make_ready_future();
 }
 
 template<typename T>

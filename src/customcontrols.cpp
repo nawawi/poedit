@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2016 Vaclav Slavik
+ *  Copyright (C) 2015-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -203,6 +203,10 @@ void AutoWrappingText::OnSize(wxSizeEvent& e)
     if (w == m_wrapWidth)
         return;
 
+    // refuse to participate in crazy-small sizes sizing (will be undone anyway):
+    if (w < 50)
+        return;
+
     wxWindowUpdateLocker lock(this);
 
     m_wrapWidth = w;
@@ -322,7 +326,7 @@ bool LearnMoreLinkXmlHandler::CanHandle(wxXmlNode *node)
 }
 
 
-ActivityIndicator::ActivityIndicator(wxWindow *parent)
+ActivityIndicator::ActivityIndicator(wxWindow *parent, int flags)
     : wxWindow(parent, wxID_ANY), m_running(false)
 {
     auto sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -335,8 +339,12 @@ ActivityIndicator::ActivityIndicator(wxWindow *parent)
     m_label->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
 
+    if (flags & Centered)
+        sizer->AddStretchSpacer();
     sizer->Add(m_spinner, wxSizerFlags().Center().Border(wxRIGHT, PX(4)));
     sizer->Add(m_label, wxSizerFlags(1).Center());
+    if (flags & Centered)
+        sizer->AddStretchSpacer();
 
     wxWeakRef<ActivityIndicator> self(this);
     HandleError = [self](dispatch::exception_ptr e){

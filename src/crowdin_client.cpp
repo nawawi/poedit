@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2016 Vaclav Slavik
+ *  Copyright (C) 2015-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -254,14 +254,14 @@ dispatch::future<void> CrowdinClient::UploadFile(const std::string& project_id,
 bool CrowdinClient::IsSignedIn() const
 {
     std::string token;
-    return keytar::GetPassword("Crowdin", &token);
+    return keytar::GetPassword("Crowdin", "", &token);
 }
 
 
 void CrowdinClient::SignInIfAuthorized()
 {
     std::string token;
-    if (keytar::GetPassword("Crowdin", &token))
+    if (keytar::GetPassword("Crowdin", "", &token))
         SetToken(token);
 }
 
@@ -275,14 +275,14 @@ void CrowdinClient::SetToken(const std::string& token)
 void CrowdinClient::SaveAndSetToken(const std::string& token)
 {
     SetToken(token);
-    keytar::AddPassword("Crowdin", token);
+    keytar::AddPassword("Crowdin", "", token);
 }
 
 
 void CrowdinClient::SignOut()
 {
     m_api->set_authorization("");
-    keytar::DeletePassword("Crowdin");
+    keytar::DeletePassword("Crowdin", "");
 }
 
 

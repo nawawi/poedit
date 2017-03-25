@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2016 Vaclav Slavik
+ *  Copyright (C) 1999-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -102,6 +102,8 @@ class PoeditFrame : public PoeditFrameBase
         /// Returns true if any windows (with documents) are open
         static bool HasAnyWindow() { return !ms_instances.empty(); }
 
+        static int GetOpenWindowsCount() { return (int)ms_instances.size(); }
+
         ~PoeditFrame();
 
         /// Reads catalog, refreshes controls, takes ownership of catalog.
@@ -124,9 +126,6 @@ class PoeditFrame : public PoeditFrameBase
          */
         bool UpdateCatalog(const wxString& pot_file = wxEmptyString);
 
-
-        virtual void DoGiveHelp(const wxString& text, bool show);
-
         void UpdateAfterPreferencesChange();
         static void UpdateAllAfterPreferencesChange();
 
@@ -141,6 +140,15 @@ class PoeditFrame : public PoeditFrameBase
 
         /// Puts text from textctrls to catalog & listctrl.
         void OnUpdatedFromTextCtrl(CatalogItemPtr item, bool statsChanged);
+
+        wxString GetFileName() const
+            { return m_catalog ? m_catalog->GetFileName() : wxString(); }
+        wxString GetFileNamePartOfTitle() const
+            { return m_fileNamePartOfTitle; }
+
+    protected:
+        // Don't show help in status bar, it's not common to do these days:
+        void DoGiveHelp(const wxString& /*help*/, bool /*show*/) override {}
 
     private:
         /** Ctor.
@@ -171,6 +179,8 @@ class PoeditFrame : public PoeditFrameBase
         wxWindow* CreateContentViewWelcome();
         wxWindow* CreateContentViewEmptyPO();
         void DestroyContentView();
+
+        void PlaceInitialFocus();
 
         typedef std::set<PoeditFrame*> PoeditFramesList;
         static PoeditFramesList ms_instances;
@@ -306,16 +316,6 @@ private:
         void OnSuggestion(wxCommandEvent& event);
         void OnPreTranslateAll(wxCommandEvent& event);
 
-        enum PreTranslateFlags
-        {
-            PreTranslate_OnlyExact       = 0x01,
-            PreTranslate_ExactNotFuzzy   = 0x02,
-            PreTranslate_OnlyGoodQuality = 0x04
-        };
-        bool PreTranslateCatalog(int *matchesCount, int flags);
-        template<typename T>
-        bool PreTranslateCatalog(int *matchesCount, const T& range, int flags);
-
         void OnPurgeDeleted(wxCommandEvent& event);
 
         void OnGoToBookmark(wxCommandEvent& event);
@@ -348,9 +348,9 @@ private:
     private:
         CatalogPtr m_catalog;
 
-        wxString GetFileName() const
-            { return m_catalog ? m_catalog->GetFileName() : wxString(); }
         bool m_fileExistsOnDisk;
+
+        wxString m_fileNamePartOfTitle;
 
         std::unique_ptr<MainToolbar> m_toolbar;
 

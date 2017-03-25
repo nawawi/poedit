@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2016 Vaclav Slavik
+ *  Copyright (C) 2014-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -137,7 +137,12 @@ public:
 class ActivityIndicator : public wxWindow
 {
 public:
-    ActivityIndicator(wxWindow *parent);
+    enum Flags
+    {
+        Centered = 1,
+    };
+
+    ActivityIndicator(wxWindow *parent, int flags = 0);
 
     /// Start indicating, with optional progress label.
     void Start(const wxString& msg = "");
@@ -154,7 +159,7 @@ public:
     /// Convenience function for showing error message in the indicator
     std::function<void(dispatch::exception_ptr)> HandleError;
 
-    bool HasTransparentBackground() override { return true;  }
+    bool HasTransparentBackground() override { return true; }
 
 private:
     bool m_running;

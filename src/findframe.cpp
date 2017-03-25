@@ -1,7 +1,7 @@
-/*
+﻿/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2001-2016 Vaclav Slavik
+ *  Copyright (C) 2001-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -143,8 +143,8 @@ FindFrame::FindFrame(PoeditFrame *owner,
 #endif
 
     m_btnClose = new wxButton(panel, wxID_CLOSE, _("Close"));
-    m_btnReplaceAll = new wxButton(panel, wxID_ANY, MSW_OR_OTHER(_("Replace all"), _("Replace All")));
-    m_btnReplace = new wxButton(panel, wxID_ANY, _("Replace"));
+    m_btnReplaceAll = new wxButton(panel, wxID_ANY, MSW_OR_OTHER(_("Replace &all"), _("Replace &All")));
+    m_btnReplace = new wxButton(panel, wxID_ANY, _("&Replace"));
     m_btnPrev = new wxButton(panel, wxID_ANY, _("< &Previous"));
     m_btnNext = new wxButton(panel, wxID_ANY, _("&Next >"));
     m_btnNext->SetDefault();
@@ -182,12 +182,12 @@ FindFrame::FindFrame(PoeditFrame *owner,
 
     wxAcceleratorEntry entries[] = {
 #ifndef __WXGTK__
-        { wxACCEL_SHIFT,  WXK_RETURN, m_btnPrev->GetId() },
+        { wxACCEL_SHIFT, WXK_RETURN, m_btnPrev->GetId() },
 #endif
 #ifdef __WXOSX__
-        { wxACCEL_CMD,  'W', wxID_CLOSE },
+        { wxACCEL_CMD, 'W', wxID_CLOSE },
 #endif
-        { wxACCEL_NORMAL,  WXK_ESCAPE, wxID_CLOSE }
+        { wxACCEL_NORMAL, WXK_ESCAPE, wxID_CLOSE }
     };
     wxAcceleratorTable accel(WXSIZEOF(entries), entries);
     SetAcceleratorTable(accel);
@@ -290,7 +290,14 @@ void FindFrame::OnModeChanged()
 {
     bool isReplace = m_mode->GetSelection() == Mode_Replace;
 
-    SetTitle(isReplace ? _("Replace") : _("Find"));
+    wxString title = isReplace ? _("Replace") : _("Find");
+    if (PoeditFrame::GetOpenWindowsCount() > 1)
+    {
+        auto filename = m_owner->GetFileNamePartOfTitle();
+        if (!filename.empty())
+            title += wxString::Format(L" — %s", filename);
+    }
+    SetTitle(title);
 
     m_btnReplace->Show(isReplace);
     m_btnReplaceAll->Show(isReplace);
@@ -448,7 +455,7 @@ bool FindFrame::DoFind(int dir)
 
     int mode = m_mode->GetSelection();
     int cnt = m_listCtrl->GetItemCount();
-    bool inTrans = m_findInTrans->GetValue()  && (m_catalog->HasCapability(Catalog::Cap::Translations));
+    bool inTrans = m_findInTrans->GetValue() && (m_catalog->HasCapability(Catalog::Cap::Translations));
     bool inSource = (mode == Mode_Find) && m_findInOrig->GetValue();
     bool inComments = (mode == Mode_Find) && m_findInComments->GetValue();
     bool ignoreCase = (mode == Mode_Find) && m_ignoreCase->GetValue();

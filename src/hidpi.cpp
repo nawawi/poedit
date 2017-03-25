@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2016 Vaclav Slavik
+ *  Copyright (C) 2015-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -57,14 +57,18 @@ void LoadPNGImage(wxImage& img, const wxString& filename)
     }
 }
 
-bool LoadAndScale(wxImage& img, const wxString& name)
+} // anonymous namespace
+
+wxImage LoadScaledBitmap(const wxString& name)
 {
     const wxString filename(name + ".png");
     if (!wxFileExists(filename))
-        return false;
+        return wxNullImage;
+
+    wxImage img;
 
 #ifdef NEEDS_MANUAL_HIDPI
-    if (HiDPIScalingFactor() > 1.0)
+    if (HiDPIScalingFactor() > 1.25)
     {
         double imgScale = HiDPIScalingFactor();
         const wxString filename_2x(name + "@2x.png");
@@ -72,7 +76,7 @@ bool LoadAndScale(wxImage& img, const wxString& name)
         {
             LoadPNGImage(img, filename_2x);
             if (HiDPIScalingFactor() == 2.0)
-                return true;
+                return img;
             else
                 imgScale /= 2.0;
         }
@@ -80,6 +84,9 @@ bool LoadAndScale(wxImage& img, const wxString& name)
         {
             LoadPNGImage(img, filename);
         }
+
+        if (!img.IsOk())
+            return wxNullImage;
 
         wxImageResizeQuality quality;
         if (imgScale == 2.0)
@@ -89,34 +96,11 @@ bool LoadAndScale(wxImage& img, const wxString& name)
         else
             quality = wxIMAGE_QUALITY_BICUBIC;
         img.Rescale(img.GetWidth() * imgScale, img.GetHeight() * imgScale, quality);
-        return true;
+        return img;
     }
     // else: load normally
 #endif
 
     LoadPNGImage(img, filename);
-    return true;
-}
-
-} // anonymous namespace
-
-
-wxBitmap LoadScaledBitmap(const wxString& name, bool mirror, int padding)
-{
-    wxImage img;
-    if (!LoadAndScale(img, name))
-        return wxNullBitmap;
-
-    if (padding)
-    {
-        int pad = PX(padding);
-        auto sz = img.GetSize();
-        sz.IncBy(pad * 2);
-        img.Resize(sz, wxPoint(pad, pad));
-    }
-
-    if (mirror)
-        return wxBitmap(img.Mirror());
-    else
-        return wxBitmap(img);
+    return img;
 }

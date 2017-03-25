@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2016 Vaclav Slavik
+ *  Copyright (C) 2014-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -74,12 +74,18 @@ public:
             tool->SetLabel(_("Sync"));
             tool->SetShortHelp(_("Synchronize the translation with Crowdin"));
             m_tb->SetToolNormalBitmap(m_idUpdate, wxArtProvider::GetBitmap("poedit-sync", wxART_TOOLBAR));
+            #ifdef __WXMSW__
+            m_tb->SetToolDisabledBitmap(m_idUpdate, wxArtProvider::GetBitmap("poedit-sync@disabled", wxART_TOOLBAR));
+            #endif
         }
         else
         {
             tool->SetLabel(_("Update"));
             tool->SetShortHelp(_("Update catalog - synchronize it with sources"));
             m_tb->SetToolNormalBitmap(m_idUpdate, wxArtProvider::GetBitmap("poedit-update", wxART_TOOLBAR));
+            #ifdef __WXMSW__
+            m_tb->SetToolDisabledBitmap(m_idUpdate, wxArtProvider::GetBitmap("poedit-update@disabled", wxART_TOOLBAR));
+            #endif
         }
     }
 

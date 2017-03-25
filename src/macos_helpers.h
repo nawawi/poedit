@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2007-2016 Vaclav Slavik
+ *  Copyright (C) 2007-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -29,13 +29,9 @@
 // FIXME: This is a hack to work around Automake's lack of support for ObjC++.
 //        Remove it after switching build system to Bakefile.
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef USE_SPARKLE
 // Sparkle helpers
-void Sparkle_Initialize(bool checkForBeta);
+NSObject *Sparkle_Initialize();
 void Sparkle_AddMenuItem(NSMenu *appmenu, const char *title);
 void Sparkle_Cleanup();
 #endif // USE_SPARKLE
@@ -49,9 +45,5 @@ void UserDefaults_RemoveValue(const char *key);
 void MakeButtonRounded(void *button);
 
 void MoveToApplicationsFolderIfNecessary();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // Poedit_macos_helpers_h

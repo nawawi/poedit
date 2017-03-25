@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2016 Vaclav Slavik
+ *  Copyright (C) 2016-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -27,8 +27,10 @@
 
 #include "utility.h"
 
+#include <wx/config.h>
 #include <wx/msw/uxtheme.h>
 #include <wx/nativewin.h>
+#include <wx/recguard.h>
 
 #include <mCtrl/menubar.h>
 
@@ -36,6 +38,8 @@ namespace
 {
 
 int g_mctrlInitialized = 0;
+
+const int MENUBAR_OFFSET = -2;
 
 } // anonymous namespace
 
@@ -93,6 +97,7 @@ public:
         MSG *msg = (MSG *) pMsg;
         if (mcIsMenubarMessage(m_mctrlHandle, msg))
             return true;
+
         return false;
     }
 
@@ -119,7 +124,7 @@ private:
     class mCtrlWrapper : public wxNativeWindow
     {
     public:
-        mCtrlWrapper(wxWindow *parent, WXHWND wnd) : wxNativeWindow(parent, wxID_ANY, wnd) {}
+        mCtrlWrapper(wxWindow *parent, WXHWND wnd) : wxNativeWindow(parent, wxID_ANY, wnd), m_flagReenterMctrl(0) {}
 
         WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam) override
         {
@@ -127,10 +132,25 @@ private:
             {
                 case WM_COMMAND:
                 case WM_NOTIFY:
-                    return MSWDefWindowProc(nMsg, wParam, lParam);
+                {
+                    wxRecursionGuard guard(m_flagReenterMctrl);
+
+                    if (!guard.IsInside())
+                    {
+                        return MSWDefWindowProc(nMsg, wParam, lParam);
+                    }
+                    else
+                    {
+                        return ::DefWindowProc(GetHwnd(), nMsg, wParam, lParam);
+                    }
+                }
             }
+
             return wxNativeWindow::MSWWindowProc(nMsg, wParam, lParam);
         }
+
+    private:
+        wxRecursionGuardFlag m_flagReenterMctrl;
     };
 
     mCtrlWrapper *m_mctrlWin;
@@ -161,6 +181,9 @@ bool wxFrameWithWindows10Menubar::ShouldUse() const
     if (!wxUxThemeEngine::GetIfActive())
         return false;
 
+    if (wxConfig::Get()->ReadBool("/disable_mctrl", false))
+        return false;
+
     // Detect screen readers and use normal menubar with them, because the
     // mCtrl one isn't accessible.
     BOOL running;
@@ -176,7 +199,7 @@ wxPoint wxFrameWithWindows10Menubar::GetClientAreaOrigin() const
     wxPoint pt = wxFrame::GetClientAreaOrigin();
     if (IsUsed())
     {
-        pt.y += m_menuBar->GetSize().y;
+        pt.y += m_menuBar->GetSize().y + MENUBAR_OFFSET;
     }
     return pt;
 }
@@ -195,7 +218,7 @@ void wxFrameWithWindows10Menubar::PositionToolBar()
     int width, height;
     wxWindow::DoGetClientSize(&width, &height);
 
-    int y = 0;
+    int y = MENUBAR_OFFSET;
 
     // use the 'real' MSW position here, don't offset relatively to the
     // client area origin
@@ -207,7 +230,7 @@ void wxFrameWithWindows10Menubar::PositionToolBar()
     if (toolbar && toolbar->IsShown())
     {
         int tbh = toolbar->GetSize().y;
-        toolbar->SetSize(0, y, width, tbh, wxSIZE_NO_ADJUSTMENTS);
+        toolbar->SetSize(0, y, width + 8, tbh, wxSIZE_NO_ADJUSTMENTS);
     }
 }
 

@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2016 Vaclav Slavik
+ *  Copyright (C) 1999-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -70,7 +70,6 @@ protected:
     wxString DoGetValue() const override;
 #endif
 
-#if defined(__WXMSW__) || defined(__WXGTK__)
     bool DoCopy();
     void OnCopy(wxClipboardTextEvent& event);
     void OnCut(wxClipboardTextEvent& event);
@@ -78,7 +77,6 @@ protected:
 
     virtual wxString DoCopyText(long from, long to);
     virtual void DoPasteText(long from, long to, const wxString& s);
-#endif // __WXMSW__/__WXGTK__
 
 #ifdef __WXGTK__
     struct Snapshot
@@ -122,10 +120,8 @@ public:
     static wxString UnescapePlainText(const wxString& s);
 
 protected:
-#if defined(__WXMSW__) || defined(__WXGTK__)
     wxString DoCopyText(long from, long to) override;
     void DoPasteText(long from, long to, const wxString& s) override;
-#endif
 
     void DoSetValue(const wxString& value, int flags) override;
 

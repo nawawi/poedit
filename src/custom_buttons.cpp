@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2016 Vaclav Slavik
+ *  Copyright (C) 2016-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -213,6 +213,12 @@ void SwitchButton::OnMouseClick(wxMouseEvent& e)
     // normal click handling moves focus to the switch (which is a button
     // underneath), which we'd rather not do
     SetValue(!GetValue());
+
+    // we need to send the event, because SetValue() doesn't
+    wxCommandEvent event(wxEVT_TOGGLEBUTTON, GetId());
+    event.SetInt(GetValue());
+    event.SetEventObject(this);
+    ProcessCommand(event);
 }
 
 
@@ -237,11 +243,7 @@ bool SwitchButton::MSWOnDraw(WXDRAWITEMSTRUCT *wxdis)
 
     wxRect rect(lpDIS->rcItem.left, lpDIS->rcItem.top, lpDIS->rcItem.right - lpDIS->rcItem.left, lpDIS->rcItem.bottom - lpDIS->rcItem.top);
 
-    // FIXME: This is a mess, but cleaner solution needs support in wx
-    static wxScopedPtr<wxGraphicsContext> gcdummy(wxGraphicsContext::Create(this));
-    gcdummy.reset();
-
-    wxScopedPtr<wxGraphicsContext> gc(wxGraphicsContext::CreateFromNative(new Graphics(hdc)));
+    wxScopedPtr<wxGraphicsContext> gc(wxGraphicsContext::CreateFromNativeHDC(hdc));
     gc->EnableOffset(false);
 
     if (toggled)

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2016 Vaclav Slavik
+ *  Copyright (C) 2014-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -138,7 +138,7 @@ private:
 };
 
 
-std::wregex RE_HTML_MARKUP(LR"(<\/?[a-zA-Z]+(\s+\w+(=(\w+|(\"|').*(\"|')))?)*\s*\/?>)",
+std::wregex RE_HTML_MARKUP(LR"(<\/?[a-zA-Z]+(\s+\w+(=(\w+|"[^"]*"|'[^']*'))?)*\s*\/?>)",
                            std::regex_constants::ECMAScript | std::regex_constants::optimize);
 
 // php-format per http://php.net/manual/en/function.sprintf.php plus positionals

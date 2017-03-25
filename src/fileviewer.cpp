@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2016 Vaclav Slavik
+ *  Copyright (C) 1999-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -121,7 +121,7 @@ FileViewer::FileViewer(wxWindow*)
 
 #ifdef __WXOSX__
     wxAcceleratorEntry entries[] = {
-        { wxACCEL_CMD,  'W', wxID_CLOSE }
+        { wxACCEL_CMD, 'W', wxID_CLOSE }
     };
     wxAcceleratorTable accel(WXSIZEOF(entries), entries);
     SetAcceleratorTable(accel);
@@ -324,7 +324,8 @@ void FileViewer::ShowReferences(CatalogPtr catalog, CatalogItemPtr item, int def
     if (m_basePath.empty())
         m_basePath = wxPathOnly(catalog->GetFileName());
 
-    m_references = item->GetReferences();
+    if (item)
+        m_references = item->GetReferences();
 
     m_file->Clear();
     m_file->Enable(m_references.size() > 1);

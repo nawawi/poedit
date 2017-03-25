@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2016 Vaclav Slavik
+ *  Copyright (C) 2000-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -23,32 +23,43 @@
  *
  */
 
-#ifndef _SUMMARYDLG_H_
-#define _SUMMARYDLG_H_
+#ifndef Poedit_cat_update_h
+#define Poedit_cat_update_h
 
-#include <wx/string.h>
-#include <wx/dialog.h>
+#include "catalog.h"
+
+class WXDLLIMPEXP_FWD_CORE wxWindow;
 
 
-/** This class provides simple dialog that displays list
-  * of changes made in the catalog.
-  */
-class MergeSummaryDialog : public wxDialog
+/// Result of PerformUpdateFromSources()
+enum class UpdateResultReason
 {
-    public:
-        MergeSummaryDialog(wxWindow *parent = NULL);
-        ~MergeSummaryDialog();
-
-        /** Reads data from catalog and fill dialog's controls.
-            \param snew      list of strings that are new to the catalog
-            \param sobsolete list of strings that no longer appear in the
-                             catalog (as compared to catalog's state before
-                             parsing sources).
-         */
-        void TransferTo(const wxArrayString& snew, 
-                        const wxArrayString& sobsolete);
+    Unspecified,
+    CancelledByUser,
+    NoSourcesFound
 };
 
+enum UpdateFlags
+{
+    Update_DontShowSummary = 1
+};
+
+/**
+    Update catalog from source code, if configured, and provide UI
+    during the operation.
+ */
+bool PerformUpdateFromSources(wxWindow *parent,
+                              CatalogPtr catalog,
+                              UpdateResultReason& reason,
+                              int flags = 0);
+
+/**
+    Similarly for updating from a POT file.
+ */
+bool PerformUpdateFromPOT(wxWindow *parent,
+                          CatalogPtr catalog,
+                          const wxString& pot_file,
+                          UpdateResultReason& reason);
 
 
-#endif // _SUMMARYDLG_H_
+#endif // Poedit_cat_update_h

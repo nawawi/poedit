@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2016 Vaclav Slavik
+ *  Copyright (C) 1999-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -99,7 +99,6 @@ class PoeditApp : public wxApp
             upgrade to new version.)
          */
         void SetDefaultCfg(wxConfigBase *cfg);
-        void SetDefaultExtractors(wxConfigBase *cfg);
         
         void OnInitCmdLine(wxCmdLineParser& parser);
         bool OnCmdLineParsed(wxCmdLineParser& parser);
@@ -133,8 +132,8 @@ class PoeditApp : public wxApp
         DECLARE_EVENT_TABLE()
 
 #ifdef __WXOSX__
-        class RecentMenuData;
-        std::unique_ptr<RecentMenuData> m_recentMenuData;
+        class NativeMacAppData;
+        std::unique_ptr<NativeMacAppData> m_nativeMacAppData;
 #else
         wxFileHistory m_history;
 #endif

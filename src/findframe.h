@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2001-2016 Vaclav Slavik
+ *  Copyright (C) 2001-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -51,7 +51,7 @@ class FindFrame : public wxFrame
 {
     public:
         /** Ctor.
-            \param owner  Parent frame, FindFrame will float on it
+            \param owner   Parent frame, FindFrame will float on it
             \param list    List control to search in
             \param catalog Catalog to search in
          */

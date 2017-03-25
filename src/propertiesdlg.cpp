@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2016 Vaclav Slavik
+ *  Copyright (C) 2000-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -43,6 +43,7 @@
 #include <wx/stattext.h>
 #include <wx/menu.h>
 #include <wx/notebook.h>
+#include <wx/windowptr.h>
 
 #include <wx/nativewin.h>
 #if !wxCHECK_VERSION(3,1,0)
@@ -270,22 +271,26 @@ public:
         auto lbl = new wxStaticText(this, wxID_ANY, label);
         sizer->Add(lbl, wxSizerFlags().Expand());
         m_list = new wxListBox(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_EXTENDED);
-        sizer->Add(m_list, wxSizerFlags(1).Expand());
+        sizer->Add(m_list, wxSizerFlags(1).Expand().BORDER_WIN(wxLEFT, 1));
 
 #if defined(__WXOSX__)
         auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSAddTemplate"), wxDefaultPosition, wxSize(18, 18), wxBORDER_SUNKEN);
         auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSRemoveTemplate"), wxDefaultPosition, wxSize(18,18), wxBORDER_SUNKEN);
 #elif defined(__WXMSW__)
-        auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-add"), wxDefaultPosition, wxSize(19,19));
-        auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-remove"), wxDefaultPosition, wxSize(19,19));
+        auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-add"), wxDefaultPosition, wxSize(PX(19),PX(19)));
+        auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-remove"), wxDefaultPosition, wxSize(PX(19),PX(19)));
 #elif defined(__WXGTK__)
         auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-add"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
         auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-remove"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
 #endif
         auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
         buttonSizer->Add(add);
+#ifdef __WXOSX__
+        buttonSizer->AddSpacer(PX(1));
+#endif
         buttonSizer->Add(remove);
-        sizer->Add(buttonSizer);
+        sizer->AddSpacer(PX(1));
+        sizer->Add(buttonSizer, wxSizerFlags().BORDER_MACOS(wxLEFT, PX(1)));
 
         SetDropTarget(new DropTarget(this));
 
@@ -452,6 +457,133 @@ protected:
 };
 
 
+struct PropertiesDialog::GettextSettings
+{
+    wxString CommentTag;
+    wxString XgettextFlags;
+};
+
+class PropertiesDialog::GettextSettingsDialog : public wxDialog
+{
+public:
+    GettextSettingsDialog(wxWindow *parent) : wxDialog(parent, wxID_ANY, _("Advanced extraction settings"))
+    {
+        auto outer = new wxBoxSizer(wxVERTICAL);
+        auto sizer = new wxBoxSizer(wxVERTICAL);
+        outer->Add(sizer, wxSizerFlags(1).Expand().Border(wxALL, PX(15)));
+
+        sizer->Add(new wxStaticText(this, wxID_ANY, _("Extract notes for translators from:")));
+        sizer->AddSpacer(PX(4));
+        m_commentsPrefixed = new wxRadioButton(this, wxID_ANY, _("Comments prefixed with:"));
+        m_commentsPrefix = new wxTextCtrl(this, wxID_ANY, "");
+        m_commentsPrefix->SetHint("TRANSLATORS:");
+        auto prefixSizer = new wxBoxSizer(wxHORIZONTAL);
+        sizer->Add(prefixSizer, wxSizerFlags().Expand().Border(wxLEFT, PX(10)));
+        prefixSizer->Add(m_commentsPrefixed, wxSizerFlags().Center().BORDER_MACOS(wxTOP, PX(3)).BORDER_WIN(wxBOTTOM, PX(1)));
+        prefixSizer->Add(m_commentsPrefix, wxSizerFlags(1).Center().Border(wxLEFT, PX(5)));
+
+        sizer->AddSpacer(PX(2));
+        m_commentsAll = new wxRadioButton(this, wxID_ANY, _("All comments"));
+        sizer->Add(m_commentsAll, wxSizerFlags().Border(wxLEFT, PX(10)));
+
+        sizer->Add(new wxStaticText(this, wxID_ANY, _("Additional xgettext flags:")), wxSizerFlags().Border(wxTOP, PX(15)));
+        m_flags = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(PX(450), -1));
+#ifdef __WXOSX__
+        m_flags->OSXDisableAllSmartSubstitutions();
+#endif
+        sizer->Add(m_flags, wxSizerFlags().Expand().Border(wxTOP, PX(5)));
+
+        auto buttons = CreateButtonSizer(wxOK | wxCANCEL);
+#ifdef __WXOSX__
+        outer->Add(buttons, wxSizerFlags().Expand());
+#else
+        outer->Add(buttons, wxSizerFlags().Expand().PXDoubleBorder(wxLEFT|wxRIGHT|wxBOTTOM));
+#endif
+
+        m_commentsPrefix->Bind(
+            wxEVT_UPDATE_UI,
+            [=](wxUpdateUIEvent& e){ e.Enable(m_commentsPrefixed->GetValue()); });
+
+        SetSizerAndFit(outer);
+        CenterOnParent();
+    }
+
+    void TransferTo(const PropertiesDialog::GettextSettings& data)
+    {
+        auto flags = data.XgettextFlags;
+        auto pos = flags.Find("--add-comments");
+        if (pos != wxNOT_FOUND)
+        {
+            auto posStart = pos;
+            pos += 14;
+            if (pos < (int)flags.size() && flags[pos] == '=')
+            {
+                wxString prefix;
+                pos++;
+                char lookFor = (flags[pos] == '"') ? '"' : ' ';
+                if (lookFor == '"')
+                    pos++;
+                while (pos < (int)flags.size() && flags[pos] != lookFor)
+                    prefix += flags[pos++];
+                if (lookFor == '"')
+                    pos++;
+
+                m_commentsPrefix->SetValue(prefix);
+                m_commentsPrefixed->SetValue(true);
+            }
+            else
+            {
+                m_commentsAll->SetValue(true);
+            }
+            if (pos < (int)flags.size() && flags[pos] == ' ')
+                pos++;
+            flags = flags.replace(posStart, pos - posStart, "");
+        }
+        else
+        {
+            m_commentsPrefixed->SetValue(true);
+            m_commentsPrefix->SetValue("TRANSLATORS:");
+        }
+
+        m_flags->SetValue(flags.Strip());
+    }
+
+    void TransferFrom(PropertiesDialog::GettextSettings& data) const
+    {
+        wxString flags;
+
+        if (m_commentsAll->GetValue())
+        {
+            flags = "--add-comments";
+        }
+        else
+        {
+            auto prefix = m_commentsPrefix->GetValue();
+            if (!prefix.empty() && prefix != "TRANSLATORS:")
+            {
+                if (prefix.Contains(" ") && prefix[0] != '"')
+                    prefix = '"' + prefix + '"';
+                flags.Printf("--add-comments=%s", prefix);
+            }
+        }
+
+        if (!m_flags->GetValue().empty())
+        {
+            if (!flags.empty())
+                flags += " ";
+            flags += m_flags->GetValue();
+        }
+
+        data.XgettextFlags = flags;
+    }
+
+private:
+    wxRadioButton *m_commentsAll, *m_commentsPrefixed;
+    wxTextCtrl *m_commentsPrefix;
+    wxTextCtrl *m_flags;
+};
+
+
 PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileExistsOnDisk, int initialPage)
     : m_validatedPlural(-1), m_validatedLang(-1)
 {
@@ -459,8 +591,9 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
 
     wxXmlResource::Get()->LoadDialog(this, parent, "properties");
 
-    m_team = XRCCTRL(*this, "team_name", wxTextCtrl);
-    m_teamEmail = XRCCTRL(*this, "team_email", wxTextCtrl);
+    m_gettextSettings.reset(new GettextSettings);
+
+    m_team = XRCCTRL(*this, "team", wxTextCtrl);
     m_project = XRCCTRL(*this, "prj_name", wxTextCtrl);
     m_language = XRCCTRL(*this, "language", LanguageCtrl);
     m_charset = XRCCTRL(*this, "charset", wxComboBox);
@@ -525,6 +658,7 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
 
     // Controls setup:
     m_project->SetHint(_("Name of the project the translation is for"));
+    m_team->SetHint(_("Team name and email address or URL"));
     m_pluralFormsExpr->SetHint(_("e.g. nplurals=2; plural=(n > 1);"));
 
     Layout();
@@ -558,6 +692,12 @@ PropertiesDialog::PropertiesDialog(wxWindow *parent, CatalogPtr cat, bool fileEx
     openBasepath->Bind(wxEVT_BUTTON, [=](wxCommandEvent&){
         wxLaunchDefaultApplication(m_pathsData->basepath);
     });
+
+    XRCCTRL(*this, "gettext_settings", wxButton)->Bind(wxEVT_BUTTON, &PropertiesDialog::OnGettextSettings, this);
+}
+
+PropertiesDialog::~PropertiesDialog()
+{
 }
 
 
@@ -572,30 +712,30 @@ void SetCharsetToCombobox(wxComboBox *ctrl, const wxString& value)
         {
         UTF_8_CHARSET,
         // and legacy ones
-        "iso-8859-1",
-        "iso-8859-2",
-        "iso-8859-3",
-        "iso-8859-4",
-        "iso-8859-5",
-        "iso-8859-6",
-        "iso-8859-7",
-        "iso-8859-8",
-        "iso-8859-9",
-        "iso-8859-10",
-        "iso-8859-11",
-        "iso-8859-12",
-        "iso-8859-13",
-        "iso-8859-14",
-        "iso-8859-15",
-        "koi8-r",
-        "windows-1250",
-        "windows-1251",
-        "windows-1252",
-        "windows-1253",
-        "windows-1254",
-        "windows-1255",
-        "windows-1256",
-        "windows-1257"
+        "ISO-8859-1",
+        "ISO-8859-2",
+        "ISO-8859-3",
+        "ISO-8859-4",
+        "ISO-8859-5",
+        "ISO-8859-6",
+        "ISO-8859-7",
+        "ISO-8859-8",
+        "ISO-8859-9",
+        "ISO-8859-10",
+        "ISO-8859-11",
+        "ISO-8859-12",
+        "ISO-8859-13",
+        "ISO-8859-14",
+        "ISO-8859-15",
+        "KOI8-R",
+        "CP1250",
+        "CP1251",
+        "CP1252",
+        "CP1253",
+        "CP1254",
+        "CP1255",
+        "CP1256",
+        "CP1257"
         };
 
     ctrl->Clear();
@@ -646,8 +786,7 @@ void PropertiesDialog::TransferTo(const CatalogPtr& cat)
     SetCharsetToCombobox(m_sourceCodeCharset, cat->Header().SourceCodeCharset);
 
     #define SET_VAL(what,what2) m_##what2->SetValue(cat->Header().what)
-    SET_VAL(Team, team);
-    SET_VAL(TeamEmail, teamEmail);
+    SET_VAL(LanguageTeam, team);
     SET_VAL(Project, project);
     #undef SET_VAL
 
@@ -677,6 +816,8 @@ void PropertiesDialog::TransferTo(const CatalogPtr& cat)
 
     m_pathsData->GetFromCatalog(cat);
     m_pathsData->RefreshView();
+
+    m_gettextSettings->XgettextFlags = cat->Header().GetHeader("X-Poedit-Flags-xgettext");
 }
 
 
@@ -686,8 +827,7 @@ void PropertiesDialog::TransferFrom(const CatalogPtr& cat)
     cat->Header().SourceCodeCharset = GetCharsetFromCombobox(m_sourceCodeCharset);
 
     #define GET_VAL(what,what2) cat->Header().what = m_##what2->GetValue()
-    GET_VAL(Team, team);
-    GET_VAL(TeamEmail, teamEmail);
+    GET_VAL(LanguageTeam, team);
     GET_VAL(Project, project);
     #undef GET_VAL
 
@@ -716,6 +856,8 @@ void PropertiesDialog::TransferFrom(const CatalogPtr& cat)
 
     if (m_pathsData->Changed)
         m_pathsData->SetToCatalog(cat);
+
+    cat->Header().SetHeaderNotEmpty("X-Poedit-Flags-xgettext", m_gettextSettings->XgettextFlags);
 }
 
 
@@ -785,6 +927,15 @@ void PropertiesDialog::OnPluralFormsCustom(wxCommandEvent& event)
     event.Skip();
 }
 
+void PropertiesDialog::OnGettextSettings(wxCommandEvent&)
+{
+    wxWindowPtr<GettextSettingsDialog> dlg(new GettextSettingsDialog(this));
+    dlg->TransferTo(*m_gettextSettings);
+    dlg->ShowWindowModalThenDo([this,dlg](int retval){
+        if (retval == wxID_OK)
+            dlg->TransferFrom(*m_gettextSettings);
+    });
+}
 
 bool PropertiesDialog::Validate()
 {

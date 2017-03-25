@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2010-2016 Vaclav Slavik
+ *  Copyright (C) 2010-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -31,6 +31,8 @@
         #define HAVE_MKDTEMP
     #endif
 #endif
+
+#include <map>
 
 #include <wx/arrstr.h>
 #include <wx/filename.h>
@@ -208,7 +210,7 @@ public:
     static void KeepFiles(bool keep = true) { ms_keepFiles = keep; }
 
 private:
-    int m_counter;
+    std::map<wxString, int> m_counters;
     wxString m_dir;
 
     static bool ms_keepFiles;

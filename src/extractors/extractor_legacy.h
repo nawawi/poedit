@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2016 Vaclav Slavik
+ *  Copyright (C) 1999-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -23,25 +23,26 @@
  *
  */
 
-#ifndef Poedit_extractor_h
-#define Poedit_extractor_h
+#ifndef Poedit_extractor_legacy_h
+#define Poedit_extractor_legacy_h
+
+#include "extractor.h"
 
 #include <wx/wx.h>
 #include <wx/string.h>
-
 #include <vector>
 
-class WXDLLIMPEXP_FWD_BASE wxConfigBase;
 
+class WXDLLIMPEXP_FWD_BASE wxConfigBase;
 
 /** This class holds information about an external extractor. It does
     \b not do any extraction. The only functionality it provides is
     the metadata to invoke extractors.
  */
-class Extractor
+class LegacyExtractorSpec
 {
     public:
-        Extractor() : Enabled(true) {}
+        LegacyExtractorSpec() : Enabled(true) {}
 
         /// User-oriented name of the extractor (e.g. "C/C++").
         wxString Name;
@@ -72,40 +73,73 @@ class Extractor
             charset name. %C in command is replaced with this. */
         wxString CharsetItem;
 
-        /// Returns array of files from 'files' that this extractor understands.
-        wxArrayString SelectParsable(const wxArrayString& files);
-      
+        bool operator==(const LegacyExtractorSpec& other) const
+        {
+            return Name == other.Name &&
+                   Enabled == other.Enabled &&
+                   Extensions == other.Extensions &&
+                   Command == other.Command &&
+                   KeywordItem == other.KeywordItem &&
+                   FileItem == other.FileItem &&
+                   CharsetItem == other.CharsetItem;
+        }
+
+        bool operator!=(const LegacyExtractorSpec& other) const
+        {
+            return !(*this == other);
+        }
+
         /** Returns command line used to launch the extractor with specified
-            input. This expands all veriables in Command property of the
+            input. This expands all variables in Command property of the
             parser and returns string that be directly passed to wxExecute.
             \param files    list of files to parse
             \param keywords list of recognized keywords
             \param output   name of temporary output file
             \param charset  source code charset (may be empty)
          */
-        wxString GetCommand(const wxArrayString& files, 
-                            const wxArrayString& keywords,
-                            const wxString& output,
-                            const wxString& charset);
+        wxString BuildCommand(const std::vector<wxString>& files,
+                              const wxArrayString& keywords,
+                              const wxString& output,
+                              const wxString& charset) const;
 };
 
 /** Database of all available extractors. This class is regular pseudo-template
     dynamic wxArray with additional methods for storing its content to
     wxConfig object and retrieving it.
  */
-class ExtractorsDB
+class LegacyExtractorsDB
 {
 public:
     /// Reads DB from registry/dotfile.
     void Read(wxConfigBase *cfg);
-    
+
     /// Write DB to registry/dotfile.
     void Write(wxConfigBase *cfg);
 
-    /// Returns index of extractor with given name or -1 if it can't be found:
-    int FindExtractor(const wxString& name);
+    /// Remove definitions superseded by GettextExtractor
+    static void RemoveObsoleteExtractors(wxConfigBase *cfg);
 
-    std::vector<Extractor> Data;
+    std::vector<LegacyExtractorSpec> Data;
 };
 
-#endif // Poedit_extractor_h
+
+
+/// Extractor implementation for legacy definitions
+class LegacyExtractor : public Extractor
+{
+public:
+    LegacyExtractor(const LegacyExtractorSpec& spec);
+
+    wxString GetId() const override { return m_id; }
+
+    wxString Extract(TempDirectory& tmpdir,
+                     const SourceCodeSpec& sourceSpec,
+                     const std::vector<wxString>& files) const override;
+
+private:
+    wxString m_id;
+    LegacyExtractorSpec m_spec;
+};
+
+
+#endif // Poedit_extractor_legacy_h

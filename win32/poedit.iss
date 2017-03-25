@@ -1,7 +1,7 @@
 ﻿;
 ;   This file is part of Poedit (https://poedit.net)
 ;
-;   Copyright (C) 1999-2016 Vaclav Slavik
+;   Copyright (C) 1999-2017 Vaclav Slavik
 ;
 ;   Permission is hereby granted, free of charge, to any person obtaining a
 ;   copy of this software and associated Docsumentation files (the "Software"),
@@ -31,7 +31,7 @@
 #include "../" + CONFIG + "/git_build_number.h"
 
 #define VERSION          "2.0"
-#define VERSION_FULL     "2.0beta1"
+#define VERSION_FULL     "2.0beta2"
 #define VERSION_WIN      VERSION + "." + Str(POEDIT_GIT_BUILD_NUMBER)
 
 #ifndef CRT_REDIST
@@ -70,7 +70,7 @@ InternalCompressLevel=ultra
 AppID={{68EB2C37-083A-4303-B5D8-41FA67E50B8F}
 VersionInfoVersion={#VERSION_WIN}
 VersionInfoTextVersion={#VERSION_FULL}
-AppCopyright=Copyright © 1999-2016 Vaclav Slavik
+AppCopyright=Copyright © 1999-2017 Vaclav Slavik
 AppPublisher=Vaclav Slavik
 AppSupportURL=https://poedit.net/support
 AppUpdatesURL=https://poedit.net/download
@@ -88,7 +88,7 @@ SignTool={#SIGNTOOL}
 #endif
 VersionInfoCompany=Vaclav Slavik
 VersionInfoDescription=Poedit Installer
-VersionInfoCopyright=Copyright © 1999-2016 Vaclav Slavik
+VersionInfoCopyright=Copyright © 1999-2017 Vaclav Slavik
 VersionInfoProductName=Poedit
 VersionInfoProductVersion={#VERSION_WIN}
 VersionInfoProductTextVersion={#VERSION_FULL}
@@ -108,8 +108,10 @@ Source: "{#CONFIG}\Translations\*"; DestDir: "{app}\Translations"; Flags: recurs
 Source: "{#CONFIG}\GettextTools\*"; DestDir: "{app}\GettextTools"; Flags: ignoreversion recursesubdirs
 
 [InstallDelete]
-;Delete obsolete files from version 1.6:
+;Delete obsolete files from version 1.{67}:
 Type: files; Name: "{app}\icu*52*.d??"
+Type: files; Name: "{app}\icu*54*.d??"
+Type: files; Name: "{app}\icu*55*.d??"
 ; Delete files from previous versions that are no longer needed (and in case of poedit.exe.manifest, actually harmful):
 Type: filesandordirs; Name: "{app}\bin"
 Type: filesandordirs; Name: "{app}\doc"

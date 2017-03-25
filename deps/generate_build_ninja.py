@@ -5,6 +5,7 @@ from collections import OrderedDict
 from ninja_syntax import Writer
 
 _exclusion_list = ['.DS_Store',
+                   '.git',
                    'autom4te.cache', 'build_windows',
                    'Debug', 'Debug_static', 'Release', 'Release_static',
                    'bin',
@@ -125,8 +126,8 @@ with open('build.ninja', 'w') as buildfile:
                                      # fix dylib references to work
                                      '$top_srcdir/../macos/fixup-dylib-deps.sh //lib @executable_path/../lib $destdir/lib $destdir/bin/*',
                                      # strip executables
-                                     'strip -u -r $destdir/bin/{msgfmt,msgmerge,msgunfmt,msgcat,xgettext}',
-                                     'strip -x $destdir/lib/lib*.*.dylib',
+                                     'strip -S -u -r $destdir/bin/{msgfmt,msgmerge,msgunfmt,msgcat,xgettext}',
+                                     'strip -S -x $destdir/lib/lib*.*.dylib',
                                  ]))
 
     targets.append(gen_configure(n, 'icu',

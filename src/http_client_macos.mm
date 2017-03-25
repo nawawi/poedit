@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2016 Vaclav Slavik
+ *  Copyright (C) 2014-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -200,8 +200,15 @@ private:
                 desc = "Service Unavailable";
         }
 
-        m_owner.on_error_response(status_code, desc);
-        promise.set_exception(http_exception(desc));
+        try
+        {
+            m_owner.on_error_response(status_code, desc);
+            BOOST_THROW_EXCEPTION(http_exception(desc));
+        }
+        catch (...)
+        {
+            dispatch::set_current_exception(promise);
+        }
     }
 
     json extract_json(NSData *data)

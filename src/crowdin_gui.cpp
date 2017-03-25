@@ -1,7 +1,7 @@
 ﻿/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2016 Vaclav Slavik
+ *  Copyright (C) 2015-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -29,6 +29,7 @@
 #include "crowdin_client.h"
 
 #include "catalog.h"
+#include "cloud_sync.h"
 #include "concurrency.h"
 #include "customcontrols.h"
 #include "errors.h"
@@ -169,7 +170,8 @@ void CrowdinLoginPanel::CreateLoginInfoControls(State state)
             name->SetFont(name->GetFont().Bold());
             auto username = new SecondaryLabel(this, m_userLogin);
 
-            sizer->Add(account, wxSizerFlags().PXBorder(wxRIGHT));
+            sizer->Add(account, wxSizerFlags().BORDER_MACOS(wxTOP, PX(3)));
+            sizer->AddSpacer(PX(2));
             auto box = new wxBoxSizer(wxVERTICAL);
             box->Add(name, wxSizerFlags().Left());
             box->Add(username, wxSizerFlags().Left());
@@ -526,27 +528,6 @@ private:
     int m_supportedFilesCount;
 };
 
-
-class SyncProgressDialog : public wxDialog
-{
-public:
-    SyncProgressDialog(wxWindow *parent)
-        : wxDialog(parent, wxID_ANY, _("Syncing with Crowdin"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxSYSTEM_MENU)
-    {
-        auto sizer = new wxBoxSizer(wxVERTICAL);
-        sizer->SetMinSize(PX(300), -1);
-        Activity = new ActivityIndicator(this);
-        sizer->AddStretchSpacer();
-        sizer->Add(Activity, wxSizerFlags().Expand().Border(wxALL, PX(25)));
-        sizer->AddStretchSpacer();
-        SetSizerAndFit(sizer);
-        CenterOnParent();
-    }
-
-    ActivityIndicator *Activity;
-};
-
-
 } // anonymous namespace
 
 
@@ -592,7 +573,7 @@ void CrowdinSyncFile(wxWindow *parent, std::shared_ptr<Catalog> catalog,
                         ? Language::TryParse(header.GetHeader("X-Crowdin-Language").ToStdWstring())
                         : catalog->GetLanguage();
 
-    wxWindowPtr<SyncProgressDialog> dlg(new SyncProgressDialog(parent));
+    wxWindowPtr<CloudSyncProgressWindow> dlg(new CloudSyncProgressWindow(parent));
 
     auto handle_error = [=](dispatch::exception_ptr e){
         dispatch::on_main([=]{
@@ -646,4 +627,20 @@ void CrowdinSyncFile(wxWindow *parent, std::shared_ptr<Catalog> catalog,
     });
 
     dlg->ShowWindowModal();
+}
+
+
+dispatch::future<void> CrowdinSyncDestination::Upload(CatalogPtr file)
+{
+    const auto& header = file->Header();
+    auto crowdin_prj = header.GetHeader("X-Crowdin-Project");
+    auto crowdin_file = header.GetHeader("X-Crowdin-File");
+    auto crowdin_lang = header.HasHeader("X-Crowdin-Language")
+                        ? Language::TryParse(header.GetHeader("X-Crowdin-Language").ToStdWstring())
+                        : file->GetLanguage();
+
+    return CrowdinClient::Get().UploadFile(
+                str::to_utf8(crowdin_prj), str::to_wstring(crowdin_file), crowdin_lang,
+                file->SaveToBuffer()
+            );
 }

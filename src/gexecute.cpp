@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2016 Vaclav Slavik
+ *  Copyright (C) 2000-2017 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -32,6 +32,8 @@
 #include <wx/stdpaths.h>
 #include <wx/translation.h>
 #include <wx/filename.h>
+
+#include <boost/throw_exception.hpp>
 
 #include "gexecute.h"
 #include "errors.h"
@@ -146,7 +148,9 @@ long DoExecuteGettext(const wxString& cmdline_, wxArrayString& gstderr)
         retcode = -1;
 
     if ( retcode == -1 )
-        throw Exception(wxString::Format(_("Cannot execute program: %s"), cmdline.c_str()));
+    {
+        BOOST_THROW_EXCEPTION(Exception(wxString::Format(_("Cannot execute program: %s"), cmdline.c_str())));
+    }
 
     return retcode;
 }
