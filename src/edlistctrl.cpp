@@ -213,6 +213,7 @@ PoeditListCtrl::Model::Model(TextDirection appTextDir, wxVisualAttributes visual
     m_iconComment = wxArtProvider::GetBitmap("poedit-status-comment");
     m_iconBookmark = wxArtProvider::GetBitmap("poedit-status-bookmark");
     m_iconError = wxArtProvider::GetBitmap("poedit-status-error");
+    m_iconWarning = wxArtProvider::GetBitmap("poedit-status-warning");
 }
 
 
@@ -288,8 +289,19 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
 
         case Col_Icon:
         {
-            if (d->GetValidity() == CatalogItem::Val_Invalid)
-                variant << m_iconError;
+            if (d->HasIssue())
+            {
+                switch (d->GetIssue().severity)
+                {
+                    case CatalogItem::Issue::Error:
+                        variant << m_iconError;
+                        break;
+                    case CatalogItem::Issue::Warning:
+                        variant << m_iconWarning;
+                        break;
+                }
+                break;
+            }
             else if (d->GetBookmark() != NO_BOOKMARK)
                 variant << m_iconBookmark;
             else if (d->HasComment())
@@ -305,6 +317,15 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
 #if wxCHECK_VERSION(3,1,1)
             if (d->HasContext())
             {
+            #ifdef __WXMSW__
+                if (m_appTextDir == TextDirection::RTL && m_sourceTextDir == TextDirection::LTR)
+                {
+                    // Temporary workaround for https://github.com/vslavik/poedit/issues/343 - fall back to old style rendering:
+                    orig.Printf("[%s] %s", EscapeMarkup(d->GetContext()), EscapeMarkup(d->GetString()));
+                }
+                else
+            #endif
+                {
                 // Work around a problem with GTK+'s coloring of markup that begins with colorizing <span>:
                 #ifdef __WXGTK__
                     #define MARKUP(x) L"\u200B" L##x
@@ -314,6 +335,7 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
                 orig.Printf(MARKUP("<span bgcolor=\"%s\" color=\"%s\"> %s </span> %s"),
                             m_clrContextBg, m_clrContextFg,
                             EscapeMarkup(d->GetContext()), EscapeMarkup(d->GetString()));
+                }
             }
             else
             {
@@ -381,7 +403,7 @@ bool PoeditListCtrl::Model::GetAttrByRow(unsigned row, unsigned col, wxDataViewI
         case Col_Translation:
         {
             auto d = Item(row);
-            if (d->GetValidity() == CatalogItem::Val_Invalid)
+            if (d->HasError())
             {
                 attr.SetColour(m_clrInvalid);
                 return true;
@@ -621,7 +643,7 @@ void PoeditListCtrl::CatalogChanged(const CatalogPtr& catalog)
 {
     wxWindowUpdateLocker no_updates(this);
 
-    const int oldCount = m_catalog ? m_catalog->GetCount() : 0;
+    const int oldCount = m_model->GetCount();
     const int newCount = catalog ? catalog->GetCount() : 0;
     const bool isSameCatalog = (catalog == m_catalog);
     const bool sizeOrCatalogChanged = !isSameCatalog || (oldCount != newCount);

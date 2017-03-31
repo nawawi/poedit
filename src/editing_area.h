@@ -103,6 +103,7 @@ public:
 
     // Semi-private use (TODO: get rid of them)
     SourceTextCtrl *Ctrl_Original() const { return m_textOrig; }
+    SourceTextCtrl *Ctrl_OriginalPlural() const { return m_textOrigPlural; }
     TranslationTextCtrl *Ctrl_Translation() const { return m_textTrans; }
     wxNotebook *Ctrl_PluralNotebook() const { return m_pluralNotebook; }
     TranslationTextCtrl *Ctrl_PluralTranslation(size_t index) const { return m_textTransPlural[index]; }
@@ -119,6 +120,7 @@ private:
 
 private:
     class TagLabel;
+    class IssueLabel;
 
     PoeditListCtrl *m_associatedList;
 
@@ -139,7 +141,7 @@ private:
     TagLabel *m_tagFormat;
     TagLabel *m_tagPretranslated;
 
-    TagLabel *m_errorLine;
+    IssueLabel *m_issueLine;
 };
 
 #endif // Poedit_editing_area_h

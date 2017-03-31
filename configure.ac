@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([poedit], [2.0beta2], [help@poedit.net])
+AC_INIT([poedit], [2.0], [help@poedit.net])
 PACKAGE_SHORT_VERSION=2.0
 AC_SUBST(PACKAGE_SHORT_VERSION)
 
@@ -270,7 +270,7 @@ if test "x$GXX" == "xyes"; then
     AX_CXX_CHECK_FLAG([-Wextra],[],[], [CXXFLAGS="$CXXFLAGS -Wextra"])
 fi
 
-CXXFLAGS="$CXXFLAGS $DEBUG_FLAGS \"-DPOEDIT_PREFIX=\\\"$prefix\\\"\""
+CXXFLAGS="$CXXFLAGS $DEBUG_FLAGS -DwxNO_UNSAFE_WXSTRING_CONV=1 \"-DPOEDIT_PREFIX=\\\"$prefix\\\"\""
 
 
 
