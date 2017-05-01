@@ -346,7 +346,7 @@ private:
 class GeneralPage : public wxPreferencesPage
 {
 public:
-    wxString GetName() const override { return PXNotebookTab(_("General")); }
+    wxString GetName() const override { return _("General"); }
     wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-General"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new GeneralPageWindow(parent); }
 };
@@ -572,7 +572,7 @@ public:
         // length there.
         return _("TM");
 #else
-        return PXNotebookTab(_("Translation Memory"));
+        return _("Translation Memory");
 #endif
     }
     wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-TM"); }
@@ -615,7 +615,7 @@ public:
         listSizer->AddSpacer(PX(5));
 
         m_list = new wxCheckListBox(listPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxBORDER_NONE);
-        m_list->SetMinSize(wxSize(PX(400),PX(300)));
+        m_list->SetMinSize(wxSize(PX(400),PX(200)));
 #ifdef __WXOSX__
         m_list->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
@@ -843,7 +843,7 @@ private:
 class ExtractorsPage : public wxPreferencesPage
 {
 public:
-    wxString GetName() const override { return PXNotebookTab(_("Extractors")); }
+    wxString GetName() const override { return _("Extractors"); }
     wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-Extractors"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new ExtractorsPageWindow(parent); }
 };
@@ -896,7 +896,7 @@ private:
 class AccountsPage : public wxPreferencesPage
 {
 public:
-    wxString GetName() const override { return PXNotebookTab(_("Accounts")); }
+    wxString GetName() const override { return _("Accounts"); }
     wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-Accounts"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new AccountsPageWindow(parent); }
 };
@@ -964,7 +964,7 @@ private:
 class UpdatesPage : public wxPreferencesPage
 {
 public:
-    wxString GetName() const override { return PXNotebookTab(_("Updates")); }
+    wxString GetName() const override { return _("Updates"); }
     wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-Updates"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new UpdatesPageWindow(parent); }
 };
@@ -1056,7 +1056,7 @@ class AdvancedPage : public wxStockPreferencesPage
 {
 public:
     AdvancedPage() : wxStockPreferencesPage(Kind_Advanced) {}
-    wxString GetName() const override { return PXNotebookTab(_("Advanced")); }
+    wxString GetName() const override { return _("Advanced"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new AdvancedPageWindow(parent); }
 };
 

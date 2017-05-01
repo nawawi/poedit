@@ -214,6 +214,13 @@ PoeditListCtrl::Model::Model(TextDirection appTextDir, wxVisualAttributes visual
     m_iconBookmark = wxArtProvider::GetBitmap("poedit-status-bookmark");
     m_iconError = wxArtProvider::GetBitmap("poedit-status-error");
     m_iconWarning = wxArtProvider::GetBitmap("poedit-status-warning");
+
+#ifdef HAS_BROKEN_NULL_BITMAPS
+    wxImage nullimg(m_iconError.GetSize().x, m_iconError.GetSize().y);
+    nullimg.Clear();
+    nullimg.SetMaskColour(0, 0, 0);
+    m_nullBitmap = wxBitmap(nullimg);
+#endif
 }
 
 
@@ -270,9 +277,26 @@ wxString PoeditListCtrl::Model::GetColumnType(unsigned int col) const
 
 void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsigned col) const
 {
+#if defined(HAS_BROKEN_NULL_BITMAPS)
+    #define NULL_BITMAP(variant)  variant << m_nullBitmap
+#elif defined(__WXGTK__) && !wxCHECK_VERSION(3,1,1)
+    #define NULL_BITMAP(variant)  variant << wxNullBitmap
+#else
+    #define NULL_BITMAP(variant)  variant = wxNullVariant
+#endif
+
     if (!m_catalog || m_frozen)
     {
+#if defined(__WXGTK__) && !wxCHECK_VERSION(3,1,1)
+        auto type = GetColumnType(col);
+        if (type == "string")
+            variant = "";
+        else if (type == "wxBitmap")
+            NULL_BITMAP(variant);
+        else
+#else
         variant = wxNullVariant;
+#endif
         return;
     }
 
@@ -307,7 +331,7 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
             else if (d->HasComment())
                 variant << m_iconComment;
             else
-                variant = wxNullVariant;
+                NULL_BITMAP(variant);
             break;
         }
 
@@ -519,7 +543,13 @@ void PoeditListCtrl::SetCustomFont(wxFont font_)
     SetFont(font);
 
 #if defined(__WXOSX__)
-    SetRowHeight(20);
+    // Custom setup of NSLayoutManager is necessary to match NSTableView sizing.
+    // See http://stackoverflow.com/questions/17095927/dynamically-changing-row-height-after-font-size-of-entire-nstableview-nsoutlin
+    NSLayoutManager *lm = [[NSLayoutManager alloc] init];
+    [lm setTypesetterBehavior:NSTypesetterBehavior_10_2_WithCompatibility];
+    [lm setUsesScreenFonts:NO];
+    CGFloat height = [lm defaultLineHeightForFont:font.OSXGetNSFont()];
+    SetRowHeight(int(height) + PX(4));
 #elif defined(__WXMSW__)
     SetRowHeight(GetCharHeight() + PX(4));
 #endif
@@ -560,7 +590,13 @@ void PoeditListCtrl::CreateColumns()
         isRTL = !isRTL;
 #endif
 
-    m_colIcon = AppendBitmapColumn(L"∙", Model::Col_Icon, wxDATAVIEW_CELL_INERT, wxCOL_WIDTH_AUTOSIZE, wxALIGN_CENTER, 0);
+#if defined(__WXMSW__)
+    int iconWidth = wxArtProvider::GetBitmap("poedit-status-error").GetSize().x + 6 /*wxDVC internal padding*/;
+#else
+    int iconWidth = PX(16);
+#endif
+
+    m_colIcon = AppendBitmapColumn(L"∙", Model::Col_Icon, wxDATAVIEW_CELL_INERT, iconWidth, wxALIGN_CENTER, 0);
 #if wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__)
     m_colIcon->GetRenderer()->SetValueAdjuster(new DataViewIconsAdjuster);
 #endif
@@ -661,6 +697,18 @@ void PoeditListCtrl::CatalogChanged(const CatalogPtr& catalog)
 
     if (sizeOrCatalogChanged && GetItemCount() > 0)
         CallAfter([=]{ SelectAndFocus(0); });
+}
+
+
+void PoeditListCtrl::RefreshAllItems()
+{
+    // Can't use Cleared() here because it messes up selection and scroll position
+    const int count = m_model->GetCount();
+    wxDataViewItemArray items;
+    items.reserve(count);
+    for (int i = 0; i < count; i++)
+        items.push_back(m_model->GetItem(i));
+    m_model->ItemsChanged(items);
 }
 
 

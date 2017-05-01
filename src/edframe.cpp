@@ -2341,6 +2341,13 @@ void PoeditFrame::NoteAsRecentFile()
 }
 
 
+void PoeditFrame::MarkAsModified()
+{
+    m_modified = true;
+    UpdateTitle();
+}
+
+
 void PoeditFrame::RefreshControls(int flags)
 {
     if (!m_catalog)
@@ -3120,7 +3127,7 @@ void PoeditFrame::OnSingleSelectionWithPluralsUpdate(wxUpdateUIEvent& event)
     // Enable only if a single item with plural forms is selected
     event.Enable(m_catalog &&
                  m_list && m_list->HasSingleSelection() &&
-                 m_editingArea->HasTextFocusInPlurals());
+                 m_editingArea->IsShowingPlurals());
 }
 
 void PoeditFrame::OnHasCatalogUpdate(wxUpdateUIEvent& event)

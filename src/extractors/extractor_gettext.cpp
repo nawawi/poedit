@@ -67,7 +67,6 @@ const char * const GETTEXT_EXTENSIONS[] = {
     "pl", "PL", "pm", "perl", /*"cgi" - too generic,*/    // perl
 
     "php", "php3", "php4",                                // PHP
-    // NOTE: .phtml shouldn't be used by modern PHP, but maybe it is?
 
     "py",                                                 // Python
 
@@ -95,23 +94,16 @@ const char * const GETTEXT_EXTENSIONS[] = {
 
 
 /// Extractor implementation for standard GNU gettext
-class GettextExtractor : public Extractor
+class GettextExtractorBase : public Extractor
 {
 public:
-    GettextExtractor()
-    {
-        for (const char * const *e = GETTEXT_EXTENSIONS; *e != nullptr; e++)
-            RegisterExtension(*e);
-    }
-
-    wxString GetId() const override { return "gettext"; }
-
     wxString Extract(TempDirectory& tmpdir,
                      const SourceCodeSpec& sourceSpec,
                      const std::vector<wxString>& files) const override
     {
         auto basepath = sourceSpec.BasePath;
 #ifdef __WXMSW__
+        basepath = CliSafeFileName(basepath);
         basepath.Replace("\\", "/");
 #endif
 
@@ -124,7 +116,7 @@ public:
             // char* arguments), so work around this by using the short names.
             if (!fn.IsAscii())
             {
-                fn = wxFileName(fn).GetShortPath();
+                fn = CliSafeFileName(fn);
                 fn.Replace("\\", "/");
             }
 #endif
@@ -143,6 +135,10 @@ public:
             QuoteCmdlineArg(filelist.GetName()),
             QuoteCmdlineArg(!sourceSpec.Charset.empty() ? sourceSpec.Charset : "UTF-8")
         );
+
+        auto additional = GetAdditionalFlags();
+        if (!additional.empty())
+            cmdline += " " + additional;
 
         for (auto& kw: sourceSpec.Keywords)
         {
@@ -167,10 +163,48 @@ public:
 
         return outfile;
     }
+    
+protected:
+    virtual wxString GetAdditionalFlags() const = 0;
 };
 
 
-std::shared_ptr<Extractor> Extractor::CreateGettextExtractor()
+/// Extractor implementation for standard GNU gettext
+class GettextExtractor : public GettextExtractorBase
 {
-    return std::make_shared<GettextExtractor>();
+public:
+    GettextExtractor()
+    {
+        for (const char * const *e = GETTEXT_EXTENSIONS; *e != nullptr; e++)
+            RegisterExtension(*e);
+    }
+
+    wxString GetId() const override { return "gettext"; }
+
+protected:
+    wxString GetAdditionalFlags() const override { return ""; }
+};
+
+
+/// Dedicated extractor for .phtml files - PHP, used by Zend Framework
+class PHTMLGettextExtractor : public GettextExtractorBase
+{
+public:
+    PHTMLGettextExtractor()
+    {
+        RegisterExtension("phtml");
+    }
+
+    wxString GetId() const override { return "gettext-phtml"; }
+
+protected:
+    wxString GetAdditionalFlags() const override { return "-L php"; }
+};
+
+
+
+void Extractor::CreateGettextExtractors(Extractor::ExtractorsList& into)
+{
+    into.push_back(std::make_shared<GettextExtractor>());
+    into.push_back(std::make_shared<PHTMLGettextExtractor>());
 }

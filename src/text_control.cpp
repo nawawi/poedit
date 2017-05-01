@@ -81,7 +81,7 @@ public:
         m_view.automaticSpellingCorrectionEnabled = NO;
     }
 
-    DisableAutomaticSubstitutions()
+    ~DisableAutomaticSubstitutions()
     {
         m_view.automaticDashSubstitutionEnabled = m_dash;
         m_view.automaticQuoteSubstitutionEnabled = m_quote;
@@ -850,7 +850,7 @@ void TranslationTextCtrl::SetPlainTextUserWritten(const wxString& value)
     DisableAutomaticSubstitutions disableAuto(this);
 #endif
 
-    Clear();
+    SelectAll();
     WriteText(EscapePlainText(value));
     SetInsertionPointEnd();
 
