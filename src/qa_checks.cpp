@@ -69,6 +69,10 @@ public:
 class CaseMismatch : public QACheck
 {
 public:
+    CaseMismatch(Language lang) : m_lang(lang.Lang())
+    {
+    }
+
     bool CheckString(CatalogItemPtr item, const wxString& source, const wxString& translation) override
     {
         if (u_isupper(source[0]) && u_islower(translation[0]))
@@ -79,12 +83,19 @@ public:
 
         if (u_islower(source[0]) && u_isupper(translation[0]))
         {
-            item->SetIssue(CatalogItem::Issue::Warning, _("The translation should start with a lowercase character."));
-            return true;
+            if (m_lang != "de")
+            {
+                item->SetIssue(CatalogItem::Issue::Warning, _("The translation should start with a lowercase character."));
+                return true;
+            }
+            // else: German nouns start uppercased, this would cause too many false positives
         }
 
         return false;
     }
+
+private:
+    std::string m_lang;
 };
 
 
@@ -148,6 +159,26 @@ public:
         const bool s_punct = u_ispunct(s_last);
         const bool t_punct = u_ispunct(t_last);
 
+        if (u_getIntPropertyValue(s_last, UCHAR_BIDI_PAIRED_BRACKET_TYPE) == U_BPT_CLOSE ||
+            u_getIntPropertyValue(t_last, UCHAR_BIDI_PAIRED_BRACKET_TYPE) == U_BPT_CLOSE)
+        {
+            // too many reordering related false positives for brackets
+            // e.g. "your {site} account" -> "váš účet na {site}"
+            if ((wchar_t)u_getBidiPairedBracket(s_last) != (wchar_t)source[0])
+            {
+                return false;
+            }
+            else
+            {
+                // OTOH, it's desirable to check strings fully enclosed in brackets like "(unsaved)"
+                if (source.find_first_of((wchar_t)s_last, 1) != source.size() - 1)
+                {
+                    // it's more complicated, possibly something like "your {foo} on {bar}"
+                    return false;
+                }
+            }
+        }
+
         if (s_punct && !t_punct)
         {
             item->SetIssue(CatalogItem::Issue::Warning,
@@ -192,7 +223,7 @@ private:
         if (src == trans)
             return true;
 
-        if (m_lang == "zh")
+        if (m_lang == "zh" || m_lang == "ja")
         {
             // Chinese uses full-width punctuation.
             // See https://en.wikipedia.org/wiki/Chinese_punctuation
@@ -206,6 +237,25 @@ private:
                     return trans == L'？';
                 case ':':
                     return trans == L'：';
+                case '(':
+                    return trans == L'（';
+                case ')':
+                    return trans == L'）';
+                default:
+                    break;
+            }
+        }
+        else if (m_lang == "ar")
+        {
+            // In Arabic (but not other RTL languages), some punctuation is mirrored.
+            switch (src)
+            {
+                case ';':
+                    return trans == L'؛';
+                case '?':
+                    return trans == L'؟';
+                case ',':
+                    return trans == L'،';
                 default:
                     break;
             }
@@ -289,10 +339,11 @@ int QAChecker::Check(CatalogItemPtr item)
 
 std::shared_ptr<QAChecker> QAChecker::GetFor(Catalog& catalog)
 {
+    auto lang = catalog.GetLanguage();
     auto c = std::make_shared<QAChecker>();
     c->AddCheck<QA::NotAllPlurals>();
-    c->AddCheck<QA::CaseMismatch>();
+    c->AddCheck<QA::CaseMismatch>(lang);
     c->AddCheck<QA::WhitespaceMismatch>();
-    c->AddCheck(std::make_shared<QA::PunctuationMismatch>(catalog.GetLanguage()));
+    c->AddCheck<QA::PunctuationMismatch>(lang);
     return c;
 }

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2017-04-10 17:34+0200\n"
-"PO-Revision-Date: 2017-04-09 03:30-0400\n"
+"POT-Creation-Date: 2017-06-01 17:42+0200\n"
+"PO-Revision-Date: 2017-04-13 11:59-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Albanian\n"
 "Language: sq_AL\n"
@@ -144,7 +144,7 @@ msgstr "Njëkohësim"
 #. TRANSLATORS: %s is a cloud destination, e.g. "Crowdin" or ftp.wordpress.com etc.
 #, c-format
 msgid "Syncing with %s…"
-msgstr ""
+msgstr "Po njëkohësohet me %s…"
 
 #. TRANSLATORS: %s is a cloud destination, e.g. "Crowdin" or ftp.wordpress.com etc.
 #, c-format
@@ -261,6 +261,9 @@ msgstr "mos fshi kartela të përkohshme (për diagnostikim)"
 
 msgid "handle a poedit:// URI"
 msgstr "trajto një URI poedit://"
+
+msgid "go to item at given line number"
+msgstr ""
 
 msgid "Failed to communicate with Poedit process."
 msgstr "Dështoi komunikimi me procesin Poedit."
@@ -928,7 +931,7 @@ msgid "Untrans"
 msgstr "Papërkth"
 
 msgid "Errors"
-msgstr ""
+msgstr "Gabime"
 
 msgid "Last modified"
 msgstr "Ndryshuar së fundi"
@@ -2124,11 +2127,11 @@ msgstr "Down"
 
 #. TRANSLATORS: Keyboard shortcut for display in Windows menus
 msgid "Left"
-msgstr ""
+msgstr "Majtas"
 
 #. TRANSLATORS: Keyboard shortcut for display in Windows menus
 msgid "Right"
-msgstr ""
+msgstr "Djathtas"
 
 #. TRANSLATORS: Keyboard shortcut, must correspond to translation of "Ctrl+"
 msgid "ctrl"

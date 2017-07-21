@@ -75,6 +75,7 @@
 #include "customcontrols.h"
 #include "gexecute.h"
 #include "hidpi.h"
+#include "http_client.h"
 #include "icons.h"
 #include "version.h"
 #include "str_helpers.h"
@@ -148,19 +149,27 @@ private:
             wxString payload;
             if (data == "Activate")
             {
-                m_app->OpenNewFile();
+                dispatch::on_main([=] {
+                    m_app->OpenNewFile();
+                });
                 return true;
             }
             if (data.StartsWith("OpenURI:", &payload))
             {
-                m_app->HandleCustomURI(payload);
+                dispatch::on_main([=] {
+                    m_app->HandleCustomURI(payload);
+                });
                 return true;
             }
             if (data.StartsWith("OpenFile:", &payload))
             {
+                long lineno = 0;
+                payload.BeforeFirst(':').ToLong(&lineno);
                 wxArrayString a;
-                a.push_back(payload);
-                m_app->OpenFiles(a);
+                a.push_back(payload.AfterFirst(':'));
+                dispatch::on_main([=] {
+                    m_app->OpenFiles(a, lineno);
+                });
                 return true;
             }
             return false;
@@ -234,11 +243,11 @@ public:
         Command("OpenURI:" + uri);
     }
 
-    void OpenFile(const wxString& filename)
+    void OpenFile(const wxString& filename, int lineno = 0)
     {
         wxFileName fn(filename);
         fn.MakeAbsolute();
-        Command("OpenFile:" + fn.GetFullPath());
+        Command(wxString::Format("OpenFile:%d:%s", lineno, fn.GetFullPath()));
     }
 
 private:
@@ -312,6 +321,7 @@ bool PoeditApp::CheckForBetaUpdates() const
 #ifndef __WXOSX__
 static wxArrayString gs_filesToOpen;
 #endif
+static int gs_lineToOpen = 0;
 
 extern void InitXmlResource();
 
@@ -447,8 +457,9 @@ bool PoeditApp::OnInit()
     //     passing files on command line
     if (!gs_filesToOpen.empty())
     {
-        OpenFiles(gs_filesToOpen);
+        OpenFiles(gs_filesToOpen, gs_lineToOpen);
         gs_filesToOpen.clear();
+        gs_lineToOpen = 0;
     }
     else
     {
@@ -581,6 +592,9 @@ void PoeditApp::SetupLanguage()
     Language uiLang = Language::TryParse(bestTrans.ToStdWstring());
     UErrorCode err = U_ZERO_ERROR;
     icu::Locale::setDefault(uiLang.ToIcu(), err);
+#if defined(HAVE_HTTP_CLIENT) && !defined(__WXOSX__)
+    http_client::set_ui_language(uiLang.LanguageTag());
+#endif
 
     const wxLanguageInfo *info = wxLocale::FindLanguageInfo(bestTrans);
     g_layoutDirection = info ? info->LayoutDirection : wxLayout_Default;
@@ -605,7 +619,7 @@ void PoeditApp::OpenNewFile()
         PoeditFrame::CreateWelcome();
 }
 
-void PoeditApp::OpenFiles(const wxArrayString& names)
+void PoeditApp::OpenFiles(const wxArrayString& names, int lineno)
 {
     PoeditFrame *active = PoeditFrame::UnusedActiveWindow();
 
@@ -628,12 +642,12 @@ void PoeditApp::OpenFiles(const wxArrayString& names)
 
         if (active)
         {
-            active->OpenFile(name);
+            active->OpenFile(name, lineno);
             active = nullptr;
         }
         else
         {
-            PoeditFrame::Create(name);
+            PoeditFrame::Create(name, lineno);
         }
     }
 }
@@ -664,6 +678,7 @@ namespace
 {
 const char *CL_KEEP_TEMP_FILES = "keep-temp-files";
 const char *CL_HANDLE_POEDIT_URI = "handle-poedit-uri";
+const char *CL_LINE = "line";
 }
 
 void PoeditApp::OnInitCmdLine(wxCmdLineParser& parser)
@@ -674,6 +689,8 @@ void PoeditApp::OnInitCmdLine(wxCmdLineParser& parser)
                      _("don't delete temporary files (for debugging)"));
     parser.AddLongOption(CL_HANDLE_POEDIT_URI,
                      _("handle a poedit:// URI"), wxCMD_LINE_VAL_STRING);
+    parser.AddLongOption(CL_LINE,
+                     _("go to item at given line number"), wxCMD_LINE_VAL_NUMBER);
     parser.AddParam("catalog.po", wxCMD_LINE_VAL_STRING,
                     wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_PARAM_MULTIPLE);
 }
@@ -682,6 +699,10 @@ bool PoeditApp::OnCmdLineParsed(wxCmdLineParser& parser)
 {
     if (!wxApp::OnCmdLineParsed(parser))
         return false;
+
+    long lineno = 0;
+    if (parser.Found(CL_LINE, &lineno))
+        gs_lineToOpen = (int)lineno;
 
     if ( parser.Found(CL_KEEP_TEMP_FILES) )
         TempDirectory::KeepFiles();
@@ -710,7 +731,7 @@ bool PoeditApp::OnCmdLineParsed(wxCmdLineParser& parser)
             else
             {
                 for (size_t i = 0; i < parser.GetParamCount(); i++)
-                    client.OpenFile(parser.GetParam(i));
+                    client.OpenFile(parser.GetParam(i), (int)lineno);
             }
             return false; // terminate program
         }
@@ -1003,6 +1024,13 @@ void PoeditApp::OpenPoeditWeb(const wxString& path)
 }
 
 #ifdef __WXOSX__
+
+void PoeditApp::MacOpenFiles(const wxArrayString& names)
+{
+    OpenFiles(names, gs_lineToOpen);
+    gs_lineToOpen = 0;
+}
+
 
 static NSMenuItem *AddNativeItem(NSMenu *menu, int pos, const wxString&text, SEL ac, NSString *key)
 {

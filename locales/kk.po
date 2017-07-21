@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2017-04-10 17:34+0200\n"
-"PO-Revision-Date: 2017-04-09 03:31-0400\n"
+"POT-Creation-Date: 2017-06-01 17:42+0200\n"
+"PO-Revision-Date: 2017-07-04 11:18-0400\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Kazakh\n"
 "Language: kk_KZ\n"
@@ -141,15 +141,15 @@ msgstr "Синхрондау"
 #. TRANSLATORS: %s is a cloud destination, e.g. "Crowdin" or ftp.wordpress.com etc.
 #, c-format
 msgid "Syncing with %s…"
-msgstr ""
+msgstr "%s қызметімен синхрондау…"
 
 #. TRANSLATORS: %s is a cloud destination, e.g. "Crowdin" or ftp.wordpress.com etc.
 #, c-format
 msgid "Syncing with %s failed."
-msgstr ""
+msgstr "%s қызметімен синхрондау сәтсіз аяқталды."
 
 msgid "Syncing error"
-msgstr ""
+msgstr "Синхрондау қатесі"
 
 msgid "Downloading translations is disabled in this project."
 msgstr "Бұл жобада аудармаларды жүктеп алу мүмкіндігі сөндірілген."
@@ -258,6 +258,9 @@ msgstr "уақытша файлдарды өшірмеу (жөндеу режи�
 
 msgid "handle a poedit:// URI"
 msgstr "poedit:// URI-ін талдау"
+
+msgid "go to item at given line number"
+msgstr ""
 
 msgid "Failed to communicate with Poedit process."
 msgstr "Poedit үрдісімен байланысу қатесі."
@@ -868,13 +871,13 @@ msgid "Close"
 msgstr "Жабу"
 
 msgid "Replace &All"
-msgstr ""
+msgstr "Б&арлығын алмастыру"
 
 msgid "Replace &all"
-msgstr ""
+msgstr "Б&арлығын алмастыру"
 
 msgid "&Replace"
-msgstr ""
+msgstr "Алмасты&ру"
 
 msgid "< &Previous"
 msgstr "< &Алдыңғы"
@@ -914,7 +917,7 @@ msgid "Untrans"
 msgstr "Аударылмаған"
 
 msgid "Errors"
-msgstr ""
+msgstr "Қателер"
 
 msgid "Last modified"
 msgstr "Соңғы рет өзгертілген"
@@ -1302,7 +1305,7 @@ msgid "Name of the project the translation is for"
 msgstr "Келесі үшін аударма жобасының аталуы"
 
 msgid "Team name and email address or URL"
-msgstr ""
+msgstr "Топ аты және эл. пошта адресі немесе сілтемесі"
 
 msgid "e.g. nplurals=2; plural=(n > 1);"
 msgstr "мыс., nplurals=1; plural=0;"
@@ -1314,43 +1317,50 @@ msgid "Please save the file first. This section cannot be edited until then."
 msgstr "Алдымен файлды сақтаңыз. Оған дейін бұл санатты түзету мүмкін емес."
 
 msgid "Not all plural forms are translated."
-msgstr ""
+msgstr "Көпше түрлер толығымен аударылмаған."
 
 msgid "The translation should start as a sentence."
-msgstr ""
+msgstr "Аударма сөйлем ретінде басталуы тиіс."
 
 msgid "The translation should start with a lowercase character."
-msgstr ""
+msgstr "Аударма кіші әріптен басталуы тиіс."
 
 msgid "The translation doesn’t start with a space."
-msgstr ""
+msgstr "Аударма бос аралықтан басталып тұрған жоқ."
 
 msgid "The translation starts with a space, but the source text doesn’t."
 msgstr ""
+"Аударма бос аралықтан басталады, ал, қайнар көз хабарламасы одан басталмайды."
 
 msgid "The translation is missing a newline at the end."
-msgstr ""
+msgstr "Аударма соңында жол тасымалдауы жетпейді."
 
 msgid "The translation ends with a newline, but the source text doesn’t."
 msgstr ""
+"Аударма жол тасымалдаумен аяқталады, ал, қайнар көз хабарламасы оған "
+"аяқталмайды."
 
 msgid "The translation is missing a space at the end."
-msgstr ""
+msgstr "Аударма соңында бос аралық жетпейді."
 
 msgid "The translation ends with a space, but the source text doesn’t."
 msgstr ""
+"Аударма бос аралықпен аяқталады, ал, қайнар көз хабарламасы онымен "
+"аяқталмайды."
 
 #, c-format
 msgid "The translation should end with “%s”."
-msgstr ""
+msgstr "Аударма \"%s\" мәнімен аяқталуы тиіс."
 
 #, c-format
 msgid "The translation should not end with “%s”."
-msgstr ""
+msgstr "Аударма \"%s\" мәнімен аяқталмауы тиіс."
 
 #, c-format
 msgid "The translation ends with “%s”, but the source text ends with “%s”."
 msgstr ""
+"Аударма \"%s\" мәнімен аяқталады, ал қайнар көз хабарламасы \"%s\" мәнімен "
+"аяқталады."
 
 msgid "Comment:"
 msgstr "Түсіндірме:"
@@ -2105,11 +2115,11 @@ msgstr "Төмен"
 
 #. TRANSLATORS: Keyboard shortcut for display in Windows menus
 msgid "Left"
-msgstr ""
+msgstr "Сол жақ"
 
 #. TRANSLATORS: Keyboard shortcut for display in Windows menus
 msgid "Right"
-msgstr ""
+msgstr "Оң жақ"
 
 #. TRANSLATORS: Keyboard shortcut, must correspond to translation of "Ctrl+"
 msgid "ctrl"
