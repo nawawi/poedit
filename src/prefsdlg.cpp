@@ -379,7 +379,7 @@ public:
         auto buttonsSizer = new wxBoxSizer(wxHORIZONTAL);
 
         auto import = new wxButton(this, wxID_ANY,
-                                   MSW_OR_OTHER(_("Learn from files..."), _("Learn From Files...")));
+                                   MSW_OR_OTHER(_(L"Learn from files…"), _(L"Learn From Files…")));
         buttonsSizer->Add(import, wxSizerFlags());
         // TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
         auto clear = new wxButton(this, wxID_ANY, _("Reset"));
@@ -507,7 +507,7 @@ private:
             dlg->GetPaths(paths);
 
             wxProgressDialog progress(_("Translation Memory"),
-                                      _("Importing translations..."),
+                                      _(L"Importing translations…"),
                                       (int)paths.size() * 2 + 1,
                                       this,
                                       wxPD_APP_MODAL|wxPD_AUTO_HIDE|wxPD_CAN_ABORT);
@@ -523,7 +523,7 @@ private:
                 if (!progress.Update(++step))
                     break;
             }
-            progress.Pulse(_("Finalizing..."));
+            progress.Pulse(_(L"Finalizing…"));
             tm->Commit();
             UpdateStats();
         });
@@ -636,7 +636,7 @@ public:
         m_delete = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-remove"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
         int editButtonStyle = wxBU_EXACTFIT | wxBORDER_NONE;
 #endif
-        m_edit = new wxButton(this, wxID_ANY, _("Edit..."), wxDefaultPosition, wxSize(-1, MSW_OR_OTHER(PX(19), -1)), editButtonStyle);
+        m_edit = new wxButton(this, wxID_ANY, _(L"Edit…"), wxDefaultPosition, wxSize(-1, MSW_OR_OTHER(PX(19), -1)), editButtonStyle);
 #ifndef __WXGTK__
         m_edit->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
@@ -997,11 +997,11 @@ public:
         crlfbox->AddSpacer(PX(10));
         crlfbox->Add(m_wrap, wxSizerFlags().Center().BORDER_WIN(wxTOP, PX(1)));
     #ifdef __WXGTK3__
-        m_wrapWidth = new wxSpinCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(PX(100),-1));
+        m_wrapWidth = new wxSpinCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(PX(110),-1));
     #else
         m_wrapWidth = new wxSpinCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(PX(50),-1));
     #endif
-        m_wrapWidth->SetRange(10, 1000);
+        m_wrapWidth->SetRange(10, 999);
         crlfbox->Add(m_wrapWidth, wxSizerFlags().Center().BORDER_MACOS(wxLEFT, PX(3)));
 
         m_keepFmt = new wxCheckBox(this, wxID_ANY, _("Preserve formatting of existing files"));
