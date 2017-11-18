@@ -252,7 +252,13 @@ private:
 
         auto rect = GetClientRect();
         if (!rect.IsEmpty())
+        {
+#if wxCHECK_VERSION(3,1,1)
+            gc->DrawRoundedRectangle(rect.x, rect.y, rect.width, rect.height, PX(2));
+#else
             gc->DrawRectangle(rect.x, rect.y, rect.width, rect.height);
+#endif
+        }
     }
 
     wxColour m_fg, m_bg;
@@ -330,7 +336,7 @@ EditingArea::EditingArea(wxWindow *parent, PoeditListCtrl *associatedList, Mode 
     m_tagFormat = new TagLabel(this, Color::TagSecondaryFg, Color::TagSecondaryBg);
 
     auto sourceLineSizer = new ShrinkableBoxSizer(wxHORIZONTAL);
-    sourceLineSizer->Add(m_labelSource, wxSizerFlags().Center().Border(wxBOTTOM, MACOS_OR_OTHER(2, 0)));
+    sourceLineSizer->Add(m_labelSource, wxSizerFlags().Center());
     sourceLineSizer->AddSpacer(PX(4));
     sourceLineSizer->Add(m_tagContext, wxSizerFlags().Center().Border(wxRIGHT, PX(4)));
     sourceLineSizer->Add(m_tagFormat, wxSizerFlags().Center().Border(wxRIGHT, PX(4)));
@@ -371,6 +377,8 @@ EditingArea::EditingArea(wxWindow *parent, PoeditListCtrl *associatedList, Mode 
         CreateTemplateControls(sizer);
     else
         CreateEditControls(sizer);
+
+    SetupTextCtrlSizes();
 }
 
 
@@ -388,7 +396,7 @@ void EditingArea::CreateEditControls(wxBoxSizer *sizer)
     m_tagPretranslated->SetLabel(_("Pre-translated"));
 
     auto transLineSizer = new ShrinkableBoxSizer(wxHORIZONTAL);
-    transLineSizer->Add(m_labelTrans, wxSizerFlags().Center().Border(wxBOTTOM, MACOS_OR_OTHER(2, 0)));
+    transLineSizer->Add(m_labelTrans, wxSizerFlags().Center());
     transLineSizer->AddSpacer(PX(4));
     transLineSizer->Add(m_issueLine, wxSizerFlags().Center().Border(wxRIGHT, PX(4)));
     transLineSizer->SetShrinkableWindow(m_issueLine);
@@ -443,6 +451,15 @@ void EditingArea::CreateEditControls(wxBoxSizer *sizer)
         UpdateFromTextCtrl();
         e.Skip();
     });
+
+#ifdef __WXMSW__
+    m_pluralNotebook->Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, [=](wxBookCtrlEvent& e){
+        e.Skip();
+        auto focused = FindFocus();
+        if (focused && (focused == m_pluralNotebook || focused->GetParent() == m_pluralNotebook))
+            m_pluralNotebook->GetPage(e.GetSelection())->SetFocus();
+    });
+#endif
 }
 
 
@@ -478,6 +495,18 @@ void EditingArea::CreateTemplateControls(wxBoxSizer *panelSizer)
 }
 
 
+void EditingArea::SetupTextCtrlSizes()
+{
+    int minh = m_textOrig->GetCharHeight();
+#ifdef __WXOSX__
+    minh += 2*3; // inset
+#endif
+
+    m_textOrig->SetMinSize(wxSize(-1, minh));
+    m_textOrigPlural->SetMinSize(wxSize(-1, minh));
+}
+
+
 EditingArea::~EditingArea()
 {
     // OnPaint may still be called as child windows are destroyed
@@ -490,7 +519,7 @@ void EditingArea::OnPaint(wxPaintEvent&)
     wxPaintDC dc(this);
     auto width = GetClientSize().x;
 
-    const int paddingTop = MACOS_OR_OTHER(PX(2), PX(6));
+    const int paddingTop = MACOS_OR_OTHER(dc.GetContentScaleFactor() > 1.0 ? PX(5) : PX(6), PX(6));
     const int paddingBottom = PX(5);
 
     auto clr = ColorScheme::Get(Color::EditingSeparator);
@@ -527,13 +556,7 @@ void EditingArea::SetCustomFont(const wxFont& font)
     for (auto tp : m_textTransPlural)
         SetCtrlFont(tp, font);
 
-    int minh = m_textOrig->GetCharHeight();
-#ifdef __WXOSX__
-    minh += 2*3; // inset
-#endif
-
-    m_textOrig->SetMinSize(wxSize(-1, minh));
-    m_textOrigPlural->SetMinSize(wxSize(-1, minh));
+    SetupTextCtrlSizes();
 }
 
 
