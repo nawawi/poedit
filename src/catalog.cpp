@@ -1560,7 +1560,7 @@ wxString FormatStringForFile(const wxString& text)
 
 
 bool Catalog::Save(const wxString& po_file, bool save_mo,
-                   int& validation_errors, CompilationStatus& mo_compilation_status)
+                   ValidationResults& validation_results, CompilationStatus& mo_compilation_status)
 {
     mo_compilation_status = CompilationStatus::NotDone;
 
@@ -1602,7 +1602,7 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
         return false;
     }
 
-    validation_errors = DoValidate(po_file_temp);
+    validation_results = DoValidate(po_file_temp);
 
     // Now that the file was written, run msgcat to re-format it according
     // to the usual format. This is a (barely) passable fix for #25 until
@@ -1677,7 +1677,7 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
             // Only shows msgcat's failure warning if we don't also get
             // validation errors, because if we do, the cause is likely the
             // same.
-            if ( !validation_errors )
+            if ( !validation_results.errors )
             {
                 wxLogWarning(_("There was a problem formatting the file nicely (but it was saved all right)."));
             }
@@ -1688,13 +1688,8 @@ bool Catalog::Save(const wxString& po_file, bool save_mo,
     /* If the user wants it, compile .mo file right now: */
 
     bool compileMO = save_mo;
-#if wxUSE_GUI // FIXME - gross
-    if (!m_cloudSync || !m_cloudSync->NeedsMO())
-#endif
-    {
-        if (!wxConfig::Get()->Read("compile_mo", (long)true))
-            compileMO = false;
-    }
+    if (!wxConfig::Get()->Read("compile_mo", (long)true))
+        compileMO = false;
 
     if (m_fileType == Type::PO && compileMO)
     {
@@ -1814,7 +1809,7 @@ std::string Catalog::SaveToBuffer()
 
 
 bool Catalog::CompileToMO(const wxString& mo_file,
-                          int& validation_errors,
+                          ValidationResults& validation_results,
                           CompilationStatus& mo_compilation_status)
 {
     mo_compilation_status = CompilationStatus::NotDone;
@@ -1830,7 +1825,7 @@ bool Catalog::CompileToMO(const wxString& mo_file,
         return false;
     }
 
-    validation_errors = DoValidate(po_file_temp);
+    validation_results = DoValidate(po_file_temp);
 
     TempOutputFileFor mo_file_temp_obj(mo_file);
     const wxString mo_file_temp = mo_file_temp_obj.FileName();
@@ -2078,21 +2073,23 @@ wxString Catalog::GetAllTypesFileMask()
 }
 
 
-int Catalog::Validate()
+Catalog::ValidationResults Catalog::Validate()
 {
     TempDirectory tmpdir;
     if ( !tmpdir.IsOk() )
-        return 0;
+        return ValidationResults();
 
     wxString tmp_po = tmpdir.CreateFileName("validated.po");
     if ( !DoSaveOnly(tmp_po, wxTextFileType_Unix) )
-        return 0;
+        return ValidationResults();
 
     return DoValidate(tmp_po);
 }
 
-int Catalog::DoValidate(const wxString& po_file)
+Catalog::ValidationResults Catalog::DoValidate(const wxString& po_file)
 {
+    ValidationResults res;
+
     GettextErrors err;
     ExecuteGettextAndParseOutput
     (
@@ -2103,7 +2100,8 @@ int Catalog::DoValidate(const wxString& po_file)
     for (auto& i: m_items)
         i->ClearIssue();
 
-    QAChecker::GetFor(*this)->Check(*this);
+    res.errors = (int)err.size();
+    res.warnings = QAChecker::GetFor(*this)->Check(*this);
 
     for ( GettextErrors::const_iterator i = err.begin(); i != err.end(); ++i )
     {
@@ -2120,7 +2118,7 @@ int Catalog::DoValidate(const wxString& po_file)
         wxLogError(i->text);
     }
 
-    return (int)err.size();
+    return res;
 }
 
 void Catalog::SetFileName(const wxString& fn)

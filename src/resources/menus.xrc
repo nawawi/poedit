@@ -363,6 +363,18 @@
           <accel>Ctrl+A</accel>
       </object>
     </object>
+    <object class="wxMenu" name="menu_view">
+      <label>_View</label>
+    </object>
+    <object class="wxMenu" name="menu_catalog">
+      <label>C_atalog</label>
+    </object>
+    <object class="wxMenu" name="menu_go">
+      <label>_Go</label>
+    </object>
+    <object class="wxMenu" name="menu_window" platform="mac">
+      <label>Window</label>
+    </object>
     <object class="wxMenu" name="menu_help">
       <object class="wxMenuItem" name="wxID_HELP">
         <label platform="win">_Online help</label>
