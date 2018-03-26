@@ -1,7 +1,7 @@
-﻿/*
+/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2017 Vaclav Slavik
+ *  Copyright (C) 1999-2018 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -162,6 +162,10 @@ protected:
 
 #ifdef __WXOSX__
     void DoSetValue(const wxString& value, int flags) override;
+#endif
+
+#ifdef __WXMSW__
+    void DoEnable(bool enable) override;
 #endif
 
     bool m_lastKeyWasReturn;

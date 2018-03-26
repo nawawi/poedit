@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2017 Vaclav Slavik
+ *  Copyright (C) 2014-2018 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -155,7 +155,8 @@ public:
 
     enum encode_flags
     {
-        encode_no_plus = 1 // don't encode spaces as +
+        encode_no_plus = 1,     // don't encode spaces as +
+        encode_keep_slash = 2,  // don't encode / as %2f
     };
 
     static std::string url_encode(const std::string& s, int flags = 0);

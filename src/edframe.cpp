@@ -1,7 +1,7 @@
-﻿/*
+/*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2017 Vaclav Slavik
+ *  Copyright (C) 1999-2018 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -1016,7 +1016,7 @@ wxWindowPtr<wxMessageDialog> PoeditFrame::CreateAskAboutSavingDialog()
          (
             _("Save"),
         #ifdef __WXMSW__
-            _(L"Don’t save")
+            _(L"Do&n’t save")
         #else
             _(L"Don’t Save")
         #endif

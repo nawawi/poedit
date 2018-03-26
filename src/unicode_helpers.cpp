@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2016-2017 Vaclav Slavik
+ *  Copyright (C) 2016-2018 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -125,6 +125,9 @@ wxString strip_control_chars(const wxString& text)
 
 wxString mark_direction(const wxString& text, TextDirection dir)
 {
+    if (text.empty())
+        return text;
+
     wchar_t mark = (dir == TextDirection::LTR) ? LRE : RLE;
     auto out = mark + text;
 #ifdef BIDI_NEEDS_DIRECTION_ON_EACH_LINE

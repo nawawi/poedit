@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2017 Vaclav Slavik
+ *  Copyright (C) 2015-2018 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -105,6 +105,10 @@ std::string http_client::url_encode(const std::string& s, int flags)
         else if (c == ' ' && !(flags & encode_no_plus))
         {
             escaped << '+';
+        }
+        else if (c == '/' && (flags & encode_keep_slash))
+        {
+            escaped << '/';
         }
         else
         {
