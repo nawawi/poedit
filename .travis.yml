@@ -40,7 +40,7 @@ before_install:
     # work around Travis being difficult, see https://github.com/travis-ci/travis-ci/issues/6633
     - export CC=$REAL_CC CXX=$REAL_CXX
     # git submodules needed for Linux:
-    - git submodule update --init src/json
+    - git submodule update --init deps/json
 
 script:
     - scripts/travis-check-translations.sh
@@ -60,7 +60,7 @@ deploy:
     api_key:
         secure: fkelxNMcGoNY4MT30dEiEUE53cMkhtmr44Y7iSEkOGmfeG9ReUqVIk1nd7027iehzdhhcov57XwHg49KA+AWpQGvEbLkRNRazOxSGFL9o/P/Rzft/tvKP0sxcRF5RUVo0b5J5wlsIKSlbjDqGu9CM+G4eyK0D2jo/XPzsv9akKQ=
     skip_cleanup: true
-    file: poedit-2.0.6.tar.gz
+    file: poedit-2.0.7.tar.gz
     on:
         repo: vslavik/poedit
         tags: true

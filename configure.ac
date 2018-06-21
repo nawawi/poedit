@@ -2,11 +2,12 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([poedit], [2.0.6], [help@poedit.net])
-PACKAGE_SHORT_VERSION=2.0.6
+AC_INIT([poedit], [2.0.7], [help@poedit.net])
+PACKAGE_SHORT_VERSION=2.0.7
 AC_SUBST(PACKAGE_SHORT_VERSION)
 
 AC_CONFIG_AUX_DIR([admin])
+AC_CONFIG_MACRO_DIR([admin])
 AC_CONFIG_SRCDIR([poedit.desktop])
 
 AC_CANONICAL_BUILD

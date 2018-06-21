@@ -24,13 +24,10 @@
 	url = https://github.com/CLD2Owners/cld2.git
 [submodule "deps/casablanca"]
 	path = deps/casablanca
-    url = https://github.com/Microsoft/cpprestsdk.git
+	url = https://github.com/Microsoft/cpprestsdk.git
 [submodule "deps/AFNetworking"]
 	path = deps/AFNetworking
 	url = https://github.com/vslavik/AFNetworking.git
 [submodule "deps/mctrl"]
 	path = deps/mctrl
 	url = https://github.com/mity/mctrl.git
-[submodule "src/json"]
-	path = src/json
-	url = https://github.com/nlohmann/json.git
