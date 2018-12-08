@@ -1,4 +1,44 @@
 
+Version 2.2
+-----------
+
+- Support for editing XLIFF (both 1.2 and 2) files.
+- Fixes for correct handling of dark themes, including on macOS Mojave.
+- [Linux] Improved appearance with GTK+ 3.
+- [Linux] Updated AppData and desktop files to use reverse DNS naming.
+
+
+Version 2.1.1
+-------------
+
+- Fixed breakage of some localizations on macOS.
+
+
+Version 2.1
+-----------
+
+- Added import and export of translation memory as TMX files.
+- Added ability to delete bad translations from the TM.
+- TM now has limited support for plural forms (only nplurals<=2).
+- Improved handling plural form rules. CLDR is now used as the data source and
+  expressions are checked for equivalence before warning about unusual forms.
+
+
+Version 2.0.9
+-------------
+
+- Improved dark theme supports (still not perfect).
+- Fix broken list rendering of RTL text on Windows.
+
+
+Version 2.0.8
+-------------
+
+- Add CakePHP support.
+- QA warnings and RTL fixes.
+- Make TM reset work when the index is corrupted.
+
+
 Version 2.0.7
 -------------
 

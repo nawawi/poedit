@@ -310,8 +310,7 @@ wxString PoeditApp::GetAppBuildNumber() const
 
 bool PoeditApp::IsBetaVersion() const
 {
-    wxString v = GetAppVersion();
-    return v.Contains("beta") || v.Contains("rc");
+    return false;
 }
 
 bool PoeditApp::CheckForBetaUpdates() const
@@ -725,16 +724,23 @@ bool PoeditApp::OnCmdLineParsed(wxCmdLineParser& parser)
         {
             wxString poeditURI;
             if (parser.Found(CL_HANDLE_POEDIT_URI, &poeditURI))
+            {
                 client.HandleCustomURI(poeditURI);
-
-            if (parser.GetParamCount() == 0)
+            }
+            else if (parser.GetParamCount() == 0)
             {
                 client.Activate();
             }
             else
             {
                 for (size_t i = 0; i < parser.GetParamCount(); i++)
-                    client.OpenFile(parser.GetParam(i), (int)lineno);
+                {
+                    auto fn = parser.GetParam(i);
+                    if (fn.StartsWith("poedit://"))
+                        client.HandleCustomURI(fn);
+                    else
+                        client.OpenFile(parser.GetParam(i), (int)lineno);
+                }
             }
             return false; // terminate program
         }
@@ -760,7 +766,16 @@ bool PoeditApp::OnCmdLineParsed(wxCmdLineParser& parser)
         OSXStoreOpenFiles(filesToOpen);
 #else
     for (size_t i = 0; i < parser.GetParamCount(); i++)
-        gs_filesToOpen.Add(parser.GetParam(i));
+    {
+        auto fn = parser.GetParam(i);
+        if (fn.StartsWith("poedit://"))
+        {
+            puts("calling HandleCustomURI as file");
+            CallAfter([=]{ HandleCustomURI(fn); });
+        }
+        else
+            gs_filesToOpen.push_back(fn);
+    }
 #endif
 
     return true;

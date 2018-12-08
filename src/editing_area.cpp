@@ -30,7 +30,6 @@
 #include "customcontrols.h"
 #include "edlistctrl.h"
 #include "hidpi.h"
-#include "pluralforms/pl_evaluate.h"
 #include "spellchecking.h"
 #include "text_control.h"
 #include "utility.h"
@@ -212,7 +211,7 @@ public:
 
     void SetColor(Color fg, Color bg)
     {
-        m_fg = ColorScheme::GetBlendedOn(fg, this);
+        m_fg = ColorScheme::GetBlendedOn(fg, this, bg);
         m_bg = ColorScheme::GetBlendedOn(bg, this);
 
         m_label->SetForegroundColour(m_fg);
@@ -295,8 +294,8 @@ public:
     IssueLabel(wxWindow *parent)
         : TagLabel(parent, Color::TagErrorLineFg, Color::TagErrorLineBg)
     {
-        m_iconError = wxArtProvider::GetBitmap("poedit-status-error");
-        m_iconWarning = wxArtProvider::GetBitmap("poedit-status-warning");
+        m_iconError = wxArtProvider::GetBitmap("StatusErrorBlack");
+        m_iconWarning = wxArtProvider::GetBitmap("StatusWarningBlack");
         SetIcon(m_iconError);
     }
 
@@ -453,6 +452,9 @@ void EditingArea::CreateEditControls(wxBoxSizer *sizer)
 
     m_pluralNotebook = new wxNotebook(this, -1, wxDefaultPosition, wxDefaultSize, wxNB_NOPAGETHEME);
     m_pluralNotebook->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
+#ifdef __WXMSW__
+    m_pluralNotebook->SetBackgroundColour(GetBackgroundColour());
+#endif
 
     sizer->Add(transLineSizer, wxSizerFlags().Expand().Border(wxLEFT|wxTOP, PX(6)));
     sizer->AddSpacer(PX(6));
@@ -624,7 +626,7 @@ void EditingArea::RecreatePluralTextCtrls(CatalogPtr catalog)
     m_pluralNotebook->DeleteAllPages();
     m_textTransSingularForm = NULL;
 
-    auto calc = PluralFormsCalculator::make(catalog->Header().GetHeader("Plural-Forms").ToAscii());
+    auto plurals = PluralFormsExpr(catalog->Header().GetHeader("Plural-Forms").ToStdString());
 
     int formsCount = catalog->GetPluralFormsCount();
     for (int form = 0; form < formsCount; form++)
@@ -635,11 +637,11 @@ void EditingArea::RecreatePluralTextCtrls(CatalogPtr catalog)
         int firstExample = -1;
         int examplesCnt = 0;
 
-        if (calc && formsCount > 1)
+        if (plurals && formsCount > 1)
         {
-            for (int example = 0; example < 1000; example++)
+            for (int example = 0; example < PluralFormsExpr::MAX_EXAMPLES_COUNT; example++)
             {
-                if (calc->evaluate(example) == form)
+                if (plurals.evaluate_for_n(example) == form)
                 {
                     if (++examplesCnt == 1)
                         firstExample = example;
@@ -658,9 +660,16 @@ void EditingArea::RecreatePluralTextCtrls(CatalogPtr catalog)
 
         wxString desc;
         if (formsCount == 1)
+        {
             desc = _("Everything");
+        }
         else if (examplesCnt == 0)
+        {
+            #if 0 // kept just in case, for translations
             desc.Printf(_("Form %i"), form);
+            #endif
+            desc.Printf(_("Form %i (unused)"), form);
+        }
         else if (examplesCnt == 1)
         {
             if (formsCount == 2 && firstExample == 1) // English-like
@@ -854,11 +863,26 @@ void EditingArea::UpdateToTextCtrl(CatalogItemPtr item, int flags)
         m_tagFormat->SetLabel(wxString::Format(MSW_OR_OTHER(_("%s format"), _("%s Format")), PrettyPrintFormatTag(format)));
     }
 
-    if (m_tagPretranslated)
-        ShowPart(m_tagPretranslated, item->IsPreTranslated());
-
     if (m_fuzzy)
         m_fuzzy->SetValue(item->IsFuzzy());
+
+    UpdateAuxiliaryInfo(item);
+
+    ShowPluralFormUI(item->HasPlural());
+
+    Layout();
+
+    Refresh();
+
+    // by default, editing fuzzy item unfuzzies it
+    m_dontAutoclearFuzzyStatus = false;
+}
+
+
+void EditingArea::UpdateAuxiliaryInfo(CatalogItemPtr item)
+{
+    if (m_tagPretranslated)
+        ShowPart(m_tagPretranslated, item->IsPreTranslated());
 
     if (m_issueLine)
     {
@@ -872,15 +896,6 @@ void EditingArea::UpdateToTextCtrl(CatalogItemPtr item, int flags)
             ShowPart(m_issueLine, false);
         }
     }
-
-    ShowPluralFormUI(item->HasPlural());
-
-    Layout();
-
-    Refresh();
-
-    // by default, editing fuzzy item unfuzzies it
-    m_dontAutoclearFuzzyStatus = false;
 }
 
 
@@ -952,6 +967,8 @@ void EditingArea::UpdateFromTextCtrl()
     }
     item->SetModified(true);
     item->SetPreTranslated(false);
+
+    UpdateAuxiliaryInfo(item);
 
     m_associatedList->RefreshSelectedItems();
 

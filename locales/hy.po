@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 08:33-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 10:40\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Armenian\n"
 "Language: hy_AM\n"
@@ -49,18 +49,34 @@ msgid "“%s” is not a valid POT file."
 msgstr "'%s'-ը վավեր POT ֆայլ չէ:"
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "Այլակերպված '%s' գլխագիր"
+
+msgid "PO Translation Files"
+msgstr "PO թարգմանության ֆայլեր"
+
+msgid "POT Translation Templates"
+msgstr "POT թարգմանության ֆայլեր"
+
+msgid "XLIFF Translation Files"
+msgstr "XLIFF թարգմանության ֆայլեր"
+
+msgid "All Translation Files"
+msgstr "Թարգմանության բոլոր ֆայլերը"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr "“%s” ֆայլի ձևաչափը չի աջակցվում:"
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
-msgstr[0] "“%2$s” ֆայլի %1$i տողը ճիշտ չէ բեռնվել."
-msgstr[1] "“%2$s” ֆայլի %1$i տողերը ճիշտ չեն բեռնվել."
+msgstr[0] "«%2$s» ֆայլի %1$i տողը ճիշտ չէ բեռնվել."
+msgstr[1] "«%2$s» ֆայլի %1$i տողերը ճիշտ չեն բեռնվել."
 
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
 msgstr "%d տողի '%s' ֆայլը վնասված է (անվավեր %s տվյալ):"
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "Այլակերպված '%s' գլխագիր"
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -85,7 +101,7 @@ msgid ""
 "File “%s” is read-only and cannot be saved.\n"
 "Please save it under different name."
 msgstr ""
-"“%s” ֆայլը միայն կարդալու համար է և հնարավոր չէ այն պահպանել:\n"
+"«%s» ֆայլը միայն կարդալու համար է և հնարավոր չէ այն պահպանել:\n"
 "Պահպանեք այն այլ անունով:"
 
 #, c-format
@@ -103,7 +119,7 @@ msgid ""
 "\n"
 "It was saved in UTF-8 instead and the setting was modified accordingly."
 msgstr ""
-"ՀՆարավոր չէ պահպանել գրացուցակը “%s”-ում այն գաղտնագրմամբ, որը հատկորոշված է "
+"ՀՆարավոր չէ պահպանել գրացուցակը «%s»-ում այն գաղտնագրմամբ, որը հատկորոշված է "
 "գրացուցակի կարգավորումներում:\n"
 "\n"
 "Փոխարենը՝ այն պահպանվել է UTF-8-ով և համապատասխանաբար կարգավորումը փոփոխվել "
@@ -112,14 +128,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Սխալ՝ գրացուցակը պահպանելիս"
 
-msgid "PO Translation Files"
-msgstr "PO թարգմանության ֆայլեր"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr "Ֆայլը բեռնելու սխալ “%s”: %s:"
 
-msgid "POT Translation Templates"
-msgstr "POT թարգմանության ֆայլեր"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr "չաջակցվող XLIFF տարբերակ (%s)"
 
-msgid "All Translation Files"
-msgstr "Թարգմանության բոլոր ֆայլերը"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr "Կոտրված նշարկում թարգմանության տողում:"
 
 msgid "(Use default language)"
 msgstr "(Օգտ. հիմնական լեզուն)"
@@ -272,7 +291,7 @@ msgstr "Բացել գրացուցակ"
 
 #, c-format
 msgid "File “%s” doesn’t exist."
-msgstr "“%s” ֆայլը գոյություն չունի:"
+msgstr "«%s» ֆայլը գոյություն չունի:"
 
 msgid "Poedit is an easy to use translations editor."
 msgstr "Poedit-ը թարգմանությունների դյուրին խմբագիր է:"
@@ -394,8 +413,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "Չեք կարող գցել մեկ ֆայլից ավելի Poedit-ի պատուհանում:"
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "'%s' ֆայլը հաղորդագրության գրացուցակ չէ:"
+msgid "File “%s” is not a translation file."
+msgstr "“%s” ֆայլը թարգմանության ֆայլ չէ:"
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -531,9 +550,19 @@ msgstr[1] ""
 msgid "The translation is ready for use."
 msgstr "Թարգմանությունը պատրաստ է:"
 
+msgid "Warnings have been disabled."
+msgstr "Զգուշացումներն անջատված են:"
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+"Եթե զգուշացումներն անջատել եք հաճախակի կեղծ տագնապների համար, խնդրում ենք "
+"օրինակի ֆայլը ուղարկել մեզ help@poedit.net հասցեով՝ դրանք լավարկելու համար:"
+
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
-msgstr "Poedit-ը ինքնաբար ուղղել է սխալ բովանդակությունը “%s” ֆայլում:"
+msgstr "Poedit-ը ինքնաբար ուղղել է սխալ բովանդակությունը «%s» ֆայլում:"
 
 msgid ""
 "The file contained duplicate items, which is not allowed in PO files and "
@@ -775,6 +804,10 @@ msgstr "Ամենը"
 #, c-format
 msgid "Form %i"
 msgstr "%i-ից"
+
+#, c-format
+msgid "Form %i (unused)"
+msgstr "Ձև %i (չօգտագործված)"
 
 msgid "Singular"
 msgstr "Եզակի"
@@ -1019,15 +1052,8 @@ msgstr "Գլխավոր"
 msgid "Use translation memory"
 msgstr "Օգտ. թարգմանության հիշողությունը"
 
-msgid "Learn From Files…"
-msgstr "Սովորել ֆայլերից…"
-
-msgid "Learn from files…"
-msgstr "Սովորել ֆայլերից…"
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Վերակայել"
+msgid "Manage…"
+msgstr "Կառավարել…"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1058,6 +1084,28 @@ msgstr "Պահված թարգմանություններ՝"
 msgid "Database size on disk:"
 msgstr "Շտեմարանի չափը՝"
 
+msgid "Import Translation Files…"
+msgstr "Ներմուծել թարգմանության ֆայլերը…"
+
+msgid "Import translation files…"
+msgstr "Ներմուծել թարգմանության ֆայլերը…"
+
+msgid "Import From TMX…"
+msgstr "Ներմուծել TMX-ից…"
+
+msgid "Import from TMX…"
+msgstr "Ներմուծել TMX-ից…"
+
+msgid "Export To TMX…"
+msgstr "Արտահանել TMX…"
+
+msgid "Export to TMX…"
+msgstr "Արտահանել TMX…"
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Վերակայել"
+
 msgid "Select translation files to import"
 msgstr "Ընտրեք ներմուծվող ֆայլերը"
 
@@ -1069,6 +1117,29 @@ msgstr "Թարգմանությունների ներմուծում…"
 
 msgid "Finalizing…"
 msgstr "Ամփոփում…"
+
+msgid "Select TMX files to import"
+msgstr "Ընտրեք TMX ֆայլերը՝ ներմուծելու համար"
+
+msgid "TMX Files"
+msgstr "TMX ֆայլեր"
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr "Թարգմանության հիշողության ներմուծումը «%s»-ից ձախողվեց:"
+
+msgid "Import error"
+msgstr "Ներմուծելու սխալ"
+
+msgid "Exporting translations…"
+msgstr "Թարգմանությունների արտահանում…"
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr "Թարգմանության հիշողության արտահանումը “%s” ձախողվեց:"
+
+msgid "Export error"
+msgstr "Արտահանելու սխալ"
 
 msgid "Reset translation memory"
 msgstr "Վերակայել թարգմանության հիշողությունը"
@@ -1512,11 +1583,17 @@ msgstr "Գտնել նախորդը"
 msgid "&Preferences"
 msgstr "&Կարգավորումներ"
 
-msgid "Display entry &IDs"
-msgstr "Ցուցադրել գրառումների &ID-ները"
+msgid "Show string &ID"
+msgstr "Ցուցադրել տողի &ID-ին"
 
-msgid "Display Entry &IDs"
-msgstr "Ցուցադրել գրառումների &ID-ները"
+msgid "Show String &ID"
+msgstr "Ցուցադրել տողի &ID-ին"
+
+msgid "Show warnings"
+msgstr "Ցուցադրել զգուշացումները"
+
+msgid "Show Warnings"
+msgstr "Ցուցադրել զգուշացումները"
 
 msgid "Sort by &file order"
 msgstr "Խմբավորել ըստ &ֆայլի կարգի"
@@ -1569,11 +1646,11 @@ msgstr "Ցուցադրել վիճակի գոտին"
 msgid "C&atalog"
 msgstr "Գ&րացուցակ"
 
-msgid "&Update from sources"
-msgstr "&Թարմացնել սկզբնականից"
+msgid "&Update from source code"
+msgstr "&Արդիացնել սկզբնականից"
 
-msgid "&Update from Sources"
-msgstr "&Թարմացնել սկզբնականից"
+msgid "&Update from Source Code"
+msgstr "&Արդիացնել սկզբնականից"
 
 msgid "Update from &POT file…"
 msgstr "Թարմացնել &POT ֆայլից…"
@@ -1826,8 +1903,11 @@ msgstr "Վավերացնել"
 msgid "Check for errors in the translation"
 msgstr "Ստուգել թարգմանության սխալները"
 
-msgid "Update"
-msgstr "Թարմացնել"
+msgid "Update from code"
+msgstr "Արդիացնել կոդից"
+
+msgid "Update from Code"
+msgstr "Արդիացնել կոդից"
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Թարմացնել գրացուցակը՝ համաժամեցնել այն սկզբնականի հետ"
@@ -1858,6 +1938,12 @@ msgstr "Հավելել մեկնաբանություն"
 msgid "Add Comment"
 msgstr "Հավելել մեկնաբանություն"
 
+msgid "Delete From Translation Memory"
+msgstr "Ջնջել Թարգմանության հիշողությունից"
+
+msgid "Delete from translation memory"
+msgstr "Ջնջել Թարգմանության հիշողությունից"
+
 msgid "Translation suggestions:"
 msgstr "Թարգմանության առաջարկություններ."
 
@@ -1871,6 +1957,20 @@ msgstr "Չկան համապատասխանություններ"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "Այս տողը գտնվել է Poedit-ի թարգմանության հիշողությունում:"
+
+msgid "The TMX file is malformed."
+msgstr "TMX ֆայլը այլակերպված է"
+
+msgid "No translations were found in the TMX file."
+msgstr "Թարգմանություններ չկան TMX ֆայլում:"
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr "Թարգմանության հիշողության շտեմարանը վնասված է՝ %s (%d):"
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr "Թարգմանության հիշողության սխալ. %s (%d):"
 
 msgid "Cannot create temporary directory."
 msgstr "Հնարավոր չեղավ ստեղծել ժամանակավոր գրացուցակ:"

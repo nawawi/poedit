@@ -104,6 +104,8 @@
   <ItemGroup>
     <ClCompile Include="src\attentionbar.cpp" />
     <ClCompile Include="src\catalog.cpp" />
+    <ClCompile Include="src\catalog_po.cpp" />
+    <ClCompile Include="src\catalog_xliff.cpp" />
     <ClCompile Include="src\cat_sorting.cpp" />
     <ClCompile Include="src\cat_update.cpp" />
     <ClCompile Include="src\chooselang.cpp" />
@@ -148,6 +150,7 @@
     <ClCompile Include="src\syntaxhighlighter.cpp" />
     <ClCompile Include="src\text_control.cpp" />
     <ClCompile Include="src\tm\suggestions.cpp" />
+    <ClCompile Include="src\tm\tmx_io.cpp" />
     <ClCompile Include="src\tm\transmem.cpp" />
     <ClCompile Include="src\unicode_helpers.cpp" />
     <ClCompile Include="src\utility.cpp" />
@@ -161,6 +164,8 @@
   <ItemGroup>
     <ClInclude Include="src\attentionbar.h" />
     <ClInclude Include="src\catalog.h" />
+    <ClInclude Include="src\catalog_po.h" />
+    <ClInclude Include="src\catalog_xliff.h" />
     <ClInclude Include="src\cat_sorting.h" />
     <ClInclude Include="src\cat_update.h" />
     <ClInclude Include="src\chooselang.h" />
@@ -200,6 +205,7 @@
     <ClInclude Include="src\pretranslate.h" />
     <ClInclude Include="src\progressinfo.h" />
     <ClInclude Include="src\propertiesdlg.h" />
+    <ClInclude Include="src\pugixml.h" />
     <ClInclude Include="src\qa_checks.h" />
     <ClInclude Include="src\sidebar.h" />
     <ClInclude Include="src\spellchecking.h" />
@@ -207,6 +213,7 @@
     <ClInclude Include="src\syntaxhighlighter.h" />
     <ClInclude Include="src\text_control.h" />
     <ClInclude Include="src\tm\suggestions.h" />
+    <ClInclude Include="src\tm\tmx_io.h" />
     <ClInclude Include="src\tm\transmem.h" />
     <ClInclude Include="src\unicode_helpers.h" />
     <ClInclude Include="src\utility.h" />

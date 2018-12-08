@@ -2,13 +2,11 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([poedit], [2.0.7], [help@poedit.net])
-PACKAGE_SHORT_VERSION=2.0.7
-AC_SUBST(PACKAGE_SHORT_VERSION)
+AC_INIT([poedit], [2.2], [help@poedit.net])
 
 AC_CONFIG_AUX_DIR([admin])
 AC_CONFIG_MACRO_DIR([admin])
-AC_CONFIG_SRCDIR([poedit.desktop])
+AC_CONFIG_SRCDIR([net.poedit.Poedit.desktop])
 
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -221,6 +219,16 @@ PKG_CHECK_MODULES([LUCENE], [liblucene++ >= 3.0.5],
         ],
         [
             AC_MSG_ERROR([missing Lucene++ library])
+        ])
+
+
+PKG_CHECK_MODULES([PUGIXML], [pugixml >= 1.9],
+        [
+            CXXFLAGS="$CXXFLAGS $PUGIXML_CFLAGS -DHAVE_PUGIXML"
+            AC_SUBST(PUGIXML_LIBS)
+        ],
+        [
+            dnl use bundled copy
         ])
 
 

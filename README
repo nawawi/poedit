@@ -19,8 +19,11 @@ class reference.
  Installing
 ============
 
-Binary easily-installable packages are provided for Windows and macOS and are
-part of many Linux distributions.
+Easily-installable prebuilt binaries are provided for Windows and macOS and
+available from https://poedit.net/download.
+
+Official binaries for Linux are available as a Snap at https://snapcraft.io/poedit
+Most Linux distributions also include native Poedit packages.
 
 
  Installing from sources
@@ -58,8 +61,8 @@ e.g. by setting CPPFLAGS and LDFLAGS appropriately.
 
 You need a full git checkout to build on macOS; see below for details.
 
-After checkout, use the Poedit.xcworkspace workspace and Xcode 6 to build
-Poedit.
+After checkout, use the Poedit.xcworkspace workspace and the latest version of
+Xcode to build Poedit.
 
 There are some additional dependencies on tools not included with macOS.
 They can be installed with Homebrew and macos/Brewfile:
@@ -93,7 +96,7 @@ closing, run the following command:
 On Linux and other Unices, only a subset of submodules is necessary, so you can
 save some time and disk space by checking out only them:
 
-    git submodule update --init deps/json
+    git submodule update --init deps/json deps/pugixml
 
 When building for Unix/Linux, if you get the sources directly from the Git
 repository, some generated files are not present. You have to run the

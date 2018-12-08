@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 08:33-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 10:40\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -49,6 +49,26 @@ msgid "“%s” is not a valid POT file."
 msgstr "\"%s\" nem egy érvényes POT fájl."
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "Hibás fejléc: \"%s\""
+
+msgid "PO Translation Files"
+msgstr "PO fordítási fájlok"
+
+msgid "POT Translation Templates"
+msgstr "POT fordítási sablonok"
+
+msgid "XLIFF Translation Files"
+msgstr "XLIFF fordítási fájlok"
+
+msgid "All Translation Files"
+msgstr "Minden fordítási fájl"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr "“%s” fájl nem támogatott formátum."
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] "%i sor „%s” fájlból nem lett megfelelően betöltve."
@@ -57,10 +77,6 @@ msgstr[1] "%i sorok „%s” fájlból nem lettek megfelelően betöltve."
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
 msgstr "%d sor a “%s” fájlban sérült (nem érvényes %s adat)."
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "Hibás fejléc: \"%s\""
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -116,14 +132,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Hiba a katalógus mentésekor"
 
-msgid "PO Translation Files"
-msgstr "PO fordítási fájlok"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr "Hiba fájl betöltéskor “%s”: %s."
 
-msgid "POT Translation Templates"
-msgstr "POT fordítási sablonok"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr "nem támogatott XLIFF változat (%s)"
 
-msgid "All Translation Files"
-msgstr "Minden fordítási fájl"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr "Törött jelölés a fordítószövegben."
 
 msgid "(Use default language)"
 msgstr "(Alapértelmezett nyelv használata)"
@@ -401,8 +420,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "A Poedit ablakára egyszerre több fájlt nem lehet ráhúzni."
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "„%s” fájl nem üzenet katalógus."
+msgid "File “%s” is not a translation file."
+msgstr "\"%s\" fájl nem fordítási fájl."
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -536,6 +555,17 @@ msgstr[1] "A fordítás használatra kész, de %d bejegyzés még nincs lefordí
 
 msgid "The translation is ready for use."
 msgstr "A fordítás használatra kész."
+
+msgid "Warnings have been disabled."
+msgstr "A figyelmeztetések letiltva."
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+"Ha letiltotta a figyelmeztetéseket a sok hamis pozitív figyelmeztetés miatt, "
+"kérjük, fontolja meg a help@poedit.net címre egy mintafájl küldését, hogy "
+"javíthassuk ezeket."
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -786,6 +816,10 @@ msgstr "Minden"
 msgid "Form %i"
 msgstr "%i. alak"
 
+#, c-format
+msgid "Form %i (unused)"
+msgstr "Form %i (nem használt)"
+
 msgid "Singular"
 msgstr "Egyes szám"
 
@@ -1029,15 +1063,8 @@ msgstr "Általános"
 msgid "Use translation memory"
 msgstr "Fordítási memória használata"
 
-msgid "Learn From Files…"
-msgstr "Beolvasás fájlból…"
-
-msgid "Learn from files…"
-msgstr "Beolvasás fájlból…"
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Törlés"
+msgid "Manage…"
+msgstr "Kezelés…"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1068,6 +1095,28 @@ msgstr "Tárolt fordítások:"
 msgid "Database size on disk:"
 msgstr "Adatbázis méret a lemezen:"
 
+msgid "Import Translation Files…"
+msgstr "Fordítási fájlok importálása…"
+
+msgid "Import translation files…"
+msgstr "Fordítási fájlok importálása…"
+
+msgid "Import From TMX…"
+msgstr "Importálás TMX fájlból…"
+
+msgid "Import from TMX…"
+msgstr "Importálás TMX fájlból…"
+
+msgid "Export To TMX…"
+msgstr "Exportálás TMX fájlba…"
+
+msgid "Export to TMX…"
+msgstr "Exportálás TMX fájlba…"
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Törlés"
+
 msgid "Select translation files to import"
 msgstr "Importálandó fordítás fájlok kiválasztása"
 
@@ -1079,6 +1128,29 @@ msgstr "Fordítások importálása…"
 
 msgid "Finalizing…"
 msgstr "Befejezés…"
+
+msgid "Select TMX files to import"
+msgstr "Válasszon importálandó TMX fájlt"
+
+msgid "TMX Files"
+msgstr "TMX fájlok"
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr "Nem sikerült a fordítási memória importálása ebből: “%s”"
+
+msgid "Import error"
+msgstr "Importálási hiba"
+
+msgid "Exporting translations…"
+msgstr "Fordítások exportálása…"
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr "Nem sikerült a fordítási memória exportálása ide: “%s”"
+
+msgid "Export error"
+msgstr "Exportálás hiba"
 
 msgid "Reset translation memory"
 msgstr "Fordítási memória törlése"
@@ -1523,11 +1595,17 @@ msgstr "Előző keresése"
 msgid "&Preferences"
 msgstr "&Beállítások"
 
-msgid "Display entry &IDs"
-msgstr "Bejegyzés &azonosítók megjelenítése"
+msgid "Show string &ID"
+msgstr "String &ID mutatása"
 
-msgid "Display Entry &IDs"
-msgstr "Bejegyzés &azonosítók megjelenítése"
+msgid "Show String &ID"
+msgstr "String &ID mutatása"
+
+msgid "Show warnings"
+msgstr "Figyelmeztetések mutatása"
+
+msgid "Show Warnings"
+msgstr "Figyelmeztetések mutatása"
 
 msgid "Sort by &file order"
 msgstr "Rendezés &fájlsorrend szerint"
@@ -1580,11 +1658,11 @@ msgstr "Állapotsor megjelenítése"
 msgid "C&atalog"
 msgstr "&Katalógus"
 
-msgid "&Update from sources"
-msgstr "Frissítés a &forrásokból"
+msgid "&Update from source code"
+msgstr "Frissítés a forráskódból"
 
-msgid "&Update from Sources"
-msgstr "Frissítés a &forrásokból"
+msgid "&Update from Source Code"
+msgstr "Frissítés a forráskódból"
 
 msgid "Update from &POT file…"
 msgstr "Frissítés POT fájlból…"
@@ -1836,8 +1914,11 @@ msgstr "Érvényesítés"
 msgid "Check for errors in the translation"
 msgstr "Hibák keresése a fordításban"
 
-msgid "Update"
-msgstr "Frissítés"
+msgid "Update from code"
+msgstr "Frissítés a kódból"
+
+msgid "Update from Code"
+msgstr "Frissítés a kódból"
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Katalógus frissítése - szinkronizálás a forrásokhoz"
@@ -1868,6 +1949,12 @@ msgstr "Hozzászólás"
 msgid "Add Comment"
 msgstr "Hozzászólás"
 
+msgid "Delete From Translation Memory"
+msgstr "Törlés a fordítási memóriából"
+
+msgid "Delete from translation memory"
+msgstr "Törlés a fordítási memóriából"
+
 msgid "Translation suggestions:"
 msgstr "Fordítási javaslatok:"
 
@@ -1881,6 +1968,20 @@ msgstr "Nincs találat"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "Erre a karakterláncra a Poedit fordítási memóriájában találtunk rá."
+
+msgid "The TMX file is malformed."
+msgstr "A TMX fájl formátuma hibás."
+
+msgid "No translations were found in the TMX file."
+msgstr "Nem található fordítás a TMX fájlban."
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr "Fordítási memória adatbázis sérült: %s (%d)."
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr "Fordítási memória hiba: %s (%d)."
 
 msgid "Cannot create temporary directory."
 msgstr "Az ideiglenes fájlok könyvtárát nem lehet létrehozni."

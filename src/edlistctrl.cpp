@@ -145,17 +145,17 @@ public:
 #endif
 
 
-#if wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__)
+#if wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__)&& !defined(__WXOSX__)
 
 class DataViewIconsAdjuster : public wxDataViewValueAdjuster
 {
 public:
     DataViewIconsAdjuster()
     {
-        m_comment = wxArtProvider::GetBitmap("poedit-status-comment");
-        m_commentSel = wxArtProvider::GetBitmap("poedit-status-comment-selected");
-        m_bookmark = wxArtProvider::GetBitmap("poedit-status-bookmark");
-        m_bookmarkSel = wxArtProvider::GetBitmap("poedit-status-bookmark-selected");
+        m_comment = wxArtProvider::GetBitmap("ItemCommentTemplate");
+        m_commentSel = wxArtProvider::GetBitmap("ItemCommentTemplate@inverted");
+        m_bookmark = wxArtProvider::GetBitmap("ItemBookmarkTemplate");
+        m_bookmarkSel = wxArtProvider::GetBitmap("ItemBookmarkTemplate@inverted");
     }
 
     wxVariant MakeHighlighted(const wxVariant& value) const override
@@ -188,13 +188,13 @@ private:
     wxBitmap m_bookmark, m_bookmarkSel;
 };
 
-#endif // wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__)
+#endif // wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__) && !defined(__WXOSX__)
 
 } // anonymous namespace
 
 
 
-PoeditListCtrl::Model::Model(TextDirection appTextDir, wxVisualAttributes visual)
+PoeditListCtrl::Model::Model(TextDirection appTextDir, ColorScheme::Mode visualMode)
     : m_frozen(false),
       m_sourceTextDir(TextDirection::LTR),
       m_transTextDir(TextDirection::LTR),
@@ -204,16 +204,16 @@ PoeditListCtrl::Model::Model(TextDirection appTextDir, wxVisualAttributes visual
 
     // configure items colors & fonts:
 
-    m_clrID = ColorScheme::Get(Color::ItemID, visual);
-    m_clrFuzzy = ColorScheme::Get(Color::ItemFuzzy, visual);
-    m_clrInvalid = ColorScheme::Get(Color::ItemError, visual);
-    m_clrContextFg = ColorScheme::Get(Color::ItemContextFg, visual).GetAsString(wxC2S_HTML_SYNTAX);
-    m_clrContextBg = ColorScheme::Get(Color::ItemContextBg, visual).GetAsString(wxC2S_HTML_SYNTAX);
+    m_clrID = ColorScheme::Get(Color::ItemID, visualMode);
+    m_clrFuzzy = ColorScheme::Get(Color::ItemFuzzy, visualMode);
+    m_clrInvalid = ColorScheme::Get(Color::ItemError, visualMode);
+    m_clrContextFg = ColorScheme::Get(Color::ItemContextFg, visualMode).GetAsString(wxC2S_HTML_SYNTAX);
+    m_clrContextBg = ColorScheme::Get(Color::ItemContextBg, visualMode).GetAsString(wxC2S_HTML_SYNTAX);
 
-    m_iconComment = wxArtProvider::GetBitmap("poedit-status-comment");
-    m_iconBookmark = wxArtProvider::GetBitmap("poedit-status-bookmark");
-    m_iconError = wxArtProvider::GetBitmap("poedit-status-error");
-    m_iconWarning = wxArtProvider::GetBitmap("poedit-status-warning");
+    m_iconComment = wxArtProvider::GetBitmap("ItemCommentTemplate");
+    m_iconBookmark = wxArtProvider::GetBitmap("ItemBookmarkTemplate");
+    m_iconError = wxArtProvider::GetBitmap("StatusError");
+    m_iconWarning = wxArtProvider::GetBitmap("StatusWarning");
 
 #ifdef HAS_BROKEN_NULL_BITMAPS
     wxImage nullimg(m_iconError.GetSize().x, m_iconError.GetSize().y);
@@ -344,41 +344,47 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
         {
             wxString orig;
 #if wxCHECK_VERSION(3,1,1)
-            if (d->HasContext())
+        #ifdef __WXMSW__
+            // Temporary workaround for https://github.com/vslavik/poedit/issues/343 and
+            // https://github.com/vslavik/poedit/issues/481 -- fall back to old style rendering:
+            if (m_appTextDir == TextDirection::LTR || m_sourceTextDir == TextDirection::RTL)
+        #endif
             {
-            #ifdef __WXMSW__
-                if (m_appTextDir == TextDirection::RTL && m_sourceTextDir == TextDirection::LTR)
+                if (d->HasContext())
                 {
-                    // Temporary workaround for https://github.com/vslavik/poedit/issues/343 - fall back to old style rendering:
-                    orig.Printf("[%s] %s", EscapeMarkup(d->GetContext()), EscapeMarkup(d->GetString()));
-                }
-                else
-            #endif
-                {
-                // Work around a problem with GTK+'s coloring of markup that begins with colorizing <span>:
+                    // Work around a problem with GTK+'s coloring of markup that begins with colorizing <span>:
                 #ifdef __WXGTK__
                     #define MARKUP(x) L"\u200B" L##x
                 #else
                     #define MARKUP(x) x
                 #endif
-                orig.Printf(MARKUP("<span bgcolor=\"%s\" color=\"%s\"> %s </span> %s"),
-                            m_clrContextBg, m_clrContextFg,
-                            EscapeMarkup(d->GetContext()), EscapeMarkup(d->GetString()));
+                    orig.Printf(MARKUP("<span bgcolor=\"%s\" color=\"%s\"> %s </span> %s"),
+                        m_clrContextBg, m_clrContextFg,
+                        EscapeMarkup(d->GetContext()), EscapeMarkup(d->GetString()));
+                }
+                else
+                {
+                    orig = EscapeMarkup(d->GetString());
                 }
             }
-            else
+        #ifdef __WXMSW__
+            else // RTL problems, fall back to worse rendering
+        #endif
+#endif
+#if !wxCHECK_VERSION(3,1,1) || defined(__WXMSW__)
+            // non-markup rendering of source column:
             {
-                orig = EscapeMarkup(d->GetString());
+                if (d->HasContext())
+                    orig.Printf("[%s] %s", d->GetContext(), d->GetString());
+                else
+                    orig = d->GetString();
             }
-#else // wx 3.0
-            if (d->HasContext())
-                orig.Printf("[%s] %s", d->GetContext(), d->GetString());
-            else
-                orig = d->GetString();
 #endif
 
             // FIXME: use syntax highlighting or typographic marks
             orig.Replace("\n", " ");
+            orig.Trim(true);
+            orig.Trim(false);
 
             // Add RTL Unicode mark to render bidi texts correctly
             if (m_appTextDir != m_sourceTextDir)
@@ -394,6 +400,8 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
 
             // FIXME: use syntax highlighting or typographic marks
             trans.Replace("\n", " ");
+            trans.Trim(true);
+            trans.Trim(false);
 
             // Add RTL Unicode mark to render bidi texts correctly
             if (m_appTextDir != m_transTextDir)
@@ -489,17 +497,23 @@ void PoeditListCtrl::Model::CreateSortMap()
 PoeditListCtrl::PoeditListCtrl(wxWindow *parent, wxWindowID id, bool dispIDs)
      : wxDataViewCtrl(parent, id, wxDefaultPosition, wxDefaultSize, wxDV_MULTIPLE | wxDV_ROW_LINES | wxNO_BORDER, wxDefaultValidator, "translations list")
 {
+    auto visualMode = ColorScheme::GetWindowMode(this);
     m_displayIDs = dispIDs;
 
     m_appTextDir = (wxTheApp->GetLayoutDirection() == wxLayout_RightToLeft) ? TextDirection::RTL : TextDirection::LTR;
 
-    m_model.reset(new Model(m_appTextDir, GetDefaultAttributes()));
+    m_model.reset(new Model(m_appTextDir, visualMode));
     AssociateModel(m_model.get());
 
     CreateColumns();
     UpdateColumns();
 
     UpdateHeaderAttrs();
+
+#ifdef __WXMSW__
+    if (visualMode == ColorScheme::Dark)
+        SetAlternateRowColour(GetBackgroundColour().ChangeLightness(108));
+#endif
 
     Bind(wxEVT_SIZE, &PoeditListCtrl::OnSize, this);
 }
@@ -516,12 +530,11 @@ void PoeditListCtrl::UpdateHeaderAttrs()
     if (IsWindows10OrGreater())
     {
         // Use the same text color as Explorer's headers use
-        const wxUxThemeEngine* theme = wxUxThemeEngine::GetIfActive();
-        if (theme)
+        if (wxUxThemeIsActive())
         {
             wxUxThemeHandle hTheme(this->GetParent(), L"ItemsView::Header");
             COLORREF clr;
-            HRESULT hr = theme->GetThemeColor(hTheme, HP_HEADERITEM, 0, TMT_TEXTCOLOR, &clr);
+            HRESULT hr = ::GetThemeColor(hTheme, HP_HEADERITEM, 0, TMT_TEXTCOLOR, &clr);
             if (SUCCEEDED(hr))
             {
                 wxItemAttr headerAttr;
@@ -588,14 +601,15 @@ void PoeditListCtrl::CreateColumns()
     m_colID = m_colIcon = m_colSource = m_colTrans = nullptr;
 
 #if defined(__WXMSW__)
-    int iconWidth = wxArtProvider::GetBitmap("poedit-status-error").GetSize().x + 6 /*wxDVC internal padding*/;
+    int iconWidth = wxArtProvider::GetBitmap("StatusError").GetSize().x + 6 /*wxDVC internal padding*/;
 #else
     int iconWidth = PX(16);
 #endif
 
     m_colIcon = AppendBitmapColumn(L"∙", Model::Col_Icon, wxDATAVIEW_CELL_INERT, iconWidth, wxALIGN_CENTER, 0);
-#if wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__)
-    m_colIcon->GetRenderer()->SetValueAdjuster(new DataViewIconsAdjuster);
+#if wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__) && !defined(__WXOSX__)
+    if (ColorScheme::GetWindowMode(this) == ColorScheme::Light)
+        m_colIcon->GetRenderer()->SetValueAdjuster(new DataViewIconsAdjuster());
 #endif
 
     auto sourceRenderer = new DataViewMarkupRenderer(ColorScheme::Get(Color::ItemContextBgHighlighted, this));
@@ -635,6 +649,16 @@ void PoeditListCtrl::UpdateColumns()
                              ? wxString::Format(_(L"Source text — %s"), srclang.DisplayName())
                              : _("Source text");
     m_colSource->SetTitle(sourceTitle);
+
+#ifdef __WXMSW__
+    // Temporary workaround for https://github.com/vslavik/poedit/issues/343 and
+    // https://github.com/vslavik/poedit/issues/481 -- fall back to markup-less rendering
+    // (see also above in PoeditListCtrl::Model::GetValueByRow):
+    dynamic_cast<wxDataViewTextRenderer*>(m_colSource->GetRenderer())->EnableMarkup
+    (
+        m_appTextDir == TextDirection::LTR || srclang.IsRTL()
+    );
+#endif
 
     if (m_model->m_catalog && m_model->m_catalog->HasCapability(Catalog::Cap::Translations))
     {

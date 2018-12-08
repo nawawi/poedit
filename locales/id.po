@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2017-12-05 15:52+0100\n"
-"PO-Revision-Date: 2017-07-27 03:14-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 10:41\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Indonesian\n"
 "Language: id_ID\n"
@@ -49,6 +49,26 @@ msgid "“%s” is not a valid POT file."
 msgstr "\"%s\" bukan berkas POT yang valid."
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "Header cacat: \"%s\""
+
+msgid "PO Translation Files"
+msgstr "Berkas Terjemahan PO"
+
+msgid "POT Translation Templates"
+msgstr "Templat Terjemahan POT"
+
+msgid "XLIFF Translation Files"
+msgstr "Berkas Terjemahan XLIFF"
+
+msgid "All Translation Files"
+msgstr "Semua Berkas Terjemahan"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr "Berkas \"%s\" dalam format yang tidak didukung."
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] "%i baris dari berkas \"%s\" tidak dimuat dengan benar."
@@ -56,10 +76,6 @@ msgstr[0] "%i baris dari berkas \"%s\" tidak dimuat dengan benar."
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
 msgstr "Baris %d dari berkas \"%s\" rusak (data %s tak valid)."
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "Header cacat: \"%s\""
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -115,14 +131,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Gagal menyimpan katalog"
 
-msgid "PO Translation Files"
-msgstr "Berkas Terjemahan PO"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr "Galat saat memuat berkas \"%s\": %s."
 
-msgid "POT Translation Templates"
-msgstr "Templat Terjemahan POT"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr "versi XLIFF yang tidak didukung (%s)"
 
-msgid "All Translation Files"
-msgstr "Semua Berkas Terjemahan"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr "Markup yang rusak di string terjemahan."
 
 msgid "(Use default language)"
 msgstr "(Pakai bahasa bawaan)"
@@ -398,8 +417,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "Anda tak bisa menjatuhkan lebih dari satu berkas pada jendela Poedit."
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "Berkas \"%s\" bukan suatu katalog pesan."
+msgid "File “%s” is not a translation file."
+msgstr "Berkas \"%s\" bukan sebuah berkas terjemahan."
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -530,6 +549,16 @@ msgstr[0] ""
 
 msgid "The translation is ready for use."
 msgstr "Terjemahan siap digunakan."
+
+msgid "Warnings have been disabled."
+msgstr "Peringatan telah dinonaktifkan."
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+"Jika Anda menonaktifkan peringatan karena upaya yang berlebihan, silakan "
+"mengirim sampel file ke help@poedit.net untuk membantu memperbaikinya."
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -776,6 +805,10 @@ msgstr "Segalanya"
 msgid "Form %i"
 msgstr "Formulir %i"
 
+#, c-format
+msgid "Form %i (unused)"
+msgstr "Bentuk %i (tidak terpakai)"
+
 msgid "Singular"
 msgstr "Tunggal"
 
@@ -1019,15 +1052,8 @@ msgstr "Umum"
 msgid "Use translation memory"
 msgstr "Pakai ingatan terjemahan"
 
-msgid "Learn From Files…"
-msgstr "Belajar Dari Berkas…"
-
-msgid "Learn from files…"
-msgstr "Belajar dari berkas…"
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Reset"
+msgid "Manage…"
+msgstr "Mengelola…"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1058,6 +1084,28 @@ msgstr "Terjemahan tersimpan:"
 msgid "Database size on disk:"
 msgstr "Ukuran basis data pada disk:"
 
+msgid "Import Translation Files…"
+msgstr "Impor Berkas Terjemahan…"
+
+msgid "Import translation files…"
+msgstr "Impor berkas terjemahan…"
+
+msgid "Import From TMX…"
+msgstr "Impor Dari TMX…"
+
+msgid "Import from TMX…"
+msgstr "Impor dari TMX…"
+
+msgid "Export To TMX…"
+msgstr "Ekspor Ke TMX…"
+
+msgid "Export to TMX…"
+msgstr "Ekspor ke TMX…"
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Reset"
+
 msgid "Select translation files to import"
 msgstr "Pilih berkas terjemahan yang akan diimpor"
 
@@ -1069,6 +1117,29 @@ msgstr "Mengimpor terjemahan…"
 
 msgid "Finalizing…"
 msgstr "Finalisasi…"
+
+msgid "Select TMX files to import"
+msgstr "Pilih berkas TMX yang akan diimpor"
+
+msgid "TMX Files"
+msgstr "Berkas TMX"
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr "Mengimpor memori terjemahan dari \"%s\" gagal."
+
+msgid "Import error"
+msgstr "Kesalahan impor"
+
+msgid "Exporting translations…"
+msgstr "Mengekspor terjemahan…"
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr "Mengekspor memori terjemahan ke \"%s\" gagal."
+
+msgid "Export error"
+msgstr "Kesalahan ekspor"
 
 msgid "Reset translation memory"
 msgstr "Reset memori terjemahan"
@@ -1511,11 +1582,17 @@ msgstr "Cari Sebelumnya"
 msgid "&Preferences"
 msgstr "&Preferensi"
 
-msgid "Display entry &IDs"
-msgstr "Menampilkan &ID entri"
+msgid "Show string &ID"
+msgstr "Tampilkan &ID string"
 
-msgid "Display Entry &IDs"
-msgstr "Tampilkan &ID Entri"
+msgid "Show String &ID"
+msgstr "Tampilkan &ID String"
+
+msgid "Show warnings"
+msgstr "Tampilkan peringatan"
+
+msgid "Show Warnings"
+msgstr "Tampilkan Peringatan"
 
 msgid "Sort by &file order"
 msgstr "Urutkan berdasar urutan &berkas"
@@ -1568,11 +1645,11 @@ msgstr "Tampilkan bilah status"
 msgid "C&atalog"
 msgstr "K&atalog"
 
-msgid "&Update from sources"
-msgstr "Perbar&ui dari sumber"
+msgid "&Update from source code"
+msgstr "Perbar&ui dari kode sumber"
 
-msgid "&Update from Sources"
-msgstr "Perbar&ui dari Sumber"
+msgid "&Update from Source Code"
+msgstr "Perbar&ui dari Kode Sumber"
 
 msgid "Update from &POT file…"
 msgstr "Mutakhirkan dari berkas &POT…"
@@ -1825,8 +1902,11 @@ msgstr "Validasikan"
 msgid "Check for errors in the translation"
 msgstr "Periksa kesalahan dalam terjemahan"
 
-msgid "Update"
-msgstr "Perbarui"
+msgid "Update from code"
+msgstr "Perbarui dari kode"
+
+msgid "Update from Code"
+msgstr "Perbarui dari Kode"
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Perbarui katalog - mensinkronkan dengan sumber"
@@ -1857,6 +1937,12 @@ msgstr "Tambah komentar"
 msgid "Add Comment"
 msgstr "Tambah Komentar"
 
+msgid "Delete From Translation Memory"
+msgstr "Hapus Dari Memori Terjemahan"
+
+msgid "Delete from translation memory"
+msgstr "Menghapus dari memori terjemahan"
+
 msgid "Translation suggestions:"
 msgstr "Saran terjemahan:"
 
@@ -1870,6 +1956,20 @@ msgstr "Tak Ditemukan Yang Cocok"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "String ini ditemukan dalam memori terjemahan Poedit."
+
+msgid "The TMX file is malformed."
+msgstr "Berkas TMX cacat."
+
+msgid "No translations were found in the TMX file."
+msgstr "Tidak ada terjemahan yang ditemukan dalam berkas TMX."
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr "Basis data memori terjemahan rusak: %s (%d)."
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr "Kesalahan memori terjemahan: %s (%d)."
 
 msgid "Cannot create temporary directory."
 msgstr "Tak bisa membuat direktori sementara."

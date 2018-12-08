@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 08:35-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 11:13\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Kabyle\n"
 "Language: kab_KAB\n"
@@ -49,6 +49,26 @@ msgid "“%s” is not a valid POT file."
 msgstr "“%s” mačči d afaylu POT ameɣtu."
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "Inixef ur yemsil ara akken ilaq:'%s'"
+
+msgid "PO Translation Files"
+msgstr "Ifuyla n tsuqqilt PO"
+
+msgid "POT Translation Templates"
+msgstr "Tineɣrufin n tsuqilt POT"
+
+msgid "XLIFF Translation Files"
+msgstr "Ifuyla n tsuqqilt XLIFF"
+
+msgid "All Translation Files"
+msgstr "Ifuyla merra n tsuqqilt"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr "Afaylu “%s” yesɛa amasal ur netteddu ara."
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] "%i n izirig n ufaylu “%s” ur d-yuli ara akken iwata."
@@ -57,10 +77,6 @@ msgstr[1] "%i n izirigen n ufaylu “%s” ur d-ulin ara akken iwata."
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
 msgstr "Ajerriḍ %d n ufaylu '%s'  yerreẓ (isefka n %s d urmeɣtuyen)."
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "Inixef ur yemsil ara akken ilaq:'%s'"
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -113,14 +129,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Tuccḍa deg usejles n ukaram"
 
-msgid "PO Translation Files"
-msgstr "Ifuyla n tsuqqilt PO"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr "Tuccḍa deg uɛebbi n ufaylu “%s”: %s."
 
-msgid "POT Translation Templates"
-msgstr "Tineɣrufin n tsuqilt POT"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr "lqem (%s) n XLIFF ur itteddu ara"
 
-msgid "All Translation Files"
-msgstr "Ifuyla merra n tsuqqilt"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr "Ticreḍt yerẓen deg uzrar n usuqqel."
 
 msgid "(Use default language)"
 msgstr "(Seqdec tutlayt n lexṣas)"
@@ -396,8 +415,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "Ur tezmireḍ ar ad tserseḍ ugar n yiwen n ufaylu deg wesfaylu n Poedit."
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "Afaylu '%s' mači d akaram n yizen."
+msgid "File “%s” is not a translation file."
+msgstr "Afaylu “%s” mačči d afaylu n tsuqqilt."
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -529,6 +548,16 @@ msgstr[1] ""
 
 msgid "The translation is ready for use."
 msgstr "Tasuqilt tewjed i wseqdec."
+
+msgid "Warnings have been disabled."
+msgstr "Icaɣliyen nsan."
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+"Ma yella tsenseḍ icaɣliyen ɣef sebba n ddeqs n yir tummla, azen-aɣ-d amedya "
+"n ufaylu ar help@poedit.net akken ad tmuddeḍ afus deg usnerni."
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -772,6 +801,10 @@ msgstr "Akk"
 #, c-format
 msgid "Form %i"
 msgstr "Talɣa %i"
+
+#, c-format
+msgid "Form %i (unused)"
+msgstr "Seg %i (ur yettwaseqdac ara)"
 
 msgid "Singular"
 msgstr "Asuf"
@@ -1017,15 +1050,8 @@ msgstr "Amatu"
 msgid "Use translation memory"
 msgstr "Seqdec takatut n tsuqqilt"
 
-msgid "Learn From Files…"
-msgstr "Lmed seg yifuyla…"
-
-msgid "Learn from files…"
-msgstr "Lmed seg yifuyla…"
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Ales awennez"
+msgid "Manage…"
+msgstr "Sefrek…"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1055,6 +1081,28 @@ msgstr "Tisuqqilin yettwaḥerzen :"
 msgid "Database size on disk:"
 msgstr "Tiddi n uzadur n isefka ɣef uḍebsi :"
 
+msgid "Import Translation Files…"
+msgstr "Kter ifuyla n tsuqilt…"
+
+msgid "Import translation files…"
+msgstr "Kter ifuyla n tsuqilt…"
+
+msgid "Import From TMX…"
+msgstr "Kter si TMX…"
+
+msgid "Import from TMX…"
+msgstr "Kter si TMX…"
+
+msgid "Export To TMX…"
+msgstr "Sidefḍ ar TMX…"
+
+msgid "Export to TMX…"
+msgstr "Sidefḍ ar TMX…"
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Ales awennez"
+
 msgid "Select translation files to import"
 msgstr "Fren ifuyla n tsuqqilt ara tketreḍ"
 
@@ -1066,6 +1114,29 @@ msgstr "Akter n tsuqqilin…"
 
 msgid "Finalizing…"
 msgstr "Akemmel…"
+
+msgid "Select TMX files to import"
+msgstr "Fren ifuyla TMX ara tketreḍ"
+
+msgid "TMX Files"
+msgstr "Ifuyla TMX"
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr "Akter n tkatut n tsuqilt si \"%s\" yecceḍ."
+
+msgid "Import error"
+msgstr "Tuccḍa deg ukter"
+
+msgid "Exporting translations…"
+msgstr "Asifeḍ n tsuqilin…"
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr "Akter n tkatut n tsuqilt si \"%s\" yecceḍ."
+
+msgid "Export error"
+msgstr "Tuccḍa g usifeḍ"
 
 msgid "Reset translation memory"
 msgstr "Ales awennez n tkatut n tsuqqilt"
@@ -1192,7 +1263,7 @@ msgid "Pre-translate"
 msgstr "Tasuqilt tuzwirt"
 
 msgid "Only fill in exact matches"
-msgstr "Aččar ḥaca tinmeɣrayin tiseddiyin"
+msgstr "Ččaṛ kan ayen yemṣadan s tseddi"
 
 msgid ""
 "By default, inaccurate results are filled in as well and marked as needing "
@@ -1216,8 +1287,8 @@ msgid ""
 "Pre-translation automatically finds exact or fuzzy matches for untranslated "
 "strings in the translation memory and fills in their translations."
 msgstr ""
-"Tasuqilt tuzwirt tawurmant tettaf di tkatut n isuqilt inmeɣriyen iseddiyen "
-"neɣ imewẓiyen i inekcumen ilmawen akken ad ten-taččar yis-n."
+"Tasuqilt tuzwirt tawurmant tettaf di tkatut n tsuqilt inmeɣriyen iseddiyen "
+"neɣ imewẓiyen i yinekcumen ilmawen akken ad ten-teččar yes-n."
 
 #, c-format
 msgid "%d entry was pre-translated."
@@ -1505,11 +1576,17 @@ msgstr "Nadi uzwir"
 msgid "&Preferences"
 msgstr "&Ismenyifen"
 
-msgid "Display entry &IDs"
-msgstr "Sken ID n inekcumen"
+msgid "Show string &ID"
+msgstr "Sken &ID n uzrir"
 
-msgid "Display Entry &IDs"
-msgstr "Sken ID n inekcumen"
+msgid "Show String &ID"
+msgstr "Sken &ID n uzrir"
+
+msgid "Show warnings"
+msgstr "Sken icaɣliyen"
+
+msgid "Show Warnings"
+msgstr "Sken icaɣliyen"
 
 msgid "Sort by &file order"
 msgstr "Fren s umizzwer n ufaylu"
@@ -1562,11 +1639,11 @@ msgstr "Sken tafeggagt n waddad"
 msgid "C&atalog"
 msgstr "Akaram"
 
-msgid "&Update from sources"
-msgstr "Leqqem seg yiɣbula"
+msgid "&Update from source code"
+msgstr "&Leqqem seg tengalt aɣbalu"
 
-msgid "&Update from Sources"
-msgstr "Leqqem seg yiɣbula"
+msgid "&Update from Source Code"
+msgstr "&Leqqem seg tengalt aɣbalu"
 
 msgid "Update from &POT file…"
 msgstr "Leqqem seg ufaylu POT…"
@@ -1820,8 +1897,11 @@ msgstr "Sentem"
 msgid "Check for errors in the translation"
 msgstr "Selken tuccḍiwin di tsuqqilin"
 
-msgid "Update"
-msgstr "Leqqem"
+msgid "Update from code"
+msgstr "Leqqem seg tengalt"
+
+msgid "Update from Code"
+msgstr "Leqqem seg tengalt"
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Leqqem akaram - Mtawi akked yiɣbula"
@@ -1851,6 +1931,12 @@ msgstr "Rnu awennit"
 msgid "Add Comment"
 msgstr "Rnu awennit"
 
+msgid "Delete From Translation Memory"
+msgstr "Kkes seg tkatut n tsuqilt"
+
+msgid "Delete from translation memory"
+msgstr "Kkes seg tkatut n tsuqilt"
+
 msgid "Translation suggestions:"
 msgstr "Isumar n tsuqqilt :"
 
@@ -1864,6 +1950,20 @@ msgstr "Ur d-nufi ara inmeɣrayen"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "Azrar-agi nufat-id di tkatut n tsuqqilt n Poedit."
+
+msgid "The TMX file is malformed."
+msgstr "Afaylu TMX ur yemsil ara akken iwata."
+
+msgid "No translations were found in the TMX file."
+msgstr "Ulac tisuqilin yettwafen deg ufaylu TMX."
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr "Taffa n yisefka n tkatut n tsuqil texseṛ: %s (%d)."
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr "Tuccḍa di tkatut n tsuqilt: %s (%d)."
 
 msgid "Cannot create temporary directory."
 msgstr "D awezɣi asnulfu n ukaram akudan."

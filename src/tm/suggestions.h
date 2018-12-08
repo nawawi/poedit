@@ -38,6 +38,17 @@
 class SuggestionsBackend;
 class SuggestionsProviderImpl;
 
+/// A query for suggestions
+struct SuggestionQuery
+{
+    /// Language of the source text.
+    Language srclang;
+    /// Language of the desired translation.
+    Language lang;
+    /// Source text.
+    std::wstring source;
+};
+
 
 /// A single translation suggestion
 struct Suggestion
@@ -68,6 +79,9 @@ struct Suggestion
 
     /// Source of the suggestion
     Source source;
+
+    /// Optional ID of the suggestion, for use with up/downvoting
+    std::string id;
 
     bool HasScore() const { return score != 0.0; }
     bool IsExactMatch() const { return score == 1.0; }
@@ -108,16 +122,13 @@ public:
         If no suggestions are found, @a onSuccess is called with an empty
         list as its argument.
 
-        @param backend    Suggestions backend to use, e.g.
-                          TranslationMemory::Get().
-        @param srclang    Language of the source text.
-        @param lang       Language of the desired translation.
-        @param source     Source text.
+        @param backend    Suggestions backend to use, e.g. TranslationMemory::Get().
+        @param q          Source text and its metadata.
      */
-    dispatch::future<SuggestionsList> SuggestTranslation(SuggestionsBackend& backend,
-                                                         const Language& srclang,
-                                                         const Language& lang,
-                                                         const std::wstring& source);
+    dispatch::future<SuggestionsList> SuggestTranslation(SuggestionsBackend& backend, const SuggestionQuery&& q);
+
+    /// Mark a suggestion as good. Called when a suggestion is used.
+    static void Delete(const Suggestion& s);
 
 private:
     std::unique_ptr<SuggestionsProviderImpl> m_impl;
@@ -153,13 +164,12 @@ public:
         If no suggestions are found, @a onSuccess is called with an empty
         list as its argument.
         
-        @param srclang    Language of the source text.
-        @param lang       Language of the desired translation.
-        @param source     Source text.
+        @param q     Source text and its metadata.
      */
-    virtual dispatch::future<SuggestionsList> SuggestTranslation(const Language& srclang,
-                                                                 const Language& lang,
-                                                                 const std::wstring& source) = 0;
+    virtual dispatch::future<SuggestionsList> SuggestTranslation(const SuggestionQuery&& q) = 0;
+
+    /// Delete suggestion with given ID from the database
+    virtual void Delete(const std::string& id) = 0;
 };
 
 #endif // Poedit_suggestions_h

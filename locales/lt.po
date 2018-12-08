@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 08:34-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 10:40\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Lithuanian\n"
 "Language: lt_LT\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && (n%100<=11 || n%100>=19) ? 0 : n"
-"%10>=2 && n%10<=9 && (n%100<=11 || n%100>=19) ? 1 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && (n%100>19 || n%100<11) ? 0 : (n"
+"%10>=2 && n%10<=9) && (n%100>19 || n%100<11) ? 1 : n%1!=0 ? 2: 3);\n"
 "X-Generator: crowdin.com\n"
 "X-Crowdin-Project: poedit\n"
 "X-Crowdin-Language: lt\n"
@@ -21,7 +21,7 @@ msgid "Hide this notification message"
 msgstr "Slėpti šį pranešimą"
 
 msgid "Don’t Show Again"
-msgstr "Daugiau Neberodyti"
+msgstr "Daugiau neberodyti"
 
 msgid "Don’t show again"
 msgstr "Daugiau neberodyti"
@@ -50,6 +50,26 @@ msgid "“%s” is not a valid POT file."
 msgstr "„%s“ nėra tinkamas POT failas."
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "Netinkama antraštė: „%s“"
+
+msgid "PO Translation Files"
+msgstr "PO vertimų failai"
+
+msgid "POT Translation Templates"
+msgstr "POT vertimų šablonai"
+
+msgid "XLIFF Translation Files"
+msgstr ""
+
+msgid "All Translation Files"
+msgstr "Visi vertimų failai"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr ""
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] "Nepavyko perskaityti %i eilutės iš failo „%s“."
@@ -60,10 +80,6 @@ msgstr[3] "Nepavyko perskaityti %i eilučių iš failo „%s“."
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
 msgstr "Eilutė %d iš failo „%s“ sugadinta (netinkami %s duomenys)."
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "Netinkama antraštė: „%s“"
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -115,14 +131,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Klaida išsaugant katalogą"
 
-msgid "PO Translation Files"
-msgstr "PO vertimų failai"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr ""
 
-msgid "POT Translation Templates"
-msgstr "POT vertimų šablonai"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr ""
 
-msgid "All Translation Files"
-msgstr "Visi vertimų failai"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr ""
 
 msgid "(Use default language)"
 msgstr "(Naudoti numatytąją kalbą)"
@@ -399,8 +418,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "Negalite užvilkti daugiau nei vieno failo ant „Poedit“ lango."
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "„%s“ nėra pranešimų katalogo failas."
+msgid "File “%s” is not a translation file."
+msgstr ""
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -450,7 +469,7 @@ msgid "Compiled Translation Files"
 msgstr "Kompiliuoti vertimo failai"
 
 msgid "Export as…"
-msgstr "Iškelti kaip…"
+msgstr "Eksportuoti kaip…"
 
 msgid "HTML Files"
 msgstr "HTML failai"
@@ -468,8 +487,8 @@ msgid ""
 "Translations couldn’t be updated from the source code, because no code was "
 "found in the location specified in the catalog’s Properties."
 msgstr ""
-"Vertimo negalima atnaujinti iš pradinio kodo, nes katalogo parametruose "
-"nurodytoje vietoje nerasta jokio kodo."
+"Vertimo negalima atnaujinti iš pradinių tekstų, nes katalogo parametruose "
+"nurodytoje vietoje nerasta jokių tekstų."
 
 msgid "Entries in the catalog are probably incorrect."
 msgstr "Katalogo įrašai gali būti neteisingi."
@@ -538,6 +557,17 @@ msgstr[3] "Vertimas paruoštas naudoti, bet %d įrašų dar neišversta."
 
 msgid "The translation is ready for use."
 msgstr "Vertimas paruoštas naudoti."
+
+msgid "Warnings have been disabled."
+msgstr "Įspėjimų rodymas išjungtas."
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+"Jei išjungėte perspėjimus dėl didelio klaidingų suveikimų skaičiaus, prašome "
+"atsiųsti adresu help@poedit.net failą su pavyzdžiais, kad padėtume "
+"patobulinti šią funkciją."
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -703,7 +733,7 @@ msgid "References:"
 msgstr "Nuorodos:"
 
 msgid "&Bookmarks"
-msgstr "Ž&ymelės"
+msgstr "Ž&ymės"
 
 #. TRANSLATORS: This is the key shortcut used in menus on Windows, some languages call them differently
 #. TRANSLATORS: Keyboard shortcut for display in Windows menus
@@ -712,19 +742,19 @@ msgstr "Alt+"
 
 #, c-format
 msgid "Set bookmark %i"
-msgstr "Nustatyti žymelę %i"
+msgstr "Nustatyti žymę %i"
 
 #, c-format
 msgid "Go to bookmark %i"
-msgstr "Pereiti į žymelę %i"
+msgstr "Pereiti į žymę %i"
 
 #, c-format
 msgid "Set Bookmark %i"
-msgstr "Nustatyti žymelę %i"
+msgstr "Nustatyti žymę %i"
 
 #, c-format
 msgid "Go to Bookmark %i"
-msgstr "Pereiti į žymelę %i"
+msgstr "Pereiti į žymę %i"
 
 msgid "Hide Sidebar"
 msgstr "Slėpti šoninę juostą"
@@ -786,6 +816,10 @@ msgstr "Viskas"
 #, c-format
 msgid "Form %i"
 msgstr "Forma %i"
+
+#, c-format
+msgid "Form %i (unused)"
+msgstr "Forma %i (nenaudojama)"
 
 msgid "Singular"
 msgstr "Vienaskaita"
@@ -1030,15 +1064,8 @@ msgstr "Bendra"
 msgid "Use translation memory"
 msgstr "Naudoti vertimų atminties pasiūlymus"
 
-msgid "Learn From Files…"
-msgstr "Mokytis iš failų…"
-
-msgid "Learn from files…"
-msgstr "Mokytis iš failų…"
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Iš naujo"
+msgid "Manage…"
+msgstr "Tvarkyti…"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1069,6 +1096,28 @@ msgstr "Išsaugoti vertimai:"
 msgid "Database size on disk:"
 msgstr "Duomenų bazės dydis diske:"
 
+msgid "Import Translation Files…"
+msgstr "Importuoti vertimų failus…"
+
+msgid "Import translation files…"
+msgstr "Importuoti vertimų failus…"
+
+msgid "Import From TMX…"
+msgstr "Importuoti iš TMX…"
+
+msgid "Import from TMX…"
+msgstr "Importuoti iš TMX…"
+
+msgid "Export To TMX…"
+msgstr "Eksportuoti į TMX…"
+
+msgid "Export to TMX…"
+msgstr "Eksportuoti į TMX…"
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Iš naujo"
+
 msgid "Select translation files to import"
 msgstr "Pasirinkite kokius vertimo failus importuosite"
 
@@ -1076,10 +1125,33 @@ msgid "Translation Memory"
 msgstr "Vertimų atmintis"
 
 msgid "Importing translations…"
-msgstr "Įkeliami vertimai…"
+msgstr "Importuojami vertimai…"
 
 msgid "Finalizing…"
 msgstr "Užbaigiama…"
+
+msgid "Select TMX files to import"
+msgstr "Pasirinkite kokius TMX importuosite"
+
+msgid "TMX Files"
+msgstr "TMX failai"
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr "Vertimų atminties importas iš „%s“ nepavyko."
+
+msgid "Import error"
+msgstr "Importavimo klaida"
+
+msgid "Exporting translations…"
+msgstr "Eksportuojami vertimai…"
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr "Vertimų atminties eksportas į „%s“ nepavyko."
+
+msgid "Export error"
+msgstr "Eksporto klaida"
 
 msgid "Reset translation memory"
 msgstr "Atkurti vertimų atmintį"
@@ -1107,7 +1179,7 @@ msgid ""
 "Source code extractors are used to find translatable strings in the source "
 "code files and extract them so that they can be translated."
 msgstr ""
-"Pradinio kodo ištraukėjai naudojami verstinų eilučių suradimui pradiniuose "
+"Pradinio teksto ištraukėjai naudojami verstinų eilučių suradimui pradiniuose "
 "failuose bei išgavimui taip, kad jas būtų galima išversti."
 
 msgid "Custom Extractors:"
@@ -1179,7 +1251,7 @@ msgid "Wrap at:"
 msgstr "Kelti:"
 
 msgid "Preserve formatting of existing files"
-msgstr "Išsaugoti esamų failų formatavimą"
+msgstr "Išlaikyti esamą failų formatavimą"
 
 msgid "Advanced"
 msgstr "Papildomai"
@@ -1528,11 +1600,17 @@ msgstr "Surasti ankstesnį"
 msgid "&Preferences"
 msgstr "&Nustatymai"
 
-msgid "Display entry &IDs"
-msgstr "Rodyti įrašų &identifikatorius"
+msgid "Show string &ID"
+msgstr "Rodyti eilutės &ID"
 
-msgid "Display Entry &IDs"
-msgstr "Rodyti įrašų &identifikatorius"
+msgid "Show String &ID"
+msgstr "Rodyti eilutės &ID"
+
+msgid "Show warnings"
+msgstr "Rodyti įspėjimus"
+
+msgid "Show Warnings"
+msgstr "Rodyti įspėjimus"
 
 msgid "Sort by &file order"
 msgstr "Rikiuoti pagal eiliškumą &faile"
@@ -1541,16 +1619,16 @@ msgid "Sort by &File Order"
 msgstr "Rikiuoti pagal eiliškumą &faile"
 
 msgid "Sort by &source"
-msgstr "Rikiuoti pagal &pradinį tekstą"
+msgstr "Rikiuoti pagal „&Pradinis tekstas“"
 
 msgid "Sort by &Source"
-msgstr "Rikiuoti pagal &pradinį tekstą"
+msgstr "Rikiuoti pagal „&Pradinis tekstas“"
 
 msgid "Sort by &translation"
-msgstr "Rikiuoti pagal &vertimą"
+msgstr "Rikiuoti pagal „&Vertimas“"
 
 msgid "Sort by &Translation"
-msgstr "Rikiuoti pagal &vertimą"
+msgstr "Rikiuoti pagal „&Vertimas“"
 
 msgid "&Group by context"
 msgstr "&Grupuoti pagal kontekstą"
@@ -1585,11 +1663,11 @@ msgstr "Rodyti būsenos juostą"
 msgid "C&atalog"
 msgstr "K&atalogas"
 
-msgid "&Update from sources"
-msgstr "&Atnaujinti iš pradinių tekstų"
+msgid "&Update from source code"
+msgstr "Atna&ujinti iš pradinių tekstų"
 
-msgid "&Update from Sources"
-msgstr "&Atnaujinti iš pradinių tekstų"
+msgid "&Update from Source Code"
+msgstr "Atna&ujinti iš pradinių tekstų"
 
 msgid "Update from &POT file…"
 msgstr "Atnaujinti iš &POT failo…"
@@ -1610,10 +1688,10 @@ msgid "&Purge Deleted Translations"
 msgstr "&Pašalinti ištrintus vertimus"
 
 msgid "&Validate translations"
-msgstr "&Tvirtinti vertimą"
+msgstr "Pa&tikrinti vertimą"
 
 msgid "&Validate Translations"
-msgstr "&Tvirtinti vertimą"
+msgstr "Pa&tikrinti vertimą"
 
 msgid "&Properties…"
 msgstr "&Savybės…"
@@ -1696,7 +1774,7 @@ msgid ""
 "of keywords, %F to list of input files,\n"
 "%C to charset flag (see below)."
 msgstr ""
-"Tai yra komanda, paleidžianti pradinio kodo ištraukėją.\n"
+"Tai yra komanda, paleidžianti pradinio teksto ištraukėją.\n"
 "%o bus pakeistas išvesties failo pavadinimu, %K raktažodžių\n"
 "sąrašu, %F įvesties failų sąrašu, \n"
 "%C koduotės žymomis (žiūrėti aukščiau)."
@@ -1837,13 +1915,16 @@ msgid "Save catalog"
 msgstr "Išsaugoti katalogą"
 
 msgid "Validate"
-msgstr "Patvirtinti"
+msgstr "Patikrinti"
 
 msgid "Check for errors in the translation"
 msgstr "Tikrinti ar nėra vertimo klaidų"
 
-msgid "Update"
-msgstr "Atnaujinti"
+msgid "Update from code"
+msgstr "Atnaujinti iš pradinių tekstų"
+
+msgid "Update from Code"
+msgstr "Atnaujinti iš pradinių tekstų"
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Atnaujinti katalogą - sinchronizuoti jį su pradiniais tekstais"
@@ -1874,6 +1955,12 @@ msgstr "Pridėti komentarą"
 msgid "Add Comment"
 msgstr "Pridėti komentarą"
 
+msgid "Delete From Translation Memory"
+msgstr "Ištrinti iš vertimų atminties"
+
+msgid "Delete from translation memory"
+msgstr "Ištrinti iš vertimų atminties"
+
 msgid "Translation suggestions:"
 msgstr "Vertimų siūlymai:"
 
@@ -1887,6 +1974,20 @@ msgstr "Atitikmenų nerasta"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "Ši eilutė buvo rasta „Poedit“ vertimų atmintyje."
+
+msgid "The TMX file is malformed."
+msgstr "TMX failas yra neteisingas."
+
+msgid "No translations were found in the TMX file."
+msgstr "TMX faile nerasta vertimų."
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr "Sugadinta vertimų atminties duomenų bazė: %s (%d)."
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr "Vertimų atminties klaida: %s (%d)."
 
 msgid "Cannot create temporary directory."
 msgstr "Sukurti laikino aplanko nepavyko."
@@ -1941,7 +2042,7 @@ msgid ""
 msgstr ""
 "„Gettext“ sistemoje įrašai vertimui nėra pridedami rankiniu būdu, bet "
 "automatiškai išgaunami\n"
-"iš pradinio kodo. Tokiu būdu jie lieka naujausi ir tikslūs.\n"
+"iš pradinio teksto. Tokiu būdu jie lieka naujausi ir tikslūs.\n"
 "Vertėjai paprastai naudoja PO šablono failus (POT), kuriuos sukuria programų "
 "autoriai."
 
@@ -1959,13 +2060,13 @@ msgstr "Paimti verčiamas eilutes iš esamo POT šablono."
 
 msgid ""
 "You can also extract translatable strings directly from the source code:"
-msgstr "Taipogi galite išgauti verstinas eilutes tiesiai iš pradinio kodo:"
+msgstr "Taipogi galite išgauti verstinas eilutes tiesiai iš pradinių tekstų:"
 
 msgid "Extract from sources"
 msgstr "Išgauti iš pradinių tekstų"
 
 msgid "Configure source code extraction in Properties."
-msgstr "Pradinio kodo ištraukimą galite sukonfigūruoti savybėse."
+msgstr "Pradinių tekstų ištraukimą sukonfigūruokite Nustatymuose."
 
 msgid "Sync"
 msgstr "Sinchronizuoti"

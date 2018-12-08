@@ -179,6 +179,15 @@ public:
             }
         }
 
+        if (u_hasBinaryProperty(s_last, UCHAR_QUOTATION_MARK) || (!s_punct && u_hasBinaryProperty(t_last, UCHAR_QUOTATION_MARK)))
+        {
+            // quoted fragments can move around, e.g., so ignore quotes in reporting:
+            //      >> Invalid value for ‘{fieldName}’​ field
+            //      >> Valor inválido para el campo ‘{fieldName}’
+            // TODO: count quote characters to check if used correctly in translation; don't check position
+            return false;
+        }
+
         if (s_punct && !t_punct)
         {
             item->SetIssue(CatalogItem::Issue::Warning,
@@ -261,6 +270,12 @@ private:
                 default:
                     break;
             }
+        }
+        else if (m_lang == "el")
+        {
+            // In Greek, questions end with ';' and not '?'.
+            if (src == '?')
+                return trans == ';';
         }
 
         return false;

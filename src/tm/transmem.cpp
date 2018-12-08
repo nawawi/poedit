@@ -27,12 +27,14 @@
 
 #include "catalog.h"
 #include "errors.h"
+#include "str_helpers.h"
 #include "utility.h"
 
 #include <wx/stdpaths.h>
 #include <wx/utils.h>
 #include <wx/dir.h>
 #include <wx/filename.h>
+#include <wx/translation.h>
 
 #include <time.h>
 #include <mutex>
@@ -72,15 +74,24 @@ using namespace Lucene;
 namespace
 {
 
-#define CATCH_AND_RETHROW_EXCEPTION                                 \
-    catch (LuceneException& e)                                      \
-    {                                                               \
-        throw Exception(wxString::Format("%s (%d)",                 \
-                        e.getError(), (int)e.getType()));           \
-    }                                                               \
-    catch (std::exception& e)                                       \
-    {                                                               \
-        throw Exception(e.what());                                  \
+#define CATCH_AND_RETHROW_EXCEPTION                                                                             \
+    catch (LuceneException& e)                                                                                  \
+    {                                                                                                           \
+        switch (e.getType())                                                                                    \
+        {                                                                                                       \
+            case LuceneException::CorruptIndex:                                                                 \
+            case LuceneException::FileNotFound:                                                                 \
+            case LuceneException::NoSuchDirectory:                                                              \
+                throw Exception(wxString::Format(_("Translation memory database is corrupted: %s (%d)."),       \
+                                                 e.getError(), (int)e.getType()));                              \
+            default:                                                                                            \
+                throw Exception(wxString::Format(_("Translation memory error: %s (%d)."),                       \
+                                                 e.getError(), (int)e.getType()));                              \
+        }                                                                                                       \
+    }                                                                                                           \
+    catch (std::exception& e)                                                                                   \
+    {                                                                                                           \
+        throw Exception(e.what());                                                                              \
     }
 
 
@@ -206,6 +217,9 @@ public:
 
     SuggestionsList Search(const Language& srclang, const Language& lang,
                            const std::wstring& source);
+
+    void ExportData(TranslationMemory::IOInterface& destination);
+    void ImportData(std::function<void(TranslationMemory::IOInterface&)> source);
 
     std::shared_ptr<TranslationMemory::Writer> GetWriter() { return m_writerAPI; }
 
@@ -353,6 +367,7 @@ void PerformSearch(IndexSearcherPtr searcher,
             {
                 time_t ts = DateField::stringToTime(doc->get(L"created"));
                 Suggestion r {t, score, int(ts)};
+                r.id = StringUtils::toUTF8(doc->get(L"uuid"));
                 results.push_back(r);
             }
         }
@@ -448,6 +463,7 @@ SuggestionsList TranslationMemoryImpl::Search(const Language& srclang,
                 {
                     time_t ts = DateField::stringToTime(doc->get(L"created"));
                     Suggestion r {t, score, int(ts)};
+                    r.id = StringUtils::toUTF8(doc->get(L"uuid"));
                     results.push_back(r);
                 }
             }
@@ -460,6 +476,37 @@ SuggestionsList TranslationMemoryImpl::Search(const Language& srclang,
     {
         return SuggestionsList();
     }
+}
+
+
+void TranslationMemoryImpl::ExportData(TranslationMemory::IOInterface& destination)
+{
+    try
+    {
+        auto reader = m_mng->Reader();
+        int32_t numDocs = reader->numDocs();
+        for (int32_t i = 0; i < numDocs; i++)
+        {
+            auto doc = reader->document(i);
+            destination.Insert
+            (
+            	Language::TryParse(doc->get(L"srclang")),
+                Language::TryParse(doc->get(L"lang")),
+                get_text_field(doc, L"source"),
+                get_text_field(doc, L"trans"),
+                DateField::stringToTime(doc->get(L"created"))
+            );
+        }
+    }
+    CATCH_AND_RETHROW_EXCEPTION
+}
+
+
+void TranslationMemoryImpl::ImportData(std::function<void(TranslationMemory::IOInterface&)> source)
+{
+    auto writer = TranslationMemory::Get().GetWriter();
+    source(*writer);
+    writer->Commit();
 }
 
 
@@ -504,10 +551,14 @@ public:
     }
 
     void Insert(const Language& srclang, const Language& lang,
-                const std::wstring& source, const std::wstring& trans) override
+                const std::wstring& source, const std::wstring& trans,
+                time_t creationTime) override
     {
         if (!lang.IsValid() || !srclang.IsValid() || lang == srclang)
             return;
+
+        if (creationTime == 0)
+            creationTime = time(NULL);
 
         // Compute unique ID for the translation:
 
@@ -531,7 +582,7 @@ public:
                                       Field::STORE_YES, Field::INDEX_NOT_ANALYZED));
             doc->add(newLucene<Field>(L"v", L"1",
                                       Field::STORE_YES, Field::INDEX_NO));
-            doc->add(newLucene<Field>(L"created", DateField::timeToString(time(NULL)),
+            doc->add(newLucene<Field>(L"created", DateField::timeToString(creationTime),
                                       Field::STORE_YES, Field::INDEX_NO));
             doc->add(newLucene<Field>(L"srclang", srclang.WCode(),
                                       Field::STORE_YES, Field::INDEX_NOT_ANALYZED));
@@ -547,6 +598,12 @@ public:
         CATCH_AND_RETHROW_EXCEPTION
     }
 
+    void Insert(const Language& srclang, const Language& lang,
+                const std::wstring& source, const std::wstring& trans) override
+    {
+        Insert(srclang, lang, source, trans, 0);
+    }
+
     void Insert(const Language& srclang, const Language& lang, const CatalogItemPtr& item) override
     {
         if (!lang.IsValid() || !srclang.IsValid())
@@ -556,15 +613,31 @@ public:
         if (item->HasError())
             return;
 
-        // can't handle plurals yet (TODO?)
-        if (item->HasPlural())
-            return;
-
         // ignore untranslated or unfinished translations
         if (item->IsFuzzy() || !item->IsTranslated())
             return;
 
-        Insert(srclang, lang, item->GetString().ToStdWstring(), item->GetTranslation().ToStdWstring());
+        // always store at least the singular translation
+        Insert(srclang, lang, str::to_wstring(item->GetString()), str::to_wstring(item->GetTranslation()));
+
+        // for plurals, try to support at least the simpler cases, with nplurals <= 2
+        if (item->HasPlural())
+        {
+            switch (lang.nplurals())
+            {
+                case 1:
+                    // e.g. Chinese, Japanese; store translation for both singular and plural
+                    Insert(srclang, lang, str::to_wstring(item->GetPluralString()), str::to_wstring(item->GetTranslation()));
+                    break;
+                case 2:
+                    // e.g. Germanic or Romanic languages, same 2 forms as English
+                    Insert(srclang, lang, str::to_wstring(item->GetPluralString()), str::to_wstring(item->GetTranslation(1)));
+                    break;
+                default:
+                    // not supported, only singular stored above
+                    break;
+            }
+        }
     }
 
     void Insert(const CatalogPtr& cat) override
@@ -581,6 +654,15 @@ public:
             // much useful translations as we can.
             Insert(srclang, lang, item);
         }
+    }
+
+    void Delete(const std::string& uuid) override
+    {
+        try
+        {
+            m_writer->deleteDocuments(newLucene<Term>(L"uuid", StringUtils::toUnicode(uuid)));
+        }
+        CATCH_AND_RETHROW_EXCEPTION
     }
 
     void DeleteAll() override
@@ -669,18 +751,37 @@ SuggestionsList TranslationMemory::Search(const Language& srclang,
     return m_impl->Search(srclang, lang, source);
 }
 
-dispatch::future<SuggestionsList> TranslationMemory::SuggestTranslation(const Language& srclang,
-                                                                        const Language& lang,
-                                                                        const std::wstring& source)
+dispatch::future<SuggestionsList> TranslationMemory::SuggestTranslation(const SuggestionQuery&& q)
 {
     try
     {
-        return dispatch::make_ready_future(Search(srclang, lang, source));
+        return dispatch::make_ready_future(Search(q.srclang, q.lang, q.source));
     }
     catch (...)
     {
         return dispatch::make_exceptional_future_from_current<SuggestionsList>();
     }
+}
+
+void TranslationMemory::Delete(const std::string& id)
+{
+    auto tm = TranslationMemory::Get().GetWriter();
+    tm->Delete(id);
+    tm->Commit();
+}
+
+void TranslationMemory::ExportData(IOInterface& destination)
+{
+    if (!m_impl)
+        std::rethrow_exception(m_error);
+    return m_impl->ExportData(destination);
+}
+
+void TranslationMemory::ImportData(std::function<void(IOInterface&)> source)
+{
+    if (!m_impl)
+        std::rethrow_exception(m_error);
+    return m_impl->ImportData(source);
 }
 
 std::shared_ptr<TranslationMemory::Writer> TranslationMemory::GetWriter()

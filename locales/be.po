@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 08:33-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 10:39\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Belarusian\n"
 "Language: be_BY\n"
@@ -51,6 +51,26 @@ msgid "“%s” is not a valid POT file."
 msgstr "\"%s\" не з'яўляецца карэктным файлам POT."
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "Няправільны загаловак: “%s”"
+
+msgid "PO Translation Files"
+msgstr "Файлы перакладу PO"
+
+msgid "POT Translation Templates"
+msgstr "Шаблоны перакладу POT"
+
+msgid "XLIFF Translation Files"
+msgstr ""
+
+msgid "All Translation Files"
+msgstr "Усе файлы перакладаў"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr ""
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] "%i радок файла \"%s\" быў загружаны некарэктна."
@@ -61,10 +81,6 @@ msgstr[3] "%i радкоў файла \"%s\" былі загружаныя не�
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
 msgstr "Радок %d файла \"%s\" пашкоджаны (некарэктныя даныя %s)."
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "Пашкоджаны загаловак: “%s”"
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -119,14 +135,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Памылка захавання каталога"
 
-msgid "PO Translation Files"
-msgstr "Файлы перакладу PO"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr ""
 
-msgid "POT Translation Templates"
-msgstr "Шаблоны перакладу POT"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr ""
 
-msgid "All Translation Files"
-msgstr "Усе файлы перакладаў"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr ""
 
 msgid "(Use default language)"
 msgstr "(Карыстацца мовай па змаўчанні)"
@@ -400,8 +419,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "Нельга перацягваць некалькі файлаў у акно Poedit."
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "Файл \"%s\" не з'яўляецца каталогам паведамленняў."
+msgid "File “%s” is not a translation file."
+msgstr ""
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -542,6 +561,17 @@ msgstr[3] ""
 
 msgid "The translation is ready for use."
 msgstr "Пераклад гатовы да выкарыстання."
+
+msgid "Warnings have been disabled."
+msgstr "Папярэджанні былі адключаныя."
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+"Калі вы адключылі папярэджанні з-за ілжывых апавяшчэнняў, калі ласка, "
+"накіруйце нам узор файла на адрас help@poedit.net, каб мы маглі высветліць "
+"прычыну гэтага."
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -795,6 +825,10 @@ msgstr "Усё"
 msgid "Form %i"
 msgstr "Форма %i"
 
+#, c-format
+msgid "Form %i (unused)"
+msgstr "Форма %i (не выкарыстоўваецца)"
+
 msgid "Singular"
 msgstr "Адзіночны лік"
 
@@ -1039,15 +1073,8 @@ msgstr "Агульныя"
 msgid "Use translation memory"
 msgstr "Выкарыстоўваць памяць перакладаў"
 
-msgid "Learn From Files…"
-msgstr "Вывучыць з файлаў…"
-
-msgid "Learn from files…"
-msgstr "Вывучыць з файлаў…"
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Скінуць"
+msgid "Manage…"
+msgstr "Кіраванне…"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1078,6 +1105,28 @@ msgstr "Захаваныя пераклады:"
 msgid "Database size on disk:"
 msgstr "Памер базы даных на дыску:"
 
+msgid "Import Translation Files…"
+msgstr "Імпарт файлаў перакладу…"
+
+msgid "Import translation files…"
+msgstr "Імпарт файлаў перакладу…"
+
+msgid "Import From TMX…"
+msgstr "Імпарт з TMX…"
+
+msgid "Import from TMX…"
+msgstr "Імпарт з TMX…"
+
+msgid "Export To TMX…"
+msgstr "Экспарт у TMX…"
+
+msgid "Export to TMX…"
+msgstr "Экспарт у TMX…"
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Скінуць"
+
 msgid "Select translation files to import"
 msgstr "Выберыце файлы перакладу для імпартавання"
 
@@ -1089,6 +1138,29 @@ msgstr "Імпартаванне перакладаў…"
 
 msgid "Finalizing…"
 msgstr "Завяршэнне…"
+
+msgid "Select TMX files to import"
+msgstr "Выберыце файлы TMX для імпарту"
+
+msgid "TMX Files"
+msgstr "Файлы TMX"
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr "Не атрымалася імпартаваць файлы перакладу ў “%s”."
+
+msgid "Import error"
+msgstr "Памылка імпартавання"
+
+msgid "Exporting translations…"
+msgstr "Экспартаванне перакладаў…"
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr "Не атрымалася экспартаваць файлы перакладу ў “%s”."
+
+msgid "Export error"
+msgstr "Памылка экспарту"
 
 msgid "Reset translation memory"
 msgstr "Скінуць памяць перакладаў"
@@ -1537,11 +1609,17 @@ msgstr "Знайсці папярэдні"
 msgid "&Preferences"
 msgstr "&Налады"
 
-msgid "Display entry &IDs"
-msgstr "Паказваць ну&мары радкоў"
+msgid "Show string &ID"
+msgstr "Паказваць &ID радка"
 
-msgid "Display Entry &IDs"
-msgstr "Паказваць ну&мары радкоў"
+msgid "Show String &ID"
+msgstr "Паказваць &ID радка"
+
+msgid "Show warnings"
+msgstr "Паказаць папярэджанні"
+
+msgid "Show Warnings"
+msgstr "Паказаць папярэджанні"
 
 msgid "Sort by &file order"
 msgstr "Сартаваць як у &файле"
@@ -1594,10 +1672,10 @@ msgstr "Паказаць радок стану"
 msgid "C&atalog"
 msgstr "К&аталог"
 
-msgid "&Update from sources"
+msgid "&Update from source code"
 msgstr "&Абнавіць з зыходнага кода"
 
-msgid "&Update from Sources"
+msgid "&Update from Source Code"
 msgstr "&Абнавіць з зыходнага кода"
 
 msgid "Update from &POT file…"
@@ -1852,8 +1930,11 @@ msgstr "Праверыць"
 msgid "Check for errors in the translation"
 msgstr "Праверыць наяўнасць памылак у перакладзе"
 
-msgid "Update"
-msgstr "Абнавіць"
+msgid "Update from code"
+msgstr "Абнавіць з кода"
+
+msgid "Update from Code"
+msgstr "Абнавіць з кода"
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Абнавіць каталог - сінхранізаваць яго з зыходнымі файламі"
@@ -1884,6 +1965,12 @@ msgstr "Дадаць каментар"
 msgid "Add Comment"
 msgstr "Дадаць каментар"
 
+msgid "Delete From Translation Memory"
+msgstr "Выдаліць з памяці перакладаў"
+
+msgid "Delete from translation memory"
+msgstr "Выдаліць з памяці перакладаў"
+
 msgid "Translation suggestions:"
 msgstr "Варыянты перакладу:"
 
@@ -1897,6 +1984,20 @@ msgstr "Супадзенняў не знойдзена"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "Гэты радок быў знойдзены ў памяці перакладаў Poedit."
+
+msgid "The TMX file is malformed."
+msgstr "Няправільны файл TMX."
+
+msgid "No translations were found in the TMX file."
+msgstr "Пераклады не знойдзеныя ў файле TMX."
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr "База даных памяці перакладаў пашкоджаная: %s (%d)."
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr "Памылка памяці перакладаў: %s (%d)."
 
 msgid "Cannot create temporary directory."
 msgstr "Не атрымалася стварыць часовы каталог."

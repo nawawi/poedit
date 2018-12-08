@@ -96,11 +96,10 @@ ManagerFrame::ManagerFrame() :
     // De-uglify the toolbar a bit on Windows 10:
     if (IsWindows10OrGreater())
     {
-        const wxUxThemeEngine* theme = wxUxThemeEngine::GetIfActive();
-        if (theme)
+        if (wxUxThemeIsActive())
         {
             wxUxThemeHandle hTheme(tb, L"ExplorerMenu::Toolbar");
-            tb->SetBackgroundColour(wxRGBToColour(theme->GetThemeSysColor(hTheme, COLOR_WINDOW)));
+            tb->SetBackgroundColour(wxRGBToColour(::GetThemeSysColor(hTheme, COLOR_WINDOW)));
         }
     }
 #endif
@@ -211,16 +210,19 @@ static void AddCatalogToList(wxListCtrl *list, int i, int id, const wxString& fi
 
         // FIXME: don't re-load the catalog if it's already loaded in the
         //        editor, reuse loaded instance
-        Catalog cat(file);
-        cat.GetStatistics(&all, &fuzzy, &badtokens, &untranslated, NULL);
-        modtime = wxFileModificationTime(file);
-        lastmodified = cat.Header().RevisionDate;
-        cfg->Write(key + "timestamp", (long)modtime);
-        cfg->Write(key + "all", (long)all);
-        cfg->Write(key + "fuzzy", (long)fuzzy);
-        cfg->Write(key + "badtokens", (long)badtokens);
-        cfg->Write(key + "untranslated", (long)untranslated);
-        cfg->Write(key + "lastmodified", lastmodified);
+        auto cat = Catalog::Create(file);
+        if (cat)
+        {
+            cat->GetStatistics(&all, &fuzzy, &badtokens, &untranslated, NULL);
+            modtime = wxFileModificationTime(file);
+            lastmodified = cat->Header().RevisionDate;
+            cfg->Write(key + "timestamp", (long)modtime);
+            cfg->Write(key + "all", (long)all);
+            cfg->Write(key + "fuzzy", (long)fuzzy);
+            cfg->Write(key + "badtokens", (long)badtokens);
+            cfg->Write(key + "untranslated", (long)untranslated);
+            cfg->Write(key + "lastmodified", lastmodified);
+        }
     }
 
     int icon;
@@ -474,7 +476,7 @@ void ManagerFrame::OnUpdateProject(wxCommandEvent&)
             }
             else
             {
-                auto cat = std::make_shared<Catalog>(f);
+                auto cat = std::make_shared<POCatalog>(f);
                 UpdateResultReason reason;
                 if (PerformUpdateFromSources(this, cat, reason, Update_DontShowSummary))
                 {

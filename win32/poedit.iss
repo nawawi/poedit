@@ -30,8 +30,7 @@
 
 #include "../" + CONFIG + "/git_build_number.h"
 
-#define VERSION          "2.0.7"
-#define VERSION_FULL     "2.0.7"
+#define VERSION          "2.2"
 #define VERSION_WIN      VERSION + "." + Str(POEDIT_GIT_BUILD_NUMBER)
 
 #ifndef CRT_REDIST
@@ -46,7 +45,7 @@ OutputBaseFilename=Poedit-{#VERSION_FULL}-setup
 OutputDir=win32\distrib-{#CONFIG}-{#VERSION_FULL}
 
 AppName=Poedit
-AppVerName=Poedit {#VERSION_FULL}
+AppVerName=Poedit {#VERSION}
 
 PrivilegesRequired=none
 ChangesAssociations=true
@@ -69,12 +68,12 @@ AllowUNCPath=true
 InternalCompressLevel=ultra
 AppID={{68EB2C37-083A-4303-B5D8-41FA67E50B8F}
 VersionInfoVersion={#VERSION_WIN}
-VersionInfoTextVersion={#VERSION_FULL}
+VersionInfoTextVersion={#VERSION}
 AppCopyright=Copyright © 1999-2018 Vaclav Slavik
 AppPublisher=Vaclav Slavik
 AppSupportURL=https://poedit.net/support
 AppUpdatesURL=https://poedit.net/download
-AppVersion={#VERSION_FULL}
+AppVersion={#VERSION}
 AppContact=help@poedit.net
 UninstallDisplayIcon={app}\Poedit.exe
 UninstallDisplayName=Poedit
@@ -91,7 +90,7 @@ VersionInfoDescription=Poedit Installer
 VersionInfoCopyright=Copyright © 1999-2018 Vaclav Slavik
 VersionInfoProductName=Poedit
 VersionInfoProductVersion={#VERSION_WIN}
-VersionInfoProductTextVersion={#VERSION_FULL}
+VersionInfoProductTextVersion={#VERSION}
 DisableDirPage=auto
 
 [Files]
@@ -143,6 +142,12 @@ Root: "HKCR"; Subkey: ".pot"; ValueType: string; ValueData: "Poedit.POT"; Flags:
 Root: "HKCR"; Subkey: "Poedit.POT"; ValueType: string; ValueData: "Translation Template"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.POT"; ValueType: string; ValueName: "FriendlyTypeName"; ValueData: "@{app}\Poedit.exe,-224"; Flags: uninsdeletekey noerror
 Root: "HKCR"; Subkey: "Poedit.POT\Shell\Open\Command"; ValueType: string; ValueData: """{app}\Poedit.exe"" ""%1"""; Flags: uninsdeletevalue noerror
+
+Root: "HKCR"; Subkey: ".xlf"; ValueType: string; ValueData: "Poedit.XLIFF"; Flags: noerror
+Root: "HKCR"; Subkey: ".xliff"; ValueType: string; ValueData: "Poedit.XLIFF"; Flags: noerror
+Root: "HKCR"; Subkey: "Poedit.XLIFF"; ValueType: string; ValueData: "XLIFF Translation"; Flags: uninsdeletekey noerror
+Root: "HKCR"; Subkey: "Poedit.XLIFF"; ValueType: string; ValueName: "FriendlyTypeName"; ValueData: "@{app}\Poedit.exe,-225"; Flags: uninsdeletekey noerror
+Root: "HKCR"; Subkey: "Poedit.XLIFF\Shell\Open\Command"; ValueType: string; ValueData: """{app}\Poedit.exe"" ""%1"""; Flags: uninsdeletevalue noerror
 
 ; Remove old, incorrectly done, association keys when upgrading:
 Root: "HKCR"; Subkey: "GettextFile"; ValueType: none; Flags: uninsdeletekey noerror dontcreatekey deletekey

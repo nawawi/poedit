@@ -2,17 +2,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 09:10-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 10:40\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Polish\n"
 "Language: pl_PL\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=((n == 1) ? 0 : ((n%10 >= 2 && n%10 <=4 && "
-"(n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || n%10 == 1 || (n%10 >= 5 && n"
-"%10 <=9)) || (n%100 >= 12 && n%100 <= 14)) ? 2 : 3));\n"
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n"
+"%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n"
+"%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
 "X-Generator: crowdin.com\n"
 "X-Crowdin-Project: poedit\n"
 "X-Crowdin-Language: pl\n"
@@ -51,6 +51,26 @@ msgid "“%s” is not a valid POT file."
 msgstr "\"%s\" nie jest prawidłowym plikiem POT."
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "Zdeformowany nagłówek: \"%s\""
+
+msgid "PO Translation Files"
+msgstr "Pliki tłumaczeń PO"
+
+msgid "POT Translation Templates"
+msgstr "Szablony tłumaczeń POT"
+
+msgid "XLIFF Translation Files"
+msgstr ""
+
+msgid "All Translation Files"
+msgstr "Wszystkie pliki tłumaczeń"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr ""
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] "%i linia pliku \"%s\" nie została prawidłowo załadowana."
@@ -60,11 +80,7 @@ msgstr[3] "%i linie pliku \"%s\" nie zostały prawidłowo załadowane."
 
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
-msgstr "Linia %d pliku \"%s\" jest uszkodzona (nieprawidłowe dane %s)."
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "Zdeformowany nagłówek: \"%s\""
+msgstr "Wiersz %d pliku „%s” jest uszkodzony (niepoprawne dane „%s”)."
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -119,14 +135,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Błąd zapisywania pakietu"
 
-msgid "PO Translation Files"
-msgstr "Pliki tłumaczeń PO"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr ""
 
-msgid "POT Translation Templates"
-msgstr "Szablony tłumaczeń POT"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr ""
 
-msgid "All Translation Files"
-msgstr "Wszystkie pliki tłumaczeń"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr ""
 
 msgid "(Use default language)"
 msgstr "(Użyj domyślnego języka)"
@@ -146,12 +165,12 @@ msgstr "Synchronizowanie"
 #. TRANSLATORS: %s is a cloud destination, e.g. "Crowdin" or ftp.wordpress.com etc.
 #, c-format
 msgid "Syncing with %s…"
-msgstr "Synchronizuję z %s..."
+msgstr "Synchronizacja z %s…"
 
 #. TRANSLATORS: %s is a cloud destination, e.g. "Crowdin" or ftp.wordpress.com etc.
 #, c-format
 msgid "Syncing with %s failed."
-msgstr "Synchronizacja z %s nie powiodła się."
+msgstr "Synchronizacja z „%s” nie powiodła się."
 
 msgid "Syncing error"
 msgstr "Błąd synchronizacji"
@@ -167,7 +186,7 @@ msgid ""
 "translation tool. Poedit can seamlessly sync PO files managed at Crowdin."
 msgstr ""
 "Crowdin jest internetową platformą do zarządzania tłumaczeniami oraz "
-"narzędziem do współpracy nad tłumaczeniami. Poedit obsługuje bezproblemową "
+"narzędziem do współpracy nad tłumaczeniami. Poedit umożliwia bezproblemową "
 "synchronizację plików PO z Crowdin."
 
 msgid "Sign In"
@@ -192,10 +211,10 @@ msgid "Signed in as:"
 msgstr "Zalogowany jako:"
 
 msgid "Learn More About Crowdin"
-msgstr "Dowiedz się więcej o platformie Crowdin"
+msgstr "Dowiedz się więcej o Crowdin"
 
 msgid "Learn more about Crowdin"
-msgstr "Dowiedz się więcej o platformie Crowdin"
+msgstr "Dowiedz się więcej o Crowdin"
 
 msgid "Sign in to Crowdin"
 msgstr "Zaloguj się do Crowdin"
@@ -213,8 +232,7 @@ msgid "File:"
 msgstr "Plik:"
 
 msgid "No translation projects listed in your Crowdin account."
-msgstr ""
-"Twoje konto w systemie Crowdin nie uwzględnia żadnych projektów tłumaczeń."
+msgstr "Brak projektów tłumaczeń powiązanych z twoim kontem w Crowdin."
 
 msgid "This project has no files that can be translated in Poedit."
 msgstr ""
@@ -406,8 +424,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "Na okno Poedit nie można upuścić więcej niż jeden plik."
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "Plik \"%s\" nie jest folderem wiadomości."
+msgid "File “%s” is not a translation file."
+msgstr ""
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -555,6 +573,17 @@ msgstr[3] ""
 
 msgid "The translation is ready for use."
 msgstr "Tłumaczenie jest gotowe do użycia."
+
+msgid "Warnings have been disabled."
+msgstr "Ostrzeżenia zostały wyłączone."
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+"Jeśli wyłączenie ostrzeżeń było wynikiem otrzymywania przez Ciebie "
+"nadmiernej liczby fałszywych alarmów, prześlij przykładowy plik na adres "
+"help@poedit.net, aby pomóc nam je udoskonalić."
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -805,6 +834,10 @@ msgstr "Wszystko"
 msgid "Form %i"
 msgstr "Forma %i"
 
+#, c-format
+msgid "Form %i (unused)"
+msgstr "Formularz %i (nieużywany)"
+
 msgid "Singular"
 msgstr "Liczba pojedyncza"
 
@@ -1048,15 +1081,8 @@ msgstr "Ustawienia główne"
 msgid "Use translation memory"
 msgstr "Używaj pamięci tłumaczeniowej"
 
-msgid "Learn From Files…"
-msgstr "Rozszerz z plików…"
-
-msgid "Learn from files…"
-msgstr "Rozszerz z plików…"
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Wyczyść"
+msgid "Manage…"
+msgstr "Zarządzaj…"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1087,6 +1113,28 @@ msgstr "Zapisane tłumaczenia:"
 msgid "Database size on disk:"
 msgstr "Rozmiar bazy danych na dysku:"
 
+msgid "Import Translation Files…"
+msgstr "Importuj pliki tłumaczeń…"
+
+msgid "Import translation files…"
+msgstr "Importuj pliki tłumaczeń…"
+
+msgid "Import From TMX…"
+msgstr "Importuj z TMX…"
+
+msgid "Import from TMX…"
+msgstr "Importuj z TMX…"
+
+msgid "Export To TMX…"
+msgstr "Eksportuj do TMX…"
+
+msgid "Export to TMX…"
+msgstr "Eksportuj do TMX…"
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Wyczyść"
+
 msgid "Select translation files to import"
 msgstr "Wybierz pliki tłumaczeń do zaimportowania"
 
@@ -1098,6 +1146,29 @@ msgstr "Trwa importowanie tłumaczeń…"
 
 msgid "Finalizing…"
 msgstr "Finalizowanie…"
+
+msgid "Select TMX files to import"
+msgstr "Wybierz pliki TMX do zaimportowania"
+
+msgid "TMX Files"
+msgstr "Pliki TMX"
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr "Importowanie pamięci tłumaczeniowej z \"%s\" nie powiodło się."
+
+msgid "Import error"
+msgstr "Błąd importowania"
+
+msgid "Exporting translations…"
+msgstr "Eksportowanie tłumaczeń…"
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr "Eksportowanie pamięci tłumaczeniowej do \"%s\" nie powiodło się."
+
+msgid "Export error"
+msgstr "Błąd eksportu"
 
 msgid "Reset translation memory"
 msgstr "Wyczyść pamięć tłumaczeniową"
@@ -1548,11 +1619,17 @@ msgstr "Znajdź poprzednie"
 msgid "&Preferences"
 msgstr "&Ustawienia"
 
-msgid "Display entry &IDs"
-msgstr "Wyświetlaj &numery wierszy"
+msgid "Show string &ID"
+msgstr "Pokaż ciąg &identyfikator"
 
-msgid "Display Entry &IDs"
-msgstr "Wyświetlaj &numery wierszy"
+msgid "Show String &ID"
+msgstr "Pokaż ciąg &identyfikator"
+
+msgid "Show warnings"
+msgstr "Pokaż ostrzeżenia"
+
+msgid "Show Warnings"
+msgstr "Pokaż ostrzeżenia"
 
 msgid "Sort by &file order"
 msgstr "Sortuj wg &nazw plików"
@@ -1605,11 +1682,11 @@ msgstr "Pokaż pasek stanu"
 msgid "C&atalog"
 msgstr "P&akiet"
 
-msgid "&Update from sources"
-msgstr "&Aktualizuj ze źródeł"
+msgid "&Update from source code"
+msgstr "Zaktualizuj z kodu źródłowego"
 
-msgid "&Update from Sources"
-msgstr "&Aktualizuj ze źródeł"
+msgid "&Update from Source Code"
+msgstr "Zaktualizuj z kodu źródłowego"
 
 msgid "Update from &POT file…"
 msgstr "Aktualizuj z pliku &POT…"
@@ -1862,8 +1939,11 @@ msgstr "Weryfikuj"
 msgid "Check for errors in the translation"
 msgstr "Sprawdza czy w tłumaczeniu występują błędy"
 
-msgid "Update"
-msgstr "Aktualizuj"
+msgid "Update from code"
+msgstr "Aktualizuj z kodu"
+
+msgid "Update from Code"
+msgstr "Aktualizuj z kodu"
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Aktualizuj pakiet – zsynchronizuj go ze źródłami"
@@ -1894,6 +1974,12 @@ msgstr "Dodaj komentarz"
 msgid "Add Comment"
 msgstr "Dodaj komentarz"
 
+msgid "Delete From Translation Memory"
+msgstr "Usuń z pamięci tłumaczeniowej"
+
+msgid "Delete from translation memory"
+msgstr "Usuń z pamięci tłumaczeniowej"
+
 msgid "Translation suggestions:"
 msgstr "Podpowiedzi do tłumaczenia:"
 
@@ -1907,6 +1993,20 @@ msgstr "Nie znaleziono odpowiedników"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "Ten tekst został znaleziony w pamięci tłumaczeniowej programu Poedit."
+
+msgid "The TMX file is malformed."
+msgstr "Plik TMX jest uszkodzony."
+
+msgid "No translations were found in the TMX file."
+msgstr "Nie znaleziono tłumaczeń w pliku TMX."
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr "Baza danych pamięci tłumaczeniowej jest uszkodzona: %s (%d)."
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr "Błąd pamięci tłumaczeniowej: %s (%d)."
 
 msgid "Cannot create temporary directory."
 msgstr "Nie można utworzyć katalogu tymczasowego!"

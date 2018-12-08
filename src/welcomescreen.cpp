@@ -25,6 +25,7 @@
 
 #include "welcomescreen.h"
 
+#include "colorscheme.h"
 #include "crowdin_gui.h"
 #include "edapp.h"
 #include "edframe.h"
@@ -96,7 +97,8 @@ public:
         [btn setBezelStyle:NSSmallSquareBezelStyle];
         [btn setButtonType:NSMomentaryPushInButton];
 
-        SetBackgroundColour(wxColour("#F2FCE2"));
+        if (ColorScheme::GetWindowMode(this) == ColorScheme::Light)
+            SetBackgroundColour(wxColour("#F2FCE2"));
         Bind(wxEVT_PAINT, &ActionButton::OnPaint, this);
     }
 
@@ -165,7 +167,15 @@ WelcomeScreenBase::WelcomeScreenBase(wxWindow *parent)
       m_clrNorm("#444444"),
       m_clrSub("#aaaaaa")
 {
-    SetBackgroundColour(wxColour("#fffcf5"));
+    switch (ColorScheme::GetWindowMode(this))
+    {
+        case ColorScheme::Light:
+            SetBackgroundColour("#fffcf5");
+            break;
+        case ColorScheme::Dark:
+            SetBackgroundColour("#00030a");
+            break;
+    }
 
 #if defined(__WXOSX__)
     auto guiface = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT).GetFaceName();

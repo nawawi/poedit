@@ -65,15 +65,25 @@ AttentionBar::AttentionBar(wxWindow *parent)
 {
 #ifdef __WXOSX__
     SetWindowVariant(wxWINDOW_VARIANT_SMALL);
+    NSView *view = GetHandle();
+    view.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 #endif
 
-#ifndef __WXGTK__
+#ifdef __WXMSW__
     m_icon = new wxStaticBitmap(this, wxID_ANY, wxNullBitmap);
 #endif
     m_label = new AutoWrappingText(this, "");
 
     m_explanation = new AutoWrappingText(this, "");
     m_explanation->SetForegroundColour(GetBackgroundColour().ChangeLightness(40));
+
+#ifndef __WXOSX__
+    if (ColorScheme::GetAppMode() == ColorScheme::Dark)
+    {
+        m_label->SetForegroundColour(wxColour(0,0,0,180));
+        m_explanation->SetForegroundColour(wxColour(0,0,0,180));
+    }
+#endif
 
     m_buttons = new wxBoxSizer(wxHORIZONTAL);
 
@@ -101,7 +111,7 @@ AttentionBar::AttentionBar(wxWindow *parent)
 
     wxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     sizer->AddSpacer(PXDefaultBorder);
-#ifndef __WXGTK__
+#ifdef __WXMSW__
     sizer->Add(m_icon, wxSizerFlags().Center().Border(wxALL, SMALL_BORDER));
 #endif
 
@@ -181,7 +191,7 @@ void AttentionBar::ShowMessage(const AttentionMessage& msg)
             iconName = wxART_ERROR;
             break;
     }
-#ifndef __WXGTK__
+#ifdef __WXMSW__
     m_icon->SetBitmap(wxArtProvider::GetBitmap(iconName, wxART_MENU, wxSize(PX(16), PX(16))));
 #endif
 

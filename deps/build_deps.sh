@@ -9,6 +9,15 @@ if [ "$1" = clean ] ; then
     exit
 fi
 
+# Include Homebrew binaries on PATH if not there yet:
+PATH="$PATH:/usr/local/bin"
+
+# Fake Java binaries so that gettext configure script doesn't invoke the system ones:
+mkdir -p "$DEPS_BUILD_DIR/helpers"
+touch "$DEPS_BUILD_DIR"/helpers/{java,javac}
+chmod +x "$DEPS_BUILD_DIR"/helpers/{java,javac}
+PATH="$DEPS_BUILD_DIR/helpers:$PATH"
+
 if [ -d /usr/local/opt/ccache/libexec ] ; then
     CC=/usr/local/opt/ccache/libexec/clang
     CXX=/usr/local/opt/ccache/libexec/clang++

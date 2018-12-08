@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 08:33-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 10:39\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -49,6 +49,26 @@ msgid "“%s” is not a valid POT file."
 msgstr "«%s» no es un archivo POT válido."
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "Cabecera con formato incorrecto: «%s»"
+
+msgid "PO Translation Files"
+msgstr "Archivos de traducción PO"
+
+msgid "POT Translation Templates"
+msgstr "Plantillas de traducción POT"
+
+msgid "XLIFF Translation Files"
+msgstr "Archivos de traducción XLIFF"
+
+msgid "All Translation Files"
+msgstr "Todos los archivos de traducción"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr "No se admite el formato del archivo «%s»."
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] "No se cargó %i renglón del archivo «%s» correctamente."
@@ -57,10 +77,6 @@ msgstr[1] "No se cargaron %i renglones del archivo «%s» correctamente."
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
 msgstr "El renglón %d del archivo «%s» está dañado (datos %s no válidos)."
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "Cabecera con formato incorrecto: «%s»"
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -114,14 +130,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Error al guardar el catálogo"
 
-msgid "PO Translation Files"
-msgstr "Archivos de traducción PO"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr "Error al cargar el archivo «%s»: %s."
 
-msgid "POT Translation Templates"
-msgstr "Plantillas de traducción POT"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr "versión no admitida de XLIFF (%s)"
 
-msgid "All Translation Files"
-msgstr "Todos los archivos de traducción"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr "Código de marcación incorrecto en la cadena de la traducción."
 
 msgid "(Use default language)"
 msgstr "(Usar idioma predeterminado)"
@@ -380,7 +399,7 @@ msgstr "Traer todo al frente"
 
 #. TRANSLATORS:File kind displayed in Finder/Explorer
 msgid "PO Translation"
-msgstr "Traducción en PO"
+msgstr "Traducción PO"
 
 msgid "The file cannot be opened."
 msgstr "No se puede abrir el archivo."
@@ -396,8 +415,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "No se puede soltar más de un archivo en la ventana de Poedit."
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "El archivo «%s» no es un catálogo de mensajes."
+msgid "File “%s” is not a translation file."
+msgstr "El archivo «%s» no es de traducción."
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -536,6 +555,17 @@ msgstr[1] ""
 
 msgid "The translation is ready for use."
 msgstr "La traducción está lista para su uso."
+
+msgid "Warnings have been disabled."
+msgstr "Se desactivaron las alertas."
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+"Si ha desactivado las alertas debido a demasiados falsos positivos, "
+"considere enviar un archivo de muestra a help@poedit.net para ayudar a "
+"mejorarlos."
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -785,6 +815,10 @@ msgstr "Todo"
 msgid "Form %i"
 msgstr "Forma %i"
 
+#, c-format
+msgid "Form %i (unused)"
+msgstr "Forma %i (no utilizada)"
+
 msgid "Singular"
 msgstr "Singular"
 
@@ -834,7 +868,7 @@ msgid "Failed command: %s"
 msgstr "Orden errónea: %s"
 
 msgid "Failed to merge gettext catalogs."
-msgstr "Error al combinar los catálogos de Gettext."
+msgstr "Error al combinar los catálogos de gettext."
 
 msgid "Source file"
 msgstr "Archivo de origen"
@@ -1029,15 +1063,8 @@ msgstr "Generales"
 msgid "Use translation memory"
 msgstr "Usar memoria de traducción"
 
-msgid "Learn From Files…"
-msgstr "Aprender de archivos…"
-
-msgid "Learn from files…"
-msgstr "Aprender de archivos…"
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Restablecer"
+msgid "Manage…"
+msgstr "Gestionar…"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1068,6 +1095,28 @@ msgstr "Traducciones almacenadas:"
 msgid "Database size on disk:"
 msgstr "Tamaño de base de datos en el disco:"
 
+msgid "Import Translation Files…"
+msgstr "Importar archivos de traducción…"
+
+msgid "Import translation files…"
+msgstr "Importar archivos de traducción…"
+
+msgid "Import From TMX…"
+msgstr "Importar desde TMX…"
+
+msgid "Import from TMX…"
+msgstr "Importar desde TMX…"
+
+msgid "Export To TMX…"
+msgstr "Exportar a TMX…"
+
+msgid "Export to TMX…"
+msgstr "Exportar a TMX…"
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Restablecer"
+
 msgid "Select translation files to import"
 msgstr "Seleccione los archivos de traducción que se importarán"
 
@@ -1079,6 +1128,29 @@ msgstr "Importando traducciones…"
 
 msgid "Finalizing…"
 msgstr "Finalizando…"
+
+msgid "Select TMX files to import"
+msgstr "Seleccione los archivos TMX que importar"
+
+msgid "TMX Files"
+msgstr "Archivos TMX"
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr "Falló la importación de la memoria de traducción desde «%s»."
+
+msgid "Import error"
+msgstr "Error de importación"
+
+msgid "Exporting translations…"
+msgstr "Exportando traducciones…"
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr "Falló la exportación de la memoria de traducción a «%s»."
+
+msgid "Export error"
+msgstr "Error de exportación"
 
 msgid "Reset translation memory"
 msgstr "Restablecer memoria de traducción"
@@ -1526,11 +1598,17 @@ msgstr "Buscar anterior"
 msgid "&Preferences"
 msgstr "&Preferencias"
 
-msgid "Display entry &IDs"
-msgstr "Mostrar &identificadores de entradas"
+msgid "Show string &ID"
+msgstr "Mostrar &id. de cadena"
 
-msgid "Display Entry &IDs"
-msgstr "Mostrar &identificadores de entradas"
+msgid "Show String &ID"
+msgstr "Mostrar &id. de cadena"
+
+msgid "Show warnings"
+msgstr "Mostrar alertas"
+
+msgid "Show Warnings"
+msgstr "Mostrar alertas"
 
 msgid "Sort by &file order"
 msgstr "Ordenar por &archivo"
@@ -1583,11 +1661,11 @@ msgstr "Mostrar barra de estado"
 msgid "C&atalog"
 msgstr "&Catálogo"
 
-msgid "&Update from sources"
-msgstr "Actualizar desde &fuentes"
+msgid "&Update from source code"
+msgstr "Actualizar desde código &fuente"
 
-msgid "&Update from Sources"
-msgstr "Actualizar desde &fuentes"
+msgid "&Update from Source Code"
+msgstr "Actualizar desde código &fuente"
 
 msgid "Update from &POT file…"
 msgstr "Actualizar desde archivo &POT…"
@@ -1665,7 +1743,7 @@ msgid "&Online Help"
 msgstr "&Ayuda en línea"
 
 msgid "&GNU gettext manual"
-msgstr "Manual de &Gettext"
+msgstr "Manual de &GNU gettext"
 
 msgid "&GNU gettext Manual"
 msgstr "Manual de &GNU gettext"
@@ -1769,7 +1847,7 @@ msgid "Translation properties"
 msgstr "Propiedades de traducción"
 
 msgid "Sources Paths"
-msgstr "Rutas de las fuentes"
+msgstr "Rutas de fuentes"
 
 msgid "Sources paths"
 msgstr "Rutas de fuentes"
@@ -1802,7 +1880,7 @@ msgid "Learn About Gettext Keywords"
 msgstr "Más información sobre las palabras clave de gettext"
 
 msgid "Learn about gettext keywords"
-msgstr "Más información sobre palabras clave de gettext"
+msgstr "Más información sobre las palabras clave de gettext"
 
 msgid "Update summary"
 msgstr "Resumen de la actualización"
@@ -1842,8 +1920,11 @@ msgstr "Validar"
 msgid "Check for errors in the translation"
 msgstr "Buscar errores en la traducción"
 
-msgid "Update"
-msgstr "Actualizar"
+msgid "Update from code"
+msgstr "Actualizar desde código"
+
+msgid "Update from Code"
+msgstr "Actualizar desde código"
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Actualizar catálogo: sincronizarlo con los orígenes"
@@ -1874,6 +1955,12 @@ msgstr "Añadir comentario"
 msgid "Add Comment"
 msgstr "Añadir comentario"
 
+msgid "Delete From Translation Memory"
+msgstr "Eliminar de la memoria de traducción"
+
+msgid "Delete from translation memory"
+msgstr "Eliminar de la memoria de traducción"
+
 msgid "Translation suggestions:"
 msgstr "Sugerencias de traducción:"
 
@@ -1887,6 +1974,20 @@ msgstr "No se hallaron coincidencias"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "Esta cadena se encontró en la memoria de traducción de Poedit."
+
+msgid "The TMX file is malformed."
+msgstr "El formato del archivo TMX es erróneo."
+
+msgid "No translations were found in the TMX file."
+msgstr "No se encontró ninguna traducción en el archivo TMX."
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr "La base de datos de la memoria de traducción está dañada: %s (%d)."
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr "Error de la memoria de traducción: %s (%d)."
 
 msgid "Cannot create temporary directory."
 msgstr "No se puede crear la carpeta temporal."
@@ -1940,7 +2041,7 @@ msgid ""
 "Translators typically use PO template files (POTs) prepared for them by the "
 "developer."
 msgstr ""
-"Las entradas traducibles no se añaden manualmente en el sistema Gettext, "
+"Las entradas traducibles no se añaden manualmente en el sistema gettext, "
 "sino que se extraen\n"
 "automáticamente del código fuente. Así se mantienen actualizadas y "
 "precisas.\n"

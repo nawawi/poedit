@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 08:35-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 10:42\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Uzbek\n"
 "Language: uz_UZ\n"
@@ -49,6 +49,26 @@ msgid "“%s” is not a valid POT file."
 msgstr ""
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr ""
+
+msgid "PO Translation Files"
+msgstr "PO tarjima fayllari"
+
+msgid "POT Translation Templates"
+msgstr "POT tarjima namunalari"
+
+msgid "XLIFF Translation Files"
+msgstr ""
+
+msgid "All Translation Files"
+msgstr "Barcha tarjima fayllari"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr ""
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] ""
@@ -56,10 +76,6 @@ msgstr[1] ""
 
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
-msgstr ""
-
-#, c-format
-msgid "Malformed header: “%s”"
 msgstr ""
 
 msgid ""
@@ -109,14 +125,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "Katalogni saqlashda xatolik"
 
-msgid "PO Translation Files"
-msgstr "PO tarjima fayllari"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr ""
 
-msgid "POT Translation Templates"
-msgstr "POT tarjima namunalari"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr ""
 
-msgid "All Translation Files"
-msgstr "Barcha tarjima fayllari"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr ""
 
 msgid "(Use default language)"
 msgstr "(Standart tildan foydalanish)"
@@ -393,7 +412,7 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr ""
 
 #, c-format
-msgid "File “%s” is not a message catalog."
+msgid "File “%s” is not a translation file."
 msgstr ""
 
 msgid "Poedit"
@@ -532,6 +551,14 @@ msgstr[1] ""
 
 msgid "The translation is ready for use."
 msgstr "Tarjima foydalanish uchun tayyor."
+
+msgid "Warnings have been disabled."
+msgstr ""
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -771,6 +798,10 @@ msgstr "Hammasi"
 #, c-format
 msgid "Form %i"
 msgstr "%i shakli "
+
+#, c-format
+msgid "Form %i (unused)"
+msgstr ""
 
 msgid "Singular"
 msgstr "Birlik"
@@ -1016,15 +1047,8 @@ msgstr "Umumiy"
 msgid "Use translation memory"
 msgstr "Tarjima xotirasidan foydalanish"
 
-msgid "Learn From Files…"
+msgid "Manage…"
 msgstr ""
-
-msgid "Learn from files…"
-msgstr ""
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "Tiklash"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
@@ -1051,6 +1075,28 @@ msgstr "Saqlangan tarjimalar:"
 msgid "Database size on disk:"
 msgstr "Diskdagi ma’lumotlar bazasi hajmi:"
 
+msgid "Import Translation Files…"
+msgstr ""
+
+msgid "Import translation files…"
+msgstr ""
+
+msgid "Import From TMX…"
+msgstr ""
+
+msgid "Import from TMX…"
+msgstr ""
+
+msgid "Export To TMX…"
+msgstr ""
+
+msgid "Export to TMX…"
+msgstr ""
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "Tiklash"
+
 msgid "Select translation files to import"
 msgstr "Import qilish uchun tarjimalarni tanlang"
 
@@ -1061,6 +1107,29 @@ msgid "Importing translations…"
 msgstr ""
 
 msgid "Finalizing…"
+msgstr ""
+
+msgid "Select TMX files to import"
+msgstr ""
+
+msgid "TMX Files"
+msgstr ""
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr ""
+
+msgid "Import error"
+msgstr ""
+
+msgid "Exporting translations…"
+msgstr ""
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr ""
+
+msgid "Export error"
 msgstr ""
 
 msgid "Reset translation memory"
@@ -1492,11 +1561,17 @@ msgstr "Oldingisini topish"
 msgid "&Preferences"
 msgstr "&Parametrlar"
 
-msgid "Display entry &IDs"
-msgstr "Kiritilganlarning ID’sini ko‘rsatish"
+msgid "Show string &ID"
+msgstr ""
 
-msgid "Display Entry &IDs"
-msgstr "Kiritilganlarning ID’sini ko‘rsatish"
+msgid "Show String &ID"
+msgstr ""
+
+msgid "Show warnings"
+msgstr ""
+
+msgid "Show Warnings"
+msgstr ""
 
 msgid "Sort by &file order"
 msgstr "&Fayl tartibi bo‘yicha saralash"
@@ -1549,11 +1624,11 @@ msgstr "Holat qatorini ko‘rsatish"
 msgid "C&atalog"
 msgstr "K&atalog"
 
-msgid "&Update from sources"
-msgstr "&Manbalardan yangilash"
+msgid "&Update from source code"
+msgstr ""
 
-msgid "&Update from Sources"
-msgstr "&Manbalardan yangilash"
+msgid "&Update from Source Code"
+msgstr ""
 
 msgid "Update from &POT file…"
 msgstr ""
@@ -1806,8 +1881,11 @@ msgstr "To‘g‘rilash"
 msgid "Check for errors in the translation"
 msgstr "Tarjimadagi xatolarni tekshirish"
 
-msgid "Update"
-msgstr "Yangilash"
+msgid "Update from code"
+msgstr ""
+
+msgid "Update from Code"
+msgstr ""
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "Katalogni yangilash - uni manbalar bilan sinxronlash"
@@ -1836,6 +1914,12 @@ msgstr "Sharh qo‘shish"
 msgid "Add Comment"
 msgstr "Sharh qo‘shish"
 
+msgid "Delete From Translation Memory"
+msgstr ""
+
+msgid "Delete from translation memory"
+msgstr ""
+
 msgid "Translation suggestions:"
 msgstr "Tarjima takliflari:"
 
@@ -1849,6 +1933,20 @@ msgstr "Topilmadi"
 
 msgid "This string was found in Poedit’s translation memory."
 msgstr "Ushbu qator Poedit’ning tarjima xotirasida topildi."
+
+msgid "The TMX file is malformed."
+msgstr ""
+
+msgid "No translations were found in the TMX file."
+msgstr ""
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr ""
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
+msgstr ""
 
 msgid "Cannot create temporary directory."
 msgstr "Vaqtinchalik direktoriya yaratilmadi."
@@ -1969,7 +2067,7 @@ msgstr "%sdan chiqish"
 
 #. TRANSLATORS: macOS item in app menu
 msgid "Preferences…"
-msgstr ""
+msgstr "Parametrlar…"
 
 msgid "Preferences..."
 msgstr "Sozlamalar..."
@@ -2037,7 +2135,7 @@ msgid "&OK"
 msgstr ""
 
 msgid "Open…"
-msgstr ""
+msgstr "Ochish…"
 
 msgid "&Open..."
 msgstr "&Ochish..."
@@ -2099,11 +2197,11 @@ msgstr "Pastga"
 
 #. TRANSLATORS: Keyboard shortcut for display in Windows menus
 msgid "Left"
-msgstr ""
+msgstr "Chapga"
 
 #. TRANSLATORS: Keyboard shortcut for display in Windows menus
 msgid "Right"
-msgstr ""
+msgstr "O‘ngga"
 
 #. TRANSLATORS: Keyboard shortcut, must correspond to translation of "Ctrl+"
 msgid "ctrl"

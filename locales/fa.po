@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-04-22 15:13+0200\n"
-"PO-Revision-Date: 2018-04-22 09:02-0400\n"
+"POT-Creation-Date: 2018-10-07 13:14+0200\n"
+"PO-Revision-Date: 2018-10-07 11:13\n"
 "Last-Translator: vslavik <vaclav@slavik.io>\n"
 "Language-Team: Persian\n"
 "Language: fa_IR\n"
@@ -49,6 +49,26 @@ msgid "“%s” is not a valid POT file."
 msgstr "“%s” یک فایل صحیح POT نیست."
 
 #, c-format
+msgid "Malformed header: “%s”"
+msgstr "سربرگ نادرست: '%s”"
+
+msgid "PO Translation Files"
+msgstr "فایل های ترجمه Po"
+
+msgid "POT Translation Templates"
+msgstr "قالب ترجمه POT"
+
+msgid "XLIFF Translation Files"
+msgstr ""
+
+msgid "All Translation Files"
+msgstr "تمام فایل های ترجمه"
+
+#, c-format
+msgid "File “%s” is in unsupported format."
+msgstr ""
+
+#, c-format
 msgid "%i line of file “%s” was not loaded correctly."
 msgid_plural "%i lines of file “%s” were not loaded correctly."
 msgstr[0] "%i خط از فایل %s درست بارگزاری نشده است."
@@ -57,10 +77,6 @@ msgstr[1] "%i خط از فایل %s درست بارگزاری نشده است."
 #, c-format
 msgid "Line %d of file “%s” is corrupted (not valid %s data)."
 msgstr "خط %d از فایل %s خراب است(داده معتبر %s نیست)."
-
-#, c-format
-msgid "Malformed header: “%s”"
-msgstr "سربرگ نادرست: '%s”"
 
 msgid ""
 "Broken catalog file: singular form msgstr used together with msgid_plural"
@@ -109,14 +125,17 @@ msgstr ""
 msgid "Error saving catalog"
 msgstr "خطا در ذخیره کردن پوشه"
 
-msgid "PO Translation Files"
-msgstr "فایل های ترجمه Po"
+#, c-format
+msgid "Error loading file “%s”: %s."
+msgstr ""
 
-msgid "POT Translation Templates"
-msgstr "قالب ترجمه POT"
+#, c-format
+msgid "unsupported XLIFF version (%s)"
+msgstr ""
 
-msgid "All Translation Files"
-msgstr "تمام فایل های ترجمه"
+#. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
+msgid "Broken markup in translation string."
+msgstr ""
 
 msgid "(Use default language)"
 msgstr "(استفاده از زبان پیش‌فرض)"
@@ -391,8 +410,8 @@ msgid "You can’t drop more than one file on Poedit window."
 msgstr "شما می‌توانید بیش از یک پرونده را در پنجره Poedit بیاندازید."
 
 #, c-format
-msgid "File “%s” is not a message catalog."
-msgstr "پرونده '%s' پیام کاتالوگ نیست."
+msgid "File “%s” is not a translation file."
+msgstr ""
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -427,7 +446,7 @@ msgid "Save"
 msgstr "ذخیره"
 
 msgid "Do&n’t save"
-msgstr ""
+msgstr "ذخیره نکن"
 
 msgid "Don’t Save"
 msgstr "ذخیره نکن"
@@ -525,6 +544,14 @@ msgstr[1] "ترجمه آماده برای استفاده است، اما نوش�
 msgid "The translation is ready for use."
 msgstr "ترجمه آماده برای استفاده است."
 
+msgid "Warnings have been disabled."
+msgstr "هشدارها غیرفعال شد."
+
+msgid ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
+msgstr ""
+
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
 msgstr "Poedit به طور خودکار محتوای نامعتبر در فایل \"%s\" را درست خواهد کرد."
@@ -577,6 +604,8 @@ msgid ""
 "Entries in this catalog have different plural forms count from what "
 "catalog’s Plural-Forms header says"
 msgstr ""
+"ها در این فروشگاه باید اشکال مختلف جمع می گوید از چه کاتالوگ سربرگ فرم جمع "
+"تعداد"
 
 msgid "Required header Plural-Forms is missing."
 msgstr ""
@@ -604,11 +633,11 @@ msgstr "بررسی"
 
 #, c-format
 msgid "Error loading message catalog file “%s”."
-msgstr ""
+msgstr "در هنگام بارگذاری پرونده خطایی رخ داد”%s”."
 
 #, c-format
 msgid "Translated: %d of %d (%d %%)"
-msgstr ""
+msgstr "ترجمه: %d از %d (%d %%)"
 
 #, c-format
 msgid "Remaining: %d"
@@ -634,7 +663,7 @@ msgstr " (تغییریافته)"
 
 #, c-format
 msgid "Failed to update translation memory: %s"
-msgstr ""
+msgstr "بروزرسانی ترجمه ناموفق: %s"
 
 msgid "Purge deleted translations"
 msgstr "لیست ترجمه‌های &سایه شده"
@@ -729,10 +758,10 @@ msgid "Translation:"
 msgstr "ترجمه:"
 
 msgid "Pre-translated"
-msgstr ""
+msgstr "پیش-ترجمه"
 
 msgid "Needs Work"
-msgstr ""
+msgstr "نیاز به کار دارد"
 
 #. TRANSLATORS: This indicates that the string's translation isn't final
 #. and has known problems.  For example, it might be machine translated or
@@ -743,7 +772,7 @@ msgstr ""
 #. I am done with it (i.e. consider it good), while "needs work" implies I
 #. need to return to it and finish the translation.
 msgid "Needs work"
-msgstr ""
+msgstr "نیاز به کار دارد"
 
 msgid ""
 "POT files are only templates and don’t contain any translations themselves.\n"
@@ -751,7 +780,7 @@ msgid ""
 msgstr ""
 
 msgid "Create New Translation"
-msgstr ""
+msgstr "ایجاد ترجمه جدید"
 
 msgid "Create new translation"
 msgstr "ایجاد ترجمه جدید"
@@ -762,6 +791,10 @@ msgstr "همه چیز"
 #, c-format
 msgid "Form %i"
 msgstr "از %i"
+
+#, c-format
+msgid "Form %i (unused)"
+msgstr ""
 
 msgid "Singular"
 msgstr "مفرد"
@@ -783,12 +816,12 @@ msgstr "سایر موارد"
 
 #, c-format
 msgid "%s Format"
-msgstr ""
+msgstr "فرمت %s"
 
 #. TRANSLATORS: %s is replaced with language name, e.g. "PHP" or "C", so "PHP Format" etc."
 #, c-format
 msgid "%s format"
-msgstr ""
+msgstr "فرمت %s"
 
 msgid "Source text"
 msgstr "منبع متن"
@@ -911,7 +944,7 @@ msgid "Untrans"
 msgstr "ترجمه نشده"
 
 msgid "Errors"
-msgstr ""
+msgstr "خطاها"
 
 msgid "Last modified"
 msgstr "آخرین تغییر"
@@ -1004,19 +1037,12 @@ msgstr "عمومی"
 msgid "Use translation memory"
 msgstr "استفاده از حافظه ترجمه"
 
-msgid "Learn From Files…"
+msgid "Manage…"
 msgstr ""
-
-msgid "Learn from files…"
-msgstr ""
-
-#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-msgid "Reset"
-msgstr "تنظیم مجدد"
 
 #. TRANSLATORS: Followed by "match translations within the file" or "pre-translate from TM"
 msgid "When updating from sources"
-msgstr ""
+msgstr "وقتی که آپدیت می کنید از منبع "
 
 #. TRANSLATORS: Preceded by "When updating from sources"
 msgid "fuzzy match within the file"
@@ -1039,6 +1065,28 @@ msgstr "ترجمه های ذخیره شده:"
 msgid "Database size on disk:"
 msgstr "حجم پایگاه داده بر روی دیسک:"
 
+msgid "Import Translation Files…"
+msgstr ""
+
+msgid "Import translation files…"
+msgstr ""
+
+msgid "Import From TMX…"
+msgstr ""
+
+msgid "Import from TMX…"
+msgstr ""
+
+msgid "Export To TMX…"
+msgstr ""
+
+msgid "Export to TMX…"
+msgstr ""
+
+#. TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
+msgid "Reset"
+msgstr "تنظیم مجدد"
+
 msgid "Select translation files to import"
 msgstr "انتخاب پرونده های ترجمه برای درون ریزی"
 
@@ -1046,9 +1094,32 @@ msgid "Translation Memory"
 msgstr "حافظه ترجمه"
 
 msgid "Importing translations…"
-msgstr ""
+msgstr "درون ریزی ترجمه ها"
 
 msgid "Finalizing…"
+msgstr ""
+
+msgid "Select TMX files to import"
+msgstr ""
+
+msgid "TMX Files"
+msgstr ""
+
+#, c-format
+msgid "Importing translation memory from “%s” failed."
+msgstr ""
+
+msgid "Import error"
+msgstr ""
+
+msgid "Exporting translations…"
+msgstr ""
+
+#, c-format
+msgid "Exporting translation memory to “%s” failed."
+msgstr ""
+
+msgid "Export error"
 msgstr ""
 
 msgid "Reset translation memory"
@@ -1464,10 +1535,16 @@ msgstr "یافتن قبلی"
 msgid "&Preferences"
 msgstr "&ترجیحات"
 
-msgid "Display entry &IDs"
+msgid "Show string &ID"
 msgstr ""
 
-msgid "Display Entry &IDs"
+msgid "Show String &ID"
+msgstr ""
+
+msgid "Show warnings"
+msgstr ""
+
+msgid "Show Warnings"
 msgstr ""
 
 msgid "Sort by &file order"
@@ -1521,11 +1598,11 @@ msgstr ""
 msgid "C&atalog"
 msgstr "پوشه"
 
-msgid "&Update from sources"
-msgstr "بروز&سازی از منابع"
+msgid "&Update from source code"
+msgstr ""
 
-msgid "&Update from Sources"
-msgstr "بروز رسانی از منابع"
+msgid "&Update from Source Code"
+msgstr ""
 
 msgid "Update from &POT file…"
 msgstr ""
@@ -1769,8 +1846,11 @@ msgstr "تایید اعتبار"
 msgid "Check for errors in the translation"
 msgstr ""
 
-msgid "Update"
-msgstr "بروزسازی"
+msgid "Update from code"
+msgstr ""
+
+msgid "Update from Code"
+msgstr ""
 
 msgid "Update catalog - synchronize it with sources"
 msgstr "پوشه بروزسازی - همزمان سازی آن با منابع"
@@ -1799,6 +1879,12 @@ msgstr "اضافه کردن نظر"
 msgid "Add Comment"
 msgstr "اضافه کردن نظر"
 
+msgid "Delete From Translation Memory"
+msgstr ""
+
+msgid "Delete from translation memory"
+msgstr ""
+
 msgid "Translation suggestions:"
 msgstr "پیشنهاد های ترجمه:"
 
@@ -1811,6 +1897,20 @@ msgid "No Matches Found"
 msgstr ""
 
 msgid "This string was found in Poedit’s translation memory."
+msgstr ""
+
+msgid "The TMX file is malformed."
+msgstr ""
+
+msgid "No translations were found in the TMX file."
+msgstr ""
+
+#, c-format
+msgid "Translation memory database is corrupted: %s (%d)."
+msgstr ""
+
+#, c-format
+msgid "Translation memory error: %s (%d)."
 msgstr ""
 
 msgid "Cannot create temporary directory."
