@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2018 Vaclav Slavik
+ *  Copyright (C) 2014-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -52,6 +52,13 @@
     // can't include both winhttp.h and wininet.h, so put a declaration here
     //#include <wininet.h>
     EXTERN_C DECLSPEC_IMPORT BOOL STDAPICALLTYPE InternetGetConnectedState(__out LPDWORD lpdwFlags, __reserved DWORD dwReserved);
+
+    #ifndef WINHTTP_OPTION_ENABLE_HTTP_PROTOCOL
+        #define WINHTTP_OPTION_ENABLE_HTTP_PROTOCOL 133
+    #endif
+    #ifndef WINHTTP_PROTOCOL_FLAG_HTTP2
+        #define WINHTTP_PROTOCOL_FLAG_HTTP2 0x1
+    #endif
 #endif
 
 namespace
@@ -277,26 +284,12 @@ private:
     static http::client::http_client_config get_client_config()
     {
         http::client::http_client_config c;
+   
+        c.set_nativesessionhandle_options([](http::client::native_handle handle){
+            DWORD dwOption = WINHTTP_PROTOCOL_FLAG_HTTP2;
+            WinHttpSetOption(handle, WINHTTP_OPTION_ENABLE_HTTP_PROTOCOL, &dwOption, sizeof(dwOption));
+        });
 
-        // WinHttp doesn't share WinInet/MSIE's proxy settings and has its own,
-        // but many users don't have properly configured both. Adopting proxy
-        // settings like this in desktop software is recommended behavior, see
-        // https ://blogs.msdn.microsoft.com/ieinternals/2013/10/11/understanding-web-proxy-configuration/
-        WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ieConfig = { 0 };
-        if (WinHttpGetIEProxyConfigForCurrentUser(&ieConfig))
-        {
-            if (ieConfig.fAutoDetect)
-            {
-                c.set_proxy(web_proxy::use_auto_discovery);
-            }
-            if (ieConfig.lpszProxy)
-            {
-                // Explicitly add // to the URL to work around a bug in C++ REST SDK's
-                // parsing of proxies with port number in their address
-                // (see https://github.com/Microsoft/cpprestsdk/issues/57)
-                c.set_proxy(uri(L"//" + std::wstring(ieConfig.lpszProxy)));
-            }
-        }
         return c;
     }
 

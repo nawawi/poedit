@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -38,6 +38,7 @@ class WXDLLIMPEXP_FWD_CORE wxSplitterWindow;
 class WXDLLIMPEXP_FWD_CORE wxSplitterEvent;
 
 #include "catalog.h"
+#include "catalog_po.h"
 #include "gexecute.h"
 #include "edlistctrl.h"
 #include "edapp.h"
@@ -243,7 +244,7 @@ public: // for PoeditApp
         void OnNew(wxCommandEvent& event);
         void NewFromScratch();
         void NewFromPOT();
-        void NewFromPOT(const wxString& pot_file, Language language = Language());
+        void NewFromPOT(POCatalogPtr pot, Language language = Language());
 
         void OnOpen(wxCommandEvent& event);
         void OnOpenFromCrowdin(wxCommandEvent& event);

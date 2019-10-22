@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *  Copyright (C) 2005 Olivier Sannier
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
@@ -199,15 +199,6 @@ class PoeditListCtrl : public wxDataViewCtrl
         /// Returns true if more than one item are selected.
         bool HasMultipleSelection() const { return GetSelectedItemsCount() > 1; }
 
-        void RefreshSelectedItems()
-        {
-            // TODO: Remove this API
-
-            wxDataViewItemArray sel;
-            GetSelections(sel);
-            m_model->ItemsChanged(sel);
-        }
-
         void RefreshAllItems();
 
         void RefreshItem(const wxDataViewItem& item)
@@ -289,12 +280,15 @@ class PoeditListCtrl : public wxDataViewCtrl
             void Freeze() { m_frozen = true; }
             void Thaw() { m_frozen = false; }
 
+            void SetMaxVisibleWidth(int chars) { m_maxVisibleWidth = chars; }
+
         public:
             CatalogPtr m_catalog;
             SortOrder sortOrder;
 
         private:
             bool m_frozen;
+            int m_maxVisibleWidth;
             std::vector<int> m_mapListToCatalog;
             std::vector<int> m_mapCatalogToList;
 
@@ -302,12 +296,7 @@ class PoeditListCtrl : public wxDataViewCtrl
 
             wxColour m_clrID, m_clrInvalid, m_clrFuzzy;
             wxString m_clrContextFg, m_clrContextBg;
-            wxBitmap m_iconComment, m_iconBookmark, m_iconError, m_iconWarning;
-
-        #if defined(__WXGTK__) && !wxCHECK_VERSION(3,0,3)
-            #define HAS_BROKEN_NULL_BITMAPS
-            wxBitmap m_nullBitmap;
-        #endif
+            wxIcon m_iconComment, m_iconBookmark, m_iconError, m_iconWarning;
         };
 
 

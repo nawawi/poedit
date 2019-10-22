@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2018 Vaclav Slavik
+ *  Copyright (C) 2000-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -524,8 +524,8 @@ private:
             _("Select translation files to import"),
             wxEmptyString,
             wxEmptyString,
-			Catalog::GetAllTypesFileMask(),
-			wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_MULTIPLE));
+            Catalog::GetAllTypesFileMask(),
+            wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_MULTIPLE));
 
         dlg->ShowWindowModalThenDo([=](int retcode){
             if (retcode != wxID_OK)

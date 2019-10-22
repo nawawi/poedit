@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2018 Vaclav Slavik
+ *  Copyright (C) 2018-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -226,6 +226,8 @@ public:
             std::string state = target.attribute("state").value();
             if (state == "needs-adaptation" || state == "needs-l10n")
                 m_isFuzzy = true;
+            else if (m_isTranslated && state == "new")
+                m_isFuzzy = true;
         }
         else
         {
@@ -276,7 +278,25 @@ public:
             target.remove_attribute("state-qualifier");
             remove_all_children(target);
         }
+    }
 
+    wxArrayString GetReferences() const override
+    {
+        wxArrayString refs;
+        for (auto loc: m_node.select_nodes(".//context-group[@purpose='location']"))
+        {
+            wxString file, line;
+            for (auto ctxt: loc.node().children("context"))
+            {
+                auto type = ctxt.attribute("context-type").value();
+                if (strcmp(type, "sourcefile") == 0)
+                    file = str::to_wx(ctxt.text().get());
+                else if (strcmp(type, "linenumber") == 0)
+                    line = ":" + str::to_wx(ctxt.text().get());
+            }
+            refs.push_back(file + line);
+        }
+        return refs;
     }
 };
 
@@ -289,7 +309,13 @@ void XLIFF12Catalog::Parse(pugi::xml_node root)
         m_sourceLanguage = Language::TryParse(file.attribute("source-language").value());
         m_language = Language::TryParse(file.attribute("target-language").value());
         for (auto unit: file.select_nodes(".//trans-unit"))
-            m_items.push_back(std::make_shared<XLIFF12CatalogItem>(++id, unit.node()));
+        {
+            auto node = unit.node();
+            if (strcmp(node.attribute("translate").value(), "no") == 0)
+                continue;
+
+            m_items.push_back(std::make_shared<XLIFF12CatalogItem>(++id, node));
+        }
     }
 }
 
@@ -335,10 +361,11 @@ public:
             m_translations.push_back("");
         }
 
-        std::string state = node.attribute("subState").value();
-        m_isFuzzy = (state == "poedit:fuzzy");
+        std::string state = node.attribute("state").value();
+        std::string substate = node.attribute("subState").value();
+        m_isFuzzy = (m_isTranslated && state == "initial") || (substate == "poedit:fuzzy");
 
-        for (auto note: unit().select_nodes(".//note"))
+        for (auto note: unit().select_nodes(".//note[not(@category='location')]"))
         {
             std::string noteText = note.node().text().get();
 
@@ -384,11 +411,21 @@ public:
             m_node.remove_attribute("subState");
             remove_all_children(target);
         }
-
     }
 
+    wxArrayString GetReferences() const override
+    {
+        wxArrayString refs;
+        for (auto note: unit().select_nodes(".//note[@category='location']"))
+        {
+            refs.push_back(str::to_wx(note.node().text().get()));
+        }
+        return refs;
+    }
+
+
 protected:
-    xml_node unit() { return m_node.parent(); }
+    xml_node unit() const { return m_node.parent(); }
 };
 
 
@@ -399,7 +436,13 @@ void XLIFF2Catalog::Parse(pugi::xml_node root)
 
     int id = 0;
     for (auto segment: root.select_nodes(".//segment"))
-        m_items.push_back(std::make_shared<XLIFF2CatalogItem>(++id, segment.node()));
+    {
+        auto node = segment.node();
+        if (strcmp(node.parent().attribute("translate").value(), "no") == 0)
+            continue;
+
+        m_items.push_back(std::make_shared<XLIFF2CatalogItem>(++id, node));
+    }
 }
 
 

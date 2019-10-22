@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2010-2018 Vaclav Slavik
+ *  Copyright (C) 2010-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -42,6 +42,7 @@
 #ifdef __clang__
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Wshadow"
+    #pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 #endif
 #include <boost/thread/executor.hpp>
 #include <boost/thread/future.hpp>
@@ -357,7 +358,7 @@ public:
     T get() { return this->f_.get(); }
 
     template<typename F>
-    auto then(F&& continuation) -> future<typename detail::future_unwrapper<typename std::result_of<F(T)>::type>::type>
+    auto then(F&& continuation) -> future<typename detail::future_unwrapper<typename std::result_of<F(typename detail::argument_type<F>::arg0_type)>::type>::type>
     {
         typedef detail::continuation_calling_helper<typename detail::argument_type<typename std::decay<F>::type>::arg0_type> cch;
         return this->f_.then(detail::background_queue_executor::get(),
@@ -367,7 +368,7 @@ public:
     }
 
     template<typename F>
-    auto then_on_main(F&& continuation) -> future<typename detail::future_unwrapper<typename std::result_of<F(T)>::type>::type>
+    auto then_on_main(F&& continuation) -> future<typename detail::future_unwrapper<typename std::result_of<F(typename detail::argument_type<F>::arg0_type)>::type>::type>
     {
         typedef detail::continuation_calling_helper<typename detail::argument_type<typename std::decay<F>::type>::arg0_type> cch;
         return this->f_.then(detail::main_thread_executor::get(),

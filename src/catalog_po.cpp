@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -558,7 +558,7 @@ class POCharsetInfoFinder : public POCatalogParser
 {
     public:
         POCharsetInfoFinder(wxTextFile *f)
-                : POCatalogParser(f), m_charset("ISO-8859-1") {}
+                : POCatalogParser(f), m_charset("UTF-8") {}
         wxString GetCharset() const { return m_charset; }
 
     protected:
@@ -611,7 +611,10 @@ class POLoadParser : public POCatalogParser
                 return lang;
 
             auto utf8 = m_allMsgidText.utf8_str();
-            return Language::TryDetectFromText(utf8.data(), utf8.length());
+            lang = Language::TryDetectFromText(utf8.data(), utf8.length());
+            if (!lang.IsValid())
+                lang = Language::English();  // gettext historically assumes English
+            return lang;
         }
 
     protected:
@@ -706,7 +709,7 @@ bool POLoadParser::OnEntry(const wxString& msgid,
         d->SetTranslations(mtranslations);
         d->SetComment(comment);
         d->SetLineNumber(lineNumber);
-        d->SetReferences(references);
+        d->SetRawReferences(references);
 
         for (auto i: extractedComments)
         {
@@ -758,9 +761,40 @@ bool POLoadParser::OnDeletedEntry(const wxArrayString& deletedLines,
 }
 
 
+// ----------------------------------------------------------------------
+// POCatalogItem class
+// ----------------------------------------------------------------------
+
+wxArrayString POCatalogItem::GetReferences() const
+{
+    // A line may contain several references, separated by white-space.
+    // Each reference is in the form "path_name:line_number"
+    // (path_name may contain spaces)
+
+    wxArrayString refs;
+
+    for ( wxArrayString::const_iterator i = m_references.begin(); i != m_references.end(); ++i )
+    {
+        wxString line = *i;
+
+        line = line.Strip(wxString::both);
+        while (!line.empty())
+        {
+            size_t idx = 0;
+            while (idx < line.length() && line[idx] != _T(':')) { idx++; }
+            while (idx < line.length() && !wxIsspace(line[idx])) { idx++; }
+
+            refs.push_back(line.Left(idx));
+            line = line.Mid(idx).Strip(wxString::both);
+        }
+    }
+
+    return refs;
+}
+
 
 // ----------------------------------------------------------------------
-// Catalog class
+// POCatalog class
 // ----------------------------------------------------------------------
 
 POCatalog::POCatalog(Type type) : Catalog(type)
@@ -1658,10 +1692,10 @@ bool POCatalog::UpdateFromPOT(POCatalogPtr pot, bool replace_header)
     return true;
 }
 
-POCatalogPtr POCatalog::CreateFromPOT(const wxString& pot_file)
+POCatalogPtr POCatalog::CreateFromPOT(POCatalogPtr pot)
 {
     POCatalogPtr c = std::make_shared<POCatalog>();
-    if (c->UpdateFromPOT(pot_file, /*replace_header=*/true))
+    if (c->UpdateFromPOT(pot, /*replace_header=*/true))
         return c;
     else
         return nullptr;

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -474,12 +474,12 @@ PoeditFrame::PoeditFrame() :
 
 #if defined(__WXGTK__)
     wxIconBundle appicons;
-    appicons.AddIcon(wxArtProvider::GetIcon("poedit", wxART_FRAME_ICON, wxSize(16,16)));
-    appicons.AddIcon(wxArtProvider::GetIcon("poedit", wxART_FRAME_ICON, wxSize(24,24)));
-    appicons.AddIcon(wxArtProvider::GetIcon("poedit", wxART_FRAME_ICON, wxSize(32,32)));
-    appicons.AddIcon(wxArtProvider::GetIcon("poedit", wxART_FRAME_ICON, wxSize(48,48)));
-    appicons.AddIcon(wxArtProvider::GetIcon("poedit", wxART_FRAME_ICON, wxSize(256,256)));
-    appicons.AddIcon(wxArtProvider::GetIcon("poedit", wxART_FRAME_ICON, wxSize(512,512)));
+    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(16,16)));
+    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(24,24)));
+    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(32,32)));
+    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(48,48)));
+    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(256,256)));
+    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(512,512)));
     SetIcons(appicons);
 #elif defined(__WXMSW__)
     SetIcons(wxIconBundle(wxStandardPaths::Get().GetResourcesDir() + "\\Resources\\Poedit.ico"));
@@ -768,6 +768,10 @@ void PoeditFrame::DestroyContentView()
 PoeditFrame::~PoeditFrame()
 {
     ms_instances.erase(this);
+
+    // don't leave file references window as the only one open:
+    if (ms_instances.empty() && FileViewer::GetIfExists())
+        FileViewer::GetIfExists()->Close();
 
     DestroyContentView();
 
@@ -1301,8 +1305,11 @@ void PoeditFrame::OnNew(wxCommandEvent& event)
         {
             wxWindowPtr<LanguageDialog> dlg(new LanguageDialog(this));
             dlg->ShowWindowModalThenDo([=](int retcode){
-                if (retcode == wxID_OK)
-                    NewFromPOT(m_catalog->GetFileName(), dlg->GetLang());
+                if (retcode != wxID_OK)
+                    return;
+                auto cat = std::dynamic_pointer_cast<POCatalog>(m_catalog);
+                wxASSERT_MSG(cat, "unexpected file type / catalog class for POT");
+                NewFromPOT(cat, dlg->GetLang());
             });
         }
         else
@@ -1326,13 +1333,21 @@ void PoeditFrame::NewFromPOT()
     if (!pot_file.empty())
     {
         wxConfig::Get()->Write("last_file_path", wxPathOnly(pot_file));
-        NewFromPOT(pot_file);
+
+        auto pot = std::make_shared<POCatalog>(pot_file, Catalog::CreationFlag_IgnoreTranslations);
+        if (!pot->IsOk())
+        {
+            wxLogError(_(L"“%s” is not a valid POT file."), pot_file.c_str());
+            return;
+        }
+
+        NewFromPOT(pot);
     }
 }
 
-void PoeditFrame::NewFromPOT(const wxString& pot_file, Language language)
+void PoeditFrame::NewFromPOT(POCatalogPtr pot, Language language)
 {
-    auto catalog = POCatalog::CreateFromPOT(pot_file);
+    auto catalog = POCatalog::CreateFromPOT(pot);
     if (!catalog)
         return;
 
@@ -1360,7 +1375,7 @@ void PoeditFrame::NewFromPOT(const wxString& pot_file, Language language)
             // file (same directory, language-based name). This doesn't always
             // work, e.g. WordPress plugins use different naming, so don't actually
             // save the file just yet and let the user confirm the location when saving.
-            wxFileName pot_fn(pot_file);
+            wxFileName pot_fn(pot->GetFileName());
             pot_fn.SetFullName(lang.Code() + "." + catalog->GetPreferredExtension());
             m_catalog->SetFileName(pot_fn.GetFullPath());
         }
@@ -1979,7 +1994,7 @@ void PoeditFrame::OnFuzzyFlag(wxCommandEvent&)
     }
     UpdateStatusBar();
 
-    UpdateToTextCtrl(EditingArea::UndoableEdit);
+    UpdateToTextCtrl(EditingArea::UndoableEdit | EditingArea::DontTouchText);
 
     if (m_list->HasSingleSelection())
     {
@@ -2375,7 +2390,7 @@ void PoeditFrame::WarnAboutLanguageIssues()
         }
         else // no error, check for warning-worthy stuff
         {
-            if (lang.IsValid() && plForms != lang.DefaultPluralFormsExpr())
+            if (lang.IsValid() && plForms != lang.DefaultPluralFormsExpr() && !m_catalog->IsFromCrowdin())
             {
                 AttentionMessage msg
                     (
@@ -2783,7 +2798,7 @@ void PoeditFrame::OnSuggestion(wxCommandEvent& event)
     UpdateStatusBar();
 
     UpdateToTextCtrl(EditingArea::UndoableEdit);
-    m_list->RefreshSelectedItems();
+    m_list->RefreshItem(m_list->GetCurrentItem());
 }
 
 
@@ -3050,7 +3065,8 @@ void PoeditFrame::OnSetBookmark(wxCommandEvent& event)
     // Set bookmark if different from the current value for the item,
     // else unset it
     int bkIndex = -1;
-    int selItemIndex = m_list->ListItemToCatalogIndex(m_list->GetCurrentItem());
+    wxDataViewItem selItem = m_list->GetCurrentItem();
+    int selItemIndex = m_list->ListItemToCatalogIndex(selItem);
     if (selItemIndex == -1)
         return;
 
@@ -3065,7 +3081,7 @@ void PoeditFrame::OnSetBookmark(wxCommandEvent& event)
     }
 
     // Refresh items
-    m_list->RefreshSelectedItems();
+    m_list->RefreshItem(selItem);
     if (bkIndex != -1)
         m_list->RefreshItem(m_list->CatalogIndexToListItem(bkIndex));
 

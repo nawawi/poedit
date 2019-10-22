@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
 
-AC_INIT([poedit], [2.2], [help@poedit.net])
+AC_INIT([poedit], [2.2.3], [help@poedit.net])
 
 AC_CONFIG_AUX_DIR([admin])
 AC_CONFIG_MACRO_DIR([admin])
@@ -118,7 +118,7 @@ AS_IF([test "x$have_cpprest" = "xyes"],
       ])
 AM_CONDITIONAL([HAVE_CPPREST], [test "x$have_cpprest" != "xno"])
 
-AC_CHECK_HEADERS([json.hpp])
+AC_CHECK_HEADERS([nlohmann/json.hpp])
 
 WX_CONFIG_CHECK([3.0.3], [WXFOUND=1], [WXFOUND=0], [$WXLIBS_USED], [--unicode])
 
@@ -274,7 +274,7 @@ AS_IF([test "x$have_cld2" = "xyes"],
 
 
 
-if test "x$GXX" == "xyes"; then
+if test "x$GXX" = "xyes"; then
     AX_CXX_CHECK_FLAG([-Wall],[],[], [CXXFLAGS="$CXXFLAGS -Wall"])
     AX_CXX_CHECK_FLAG([-Wextra],[],[], [CXXFLAGS="$CXXFLAGS -Wextra"])
 fi

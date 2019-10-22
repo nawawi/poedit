@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -80,7 +80,6 @@ class CatalogItem
                 : m_id(0),
                   m_hasPlural(false),
                   m_hasContext(false),
-                  m_references(),
                   m_isFuzzy(false),
                   m_isTranslated(false),
                   m_isModified(false),
@@ -131,12 +130,9 @@ class CatalogItem
         /// Returns all translations.
         const wxArrayString& GetTranslations() const { return m_translations; }
 
-        /// Returns references (#:) lines for the entry
-        const wxArrayString& GetRawReferences() const { return m_references; }
-
         /// Returns array of all occurrences of this string in source code,
         /// parsed into individual references
-        wxArrayString GetReferences() const;
+        virtual wxArrayString GetReferences() const = 0;
 
         /// Returns comment added by the translator to this entry
         const wxString& GetComment() const { return m_comment; }
@@ -248,8 +244,6 @@ class CatalogItem
         // Private data setters only for internal use:
         // -------------------------------------------------------------------
 
-        void SetReferences(const wxArrayString& ref) { m_references = ref; }
-
         void SetId(int id) { m_id = id; }
 
         void SetString(const wxString& s)
@@ -297,7 +291,7 @@ class CatalogItem
 
         wxArrayString m_translations;
 
-        wxArrayString m_references, m_extractedComments;
+        wxArrayString m_extractedComments;
         wxArrayString m_oldMsgid;
         bool m_isFuzzy, m_isTranslated, m_isModified, m_isPreTranslated;
         wxString m_moreFlags;

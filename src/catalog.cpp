@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -252,7 +252,7 @@ void Catalog::HeaderData::ParseDict()
     }
     else
     {
-        Charset = "ISO-8859-1";
+        Charset = "UTF-8";
     }
 
     // Parse language information, with backwards compatibility with X-Poedit-*:
@@ -1002,33 +1002,6 @@ unsigned CatalogItem::GetPluralFormsCount() const
         return 0;
 
     return trans - 1;
-}
-
-wxArrayString CatalogItem::GetReferences() const
-{
-    // A line may contain several references, separated by white-space.
-    // Each reference is in the form "path_name:line_number"
-    // (path_name may contain spaces)
-
-    wxArrayString refs;
-
-    for ( wxArrayString::const_iterator i = m_references.begin(); i != m_references.end(); ++i )
-    {
-        wxString line = *i;
-
-        line = line.Strip(wxString::both);
-        while (!line.empty())
-        {
-            size_t idx = 0;
-            while (idx < line.length() && line[idx] != _T(':')) { idx++; }
-            while (idx < line.length() && !wxIsspace(line[idx])) { idx++; }
-
-            refs.push_back(line.Left(idx));
-            line = line.Mid(idx).Strip(wxString::both);
-        }
-    }
-
-    return refs;
 }
 
 wxString CatalogItem::GetOldMsgid() const

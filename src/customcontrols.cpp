@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2018 Vaclav Slavik
+ *  Copyright (C) 2015-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -315,9 +315,23 @@ LearnMoreLink::LearnMoreLink(wxWindow *parent, const wxString& url, wxString lab
     }
 
     wxHyperlinkCtrl::Create(parent, winid, label, url);
-    SetNormalColour("#2F79BE");
-    SetVisitedColour("#2F79BE");
-    SetHoverColour("#3D8DD5");
+
+#ifdef __WXOSX__
+    if (@available(macOS 10.14, *))
+    {
+        wxColour normal(NSColor.linkColor);
+        wxColour hover([NSColor.linkColor colorWithSystemEffect:NSColorSystemEffectRollover]);
+        SetNormalColour(normal);
+        SetVisitedColour(normal);
+        SetHoverColour(hover);
+    }
+    else
+#endif
+    {
+        SetNormalColour("#2F79BE");
+        SetVisitedColour("#2F79BE");
+        SetHoverColour("#3D8DD5");
+    }
 
 #ifdef __WXOSX__
     SetWindowVariant(wxWINDOW_VARIANT_SMALL);

@@ -12,12 +12,13 @@
 *.opensdf
 *.VC.opendb
 *.VC.db
+/.vs
 /ipch/
 Makefile
 Makefile.in
 admin/config.guess
 admin/config.sub
-admin/compile
+admin/*compile
 admin/depcomp
 admin/install-sh
 admin/missing

@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2018-10-07 13:14+0200\n"
-"PO-Revision-Date: 2018-10-07 11:13\n"
-"Last-Translator: vslavik <vaclav@slavik.io>\n"
+"POT-Creation-Date: 2019-05-14 19:19+0200\n"
+"PO-Revision-Date: 2019-05-14 17:11\n"
+"Last-Translator: Václav Slavík (vslavik)\n"
 "Language-Team: Persian\n"
 "Language: fa_IR\n"
 "MIME-Version: 1.0\n"
@@ -59,14 +59,14 @@ msgid "POT Translation Templates"
 msgstr "قالب ترجمه POT"
 
 msgid "XLIFF Translation Files"
-msgstr ""
+msgstr "XLIFF فایل های ترجمه"
 
 msgid "All Translation Files"
 msgstr "تمام فایل های ترجمه"
 
 #, c-format
 msgid "File “%s” is in unsupported format."
-msgstr ""
+msgstr "پرونده \"%s\" در فرمت های پشتیبانی نشده است."
 
 #, c-format
 msgid "%i line of file “%s” was not loaded correctly."
@@ -127,24 +127,24 @@ msgstr "خطا در ذخیره کردن پوشه"
 
 #, c-format
 msgid "Error loading file “%s”: %s."
-msgstr ""
+msgstr "خطای بارگذاری فایل \"%s\": %s."
 
 #, c-format
 msgid "unsupported XLIFF version (%s)"
-msgstr ""
+msgstr "نسخه پشتیبانی نشده XLIFF (%s)"
 
 #. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
 msgid "Broken markup in translation string."
-msgstr ""
+msgstr "نشانه گذاری شکسته در رشته ترجمه."
 
 msgid "(Use default language)"
 msgstr "(استفاده از زبان پیش‌فرض)"
 
-msgid "Select your preferred language"
-msgstr "زبانی که ترجیحی را انتخاب کنید"
-
 msgid "Language selection"
 msgstr "گزینش زبان"
+
+msgid "Select your preferred language"
+msgstr "زبانی که ترجیحی را انتخاب کنید"
 
 msgid "You must restart Poedit for this change to take effect."
 msgstr ""
@@ -411,7 +411,7 @@ msgstr "شما می‌توانید بیش از یک پرونده را در پن�
 
 #, c-format
 msgid "File “%s” is not a translation file."
-msgstr ""
+msgstr "پرونده \"%s\" فایل ترجمه نیست."
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -551,6 +551,8 @@ msgid ""
 "If you disabled the warnings because of excessive false positives, please "
 "consider sending a sample file to help@poedit.net to help improve them."
 msgstr ""
+"If you disabled the warnings because of excessive false positives, please "
+"consider sending a sample file to help@poedit.net to help improve them."
 
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
@@ -609,6 +611,18 @@ msgstr ""
 
 msgid "Required header Plural-Forms is missing."
 msgstr ""
+"$_['shortcode_testimonial_columns'] \t\t= 'Column';\n"
+"$_['shortcode_testimonial_columns_desc'] \t= 'Set colums for testimonial.';\n"
+"$_['shortcode_testimonial_display_avatar'] \t\t\t= 'Display Avatar';\n"
+"$_['shortcode_testimonial_display_avatar_desc'] \t= 'Set display avatar for "
+"testimonial.';\n"
+"$_['shortcode_testimonial_author'] \t\t\t= 'Author';\n"
+"$_['shortcode_testimonial_author_desc'] \t= 'Insert Author in here.';\n"
+"$_['shortcode_testimonial_position'] \t\t= 'Position';\n"
+"$_['shortcode_testimonial_position_desc'] \t= 'Set position for author in "
+"here.';\n"
+"$_['shortcode_testimonial_avatar'] \t\t\t= 'Avatar';\n"
+"$_['shortcode_testimonial_avatar_desc'] \t= 'Set avatar for author.';"
 
 #, c-format
 msgid "Syntax error in Plural-Forms header (\"%s\")."
@@ -2160,7 +2174,7 @@ msgstr ""
 
 #. TRANSLATORS: Keyboard shortcut for display in Windows menus
 msgid "Right"
-msgstr ""
+msgstr "راست"
 
 #. TRANSLATORS: Keyboard shortcut, must correspond to translation of "Ctrl+"
 msgid "ctrl"

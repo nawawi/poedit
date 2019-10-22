@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -46,6 +46,8 @@
   #include <comdef.h>
   #include <tom.h>
   _COM_SMARTPTR_TYPEDEF(ITextDocument, __uuidof(ITextDocument));
+  _COM_SMARTPTR_TYPEDEF(ITextRange, __uuidof(ITextRange));
+  _COM_SMARTPTR_TYPEDEF(ITextFont, __uuidof(ITextFont));
 #endif
 
 #include "colorscheme.h"
@@ -108,6 +110,30 @@ inline ITextDocumentPtr TextDocument(wxTextCtrl *ctrl)
     if (ole)
         ole->QueryInterface<ITextDocument>(&doc);
     return doc;
+}
+
+// Use temporary styles (used e.g. by spellchecker too) for syntax highlighting.
+// See this nice summary of resources:
+// https://stackoverflow.com/questions/55366383/how-to-clear-temporary-tomapplytmp-formatting-from-a-richedit
+inline void SetTOMTmpStyle(const ITextDocumentPtr& doc, int from, int to, const wxTextAttr& attr)
+{
+    ITextRangePtr range;
+    doc->Range(from, to, &range);
+    if (!range)
+        return;
+    ITextFontPtr font;
+    range->GetFont(&font);
+    if (!font)
+        return;
+    font->Reset(tomApplyTmp);
+
+    auto fg = attr.GetTextColour();
+    auto bg = attr.GetBackgroundColour();
+    if (fg.IsOk())
+        font->SetForeColor(fg.GetPixel());
+    if (bg.IsOk())
+    font->SetBackColor(bg.GetPixel());
+    font->Reset(tomApplyNow);
 }
 
 // Temporarily suppresses recording of changes for Undo/Redo functionality
@@ -282,6 +308,17 @@ CustomizedTextCtrl::CustomizedTextCtrl(wxWindow *parent, wxWindowID winid, long 
 
 
 #ifdef __WXMSW__
+
+bool CustomizedTextCtrl::SetFont(const wxFont &font)
+{
+    if (!wxTextCtrl::SetFont(font))
+        return false;
+
+    auto style = GetDefaultStyle();
+    style.SetFont(font);
+    SetDefaultStyle(style);
+    return true;
+}
 
 WXDWORD CustomizedTextCtrl::MSWGetStyle(long style, WXDWORD *exstyle) const
 {
@@ -751,27 +788,39 @@ void AnyTranslatableTextCtrl::HighlightText()
 
 #else // !__WXOSX__
 
-#ifndef __WXGTK__
-    // Freezing (and more to the point, thawing) the window from inside wxEVT_TEXT
-    // handler breaks pasting under GTK+ (selection is not replaced).
-    // See https://github.com/vslavik/poedit/issues/139
-    wxWindowUpdateLocker noupd(this);
-#endif
-
     wxEventBlocker block(this, wxEVT_TEXT);
-  #ifdef __WXMSW__
-    UndoSuppressor blockUndo(this);
-  #endif
 
     auto deflt = m_attrs->Default();
     deflt.SetFont(GetFont());
-    SetStyle(0, text.length(), deflt);
 
-    if (m_syntax)
+  #ifdef __WXMSW__
+    UndoSuppressor blockUndo(this);
+
+    auto doc = TextDocument(this);
+    if (IsEditable() && doc)
     {
-        m_syntax->Highlight(text, [=](int a, int b, SyntaxHighlighter::TextKind kind){
-            SetStyle(a, b, m_attrs->For(kind));
-        });
+        // If possible, use TOM interface to apply temporary styles, which is much
+        // more efficient. Unfortunately, it's not possible to do with read-only controls.
+        SetTOMTmpStyle(doc, 0, text.length(), deflt);
+
+        if (m_syntax)
+        {
+            m_syntax->Highlight(text, [=](int a, int b, SyntaxHighlighter::TextKind kind){
+                SetTOMTmpStyle(doc, a, b, m_attrs->For(kind));
+            });
+        }
+    }
+    else
+  #endif // __WXMSW___
+    {
+        SetStyle(0, text.length(), deflt);
+
+        if (m_syntax)
+        {
+            m_syntax->Highlight(text, [=](int a, int b, SyntaxHighlighter::TextKind kind){
+                SetStyle(a, b, m_attrs->For(kind));
+            });
+        }
     }
 #endif // __WXOSX__/!__WXOSX__
 }

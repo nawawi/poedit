@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2018 Vaclav Slavik
+ *  Copyright (C) 2014-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -111,7 +111,7 @@ SidebarBlock::SidebarBlock(Sidebar *parent, const wxString& label, int flags)
                          wxSizerFlags().Expand().Border(wxBOTTOM|wxLEFT, PX(2)));
         }
         m_headerSizer = new wxBoxSizer(wxHORIZONTAL);
-        m_headerSizer->Add(new HeadingLabel(parent, label), wxSizerFlags().Expand());
+        m_headerSizer->Add(new HeadingLabel(parent, label), wxSizerFlags().Center());
         m_sizer->Add(m_headerSizer, wxSizerFlags().Expand().PXDoubleBorder(wxLEFT|wxRIGHT));
     }
     m_innerSizer = new wxBoxSizer(wxVERTICAL);
@@ -580,7 +580,7 @@ void SuggestionsSidebarBlock::SetMessage(const wxString& icon, const wxString& t
 
 void SuggestionsSidebarBlock::ReportError(SuggestionsBackend*, dispatch::exception_ptr e)
 {
-    SetMessage("SuggestionError", DescribeException(e));
+    SetMessage("SuggestionErrorTemplate", DescribeException(e));
 }
 
 void SuggestionsSidebarBlock::ClearSuggestions()

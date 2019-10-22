@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2018 Vaclav Slavik
+ *  Copyright (C) 2000-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -79,6 +79,12 @@ private:
 };
 
 
+inline bool IsVCSDir(const wxString& d)
+{
+    return d == ".git" || d == ".svn" || d == ".hg" || d == ".bzr" || d == "CVS";
+}
+
+
 int FindInDir(const wxString& basepath, const wxString& dirname, const PathsToMatch& excludedPaths,
               Extractor::FilesList& output)
 {
@@ -112,6 +118,9 @@ int FindInDir(const wxString& basepath, const wxString& dirname, const PathsToMa
     {
         const wxString f = (dirname == ".") ? filename : dirname + "/" + filename;
         cont = dir.GetNext(&filename);
+
+        if (IsVCSDir(filename))
+            continue;
 
         if (excludedPaths.MatchesFile(f))
             continue;

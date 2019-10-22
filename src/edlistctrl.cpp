@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *  Copyright (C) 2005 Olivier Sannier
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
@@ -45,6 +45,10 @@
 #include <wx/itemattr.h>
 #include <wx/msw/uxtheme.h>
 #include <vssym32.h>
+#endif
+
+#ifdef __WXGTK__
+#include <gtk/gtk.h>
 #endif
 
 #include <algorithm>
@@ -152,10 +156,10 @@ class DataViewIconsAdjuster : public wxDataViewValueAdjuster
 public:
     DataViewIconsAdjuster()
     {
-        m_comment = wxArtProvider::GetBitmap("ItemCommentTemplate");
-        m_commentSel = wxArtProvider::GetBitmap("ItemCommentTemplate@inverted");
-        m_bookmark = wxArtProvider::GetBitmap("ItemBookmarkTemplate");
-        m_bookmarkSel = wxArtProvider::GetBitmap("ItemBookmarkTemplate@inverted");
+        m_comment = wxArtProvider::GetIcon("ItemCommentTemplate");
+        m_commentSel = wxArtProvider::GetIcon("ItemCommentTemplate@inverted");
+        m_bookmark = wxArtProvider::GetIcon("ItemBookmarkTemplate");
+        m_bookmarkSel = wxArtProvider::GetIcon("ItemBookmarkTemplate@inverted");
     }
 
     wxVariant MakeHighlighted(const wxVariant& value) const override
@@ -163,17 +167,17 @@ public:
         if (value.IsNull())
             return value;
 
-        wxBitmap bitmap;
-        bitmap << value;
+        wxIcon icon;
+        icon << value;
 
-        if (bitmap.IsSameAs(m_comment))
+        if (icon.IsSameAs(m_comment))
         {
             wxVariant vout;
             vout << m_commentSel;
             return vout;
         }
 
-        if (bitmap.IsSameAs(m_bookmark))
+        if (icon.IsSameAs(m_bookmark))
         {
             wxVariant vout;
             vout << m_bookmarkSel;
@@ -184,11 +188,22 @@ public:
     }
 
 private:
-    wxBitmap m_comment, m_commentSel;
-    wxBitmap m_bookmark, m_bookmarkSel;
+    wxIcon m_comment, m_commentSel;
+    wxIcon m_bookmark, m_bookmarkSel;
 };
 
 #endif // wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__) && !defined(__WXOSX__)
+
+wxString TrimTextValue(const wxString& text, size_t maxChars)
+{
+    wxString s(text.Strip(wxString::both));
+    // FIXME: use syntax highlighting or typographic marks
+    s.Replace("\n", " ");
+    if (maxChars && s.length() > maxChars)
+        return s.substr(0, maxChars);
+    else
+        return s;
+}
 
 } // anonymous namespace
 
@@ -196,6 +211,7 @@ private:
 
 PoeditListCtrl::Model::Model(TextDirection appTextDir, ColorScheme::Mode visualMode)
     : m_frozen(false),
+      m_maxVisibleWidth(0),
       m_sourceTextDir(TextDirection::LTR),
       m_transTextDir(TextDirection::LTR),
       m_appTextDir(appTextDir)
@@ -210,17 +226,10 @@ PoeditListCtrl::Model::Model(TextDirection appTextDir, ColorScheme::Mode visualM
     m_clrContextFg = ColorScheme::Get(Color::ItemContextFg, visualMode).GetAsString(wxC2S_HTML_SYNTAX);
     m_clrContextBg = ColorScheme::Get(Color::ItemContextBg, visualMode).GetAsString(wxC2S_HTML_SYNTAX);
 
-    m_iconComment = wxArtProvider::GetBitmap("ItemCommentTemplate");
-    m_iconBookmark = wxArtProvider::GetBitmap("ItemBookmarkTemplate");
-    m_iconError = wxArtProvider::GetBitmap("StatusError");
-    m_iconWarning = wxArtProvider::GetBitmap("StatusWarning");
-
-#ifdef HAS_BROKEN_NULL_BITMAPS
-    wxImage nullimg(m_iconError.GetSize().x, m_iconError.GetSize().y);
-    nullimg.Clear();
-    nullimg.SetMaskColour(0, 0, 0);
-    m_nullBitmap = wxBitmap(nullimg);
-#endif
+    m_iconComment = wxArtProvider::GetIcon("ItemCommentTemplate");
+    m_iconBookmark = wxArtProvider::GetIcon("ItemBookmarkTemplate");
+    m_iconError = wxArtProvider::GetIcon("StatusError");
+    m_iconWarning = wxArtProvider::GetIcon("StatusWarning");
 }
 
 
@@ -263,7 +272,7 @@ wxString PoeditListCtrl::Model::GetColumnType(unsigned int col) const
             return "string";
 
         case Col_Icon:
-            return "wxBitmap";
+            return "wxIcon";
 
         case Col_Source:
         case Col_Translation:
@@ -277,12 +286,10 @@ wxString PoeditListCtrl::Model::GetColumnType(unsigned int col) const
 
 void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsigned col) const
 {
-#if defined(HAS_BROKEN_NULL_BITMAPS)
-    #define NULL_BITMAP(variant)  variant << m_nullBitmap
-#elif defined(__WXGTK__) && !wxCHECK_VERSION(3,1,1)
-    #define NULL_BITMAP(variant)  variant << wxNullBitmap
+#if defined(__WXGTK__) && !wxCHECK_VERSION(3,1,1)
+    #define NULL_ICON(variant)  variant << wxNullIcon
 #else
-    #define NULL_BITMAP(variant)  variant = wxNullVariant
+    #define NULL_ICON(variant)  variant = wxNullVariant
 #endif
 
     if (!m_catalog || m_frozen)
@@ -291,8 +298,8 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
         auto type = GetColumnType(col);
         if (type == "string")
             variant = "";
-        else if (type == "wxBitmap")
-            NULL_BITMAP(variant);
+        else if (type == "wxIcon")
+            NULL_ICON(variant);
         else
 #else
         variant = wxNullVariant;
@@ -336,13 +343,15 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
             else if (d->HasComment())
                 variant << m_iconComment;
             else
-                NULL_BITMAP(variant);
+                NULL_ICON(variant);
             break;
         }
 
         case Col_Source:
         {
             wxString orig;
+            const auto orig_str = TrimTextValue(d->GetString(), m_maxVisibleWidth);
+
 #if wxCHECK_VERSION(3,1,1)
         #ifdef __WXMSW__
             // Temporary workaround for https://github.com/vslavik/poedit/issues/343 and
@@ -360,11 +369,11 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
                 #endif
                     orig.Printf(MARKUP("<span bgcolor=\"%s\" color=\"%s\"> %s </span> %s"),
                         m_clrContextBg, m_clrContextFg,
-                        EscapeMarkup(d->GetContext()), EscapeMarkup(d->GetString()));
+                        EscapeMarkup(d->GetContext()), EscapeMarkup(orig_str));
                 }
                 else
                 {
-                    orig = EscapeMarkup(d->GetString());
+                    orig = EscapeMarkup(orig_str);
                 }
             }
         #ifdef __WXMSW__
@@ -375,16 +384,11 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
             // non-markup rendering of source column:
             {
                 if (d->HasContext())
-                    orig.Printf("[%s] %s", d->GetContext(), d->GetString());
+                    orig.Printf("[%s] %s", d->GetContext(), orig_str);
                 else
-                    orig = d->GetString();
+                    orig = orig_str;
             }
 #endif
-
-            // FIXME: use syntax highlighting or typographic marks
-            orig.Replace("\n", " ");
-            orig.Trim(true);
-            orig.Trim(false);
 
             // Add RTL Unicode mark to render bidi texts correctly
             if (m_appTextDir != m_sourceTextDir)
@@ -396,12 +400,7 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
 
         case Col_Translation:
         {
-            auto trans = d->GetTranslation();
-
-            // FIXME: use syntax highlighting or typographic marks
-            trans.Replace("\n", " ");
-            trans.Trim(true);
-            trans.Trim(false);
+            const auto trans = TrimTextValue(d->GetTranslation(), m_maxVisibleWidth);
 
             // Add RTL Unicode mark to render bidi texts correctly
             if (m_appTextDir != m_transTextDir)
@@ -577,6 +576,9 @@ void PoeditListCtrl::SetCustomFont(wxFont font_)
     SetRowHeight(int(height) + PX(4));
 #elif defined(__WXMSW__)
     SetRowHeight(GetCharHeight() + PX(4));
+#elif defined(__WXGTK__)
+    // disable Ctrl+F in-control search:
+    gtk_tree_view_set_search_column(GTK_TREE_VIEW(GtkGetTreeView()), -1);
 #endif
 
     UpdateHeaderAttrs();
@@ -606,7 +608,10 @@ void PoeditListCtrl::CreateColumns()
     int iconWidth = PX(16);
 #endif
 
-    m_colIcon = AppendBitmapColumn(L"∙", Model::Col_Icon, wxDATAVIEW_CELL_INERT, iconWidth, wxALIGN_CENTER, 0);
+    auto iconRenderer = new wxDataViewBitmapRenderer("wxIcon", wxDATAVIEW_CELL_INERT, wxALIGN_CENTER | wxALIGN_CENTRE_VERTICAL);
+    m_colIcon = new wxDataViewColumn(L"∙", iconRenderer, Model::Col_Icon, iconWidth, wxALIGN_CENTER, 0);
+    AppendColumn(m_colIcon);
+
 #if wxCHECK_VERSION(3,1,1) && !defined(__WXMSW__) && !defined(__WXOSX__)
     if (ColorScheme::GetWindowMode(this) == ColorScheme::Light)
         m_colIcon->GetRenderer()->SetValueAdjuster(new DataViewIconsAdjuster());
@@ -683,7 +688,17 @@ void PoeditListCtrl::UpdateColumns()
 
     m_colID->SetHidden(!m_displayIDs);
     if (m_displayIDs)
+    {
+        // determine best fitting width only once, then set it as fixed, because IDs are immutable
         m_colID->SetWidth(wxCOL_WIDTH_AUTOSIZE);
+        m_colID->SetWidth(m_colID->GetWidth());
+    }
+    else
+    {
+        // workaround a wx bug where it calculates width of hidden columns
+        // see https://github.com/wxWidgets/wxWidgets/commit/560a81b913f23800e286d297d8cd38e72a207641
+        m_colID->SetWidth(0);
+    }
 
     SizeColumns();
 
@@ -713,6 +728,9 @@ void PoeditListCtrl::SizeColumns()
         w += 2;
 #endif
     }
+
+    // Tell the model to not bother with strings larger than twice available space:
+    m_model->SetMaxVisibleWidth(w / GetCharWidth());
 
     if (m_colTrans && m_colTrans->IsShown())
     {

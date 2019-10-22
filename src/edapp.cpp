@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -54,6 +54,10 @@
 #include <wx/msw/wrapwin.h>
 #include <Shlwapi.h>
 #include <winsparkle.h>
+#endif
+
+#ifdef __WXGTK3__
+#include <glib.h>
 #endif
 
 #include <unicode/uclean.h>
@@ -332,6 +336,11 @@ bool PoeditApp::OnInit()
 #ifdef __WXMSW__
     // remove the current directory from the default DLL search order
     SetDllDirectory(L"");
+#endif
+
+#ifdef __WXGTK3__
+    // Wayland compatibility, see https://wiki.gnome.org/Projects/GnomeShell/ApplicationBased
+    g_set_prgname("net.poedit.Poedit");
 #endif
 
     SetVendorName("Vaclav Slavik");
@@ -950,7 +959,7 @@ void PoeditApp::OnAbout(wxCommandEvent&)
     about.SetVersion(wxGetApp().GetAppVersion());
     about.SetDescription(_("Poedit is an easy to use translations editor."));
 #endif
-    about.SetCopyright(L"Copyright \u00a9 1999-2018 Václav Slavík");
+    about.SetCopyright(L"Copyright \u00a9 1999-2019 Václav Slavík");
 #ifdef __WXGTK__ // other ports would show non-native about dlg
     about.SetWebSite("https://poedit.net");
 #endif

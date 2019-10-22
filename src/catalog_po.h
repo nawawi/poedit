@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -40,11 +40,19 @@ public:
     POCatalogItem() {}
     POCatalogItem(const CatalogItem&) = delete;
 
+    wxArrayString GetReferences() const override;
+
 protected:
+    const wxArrayString& GetRawReferences() const { return m_references; }
+    void SetRawReferences(const wxArrayString& ref) { m_references = ref; }
+
     void UpdateInternalRepresentation() override {}
 
     friend class POLoadParser;
     friend class POCatalog;
+
+protected:
+    wxArrayString m_references;
 };
 
 
@@ -187,7 +195,7 @@ public:
     /// Updates the catalog from POT file.
     bool UpdateFromPOT(const wxString& pot_file, bool replace_header = false);
     bool UpdateFromPOT(POCatalogPtr pot, bool replace_header = false);
-    static POCatalogPtr CreateFromPOT(const wxString& pot_file);
+    static POCatalogPtr CreateFromPOT(POCatalogPtr pot);
 
 protected:
     /** Loads catalog from .po file.

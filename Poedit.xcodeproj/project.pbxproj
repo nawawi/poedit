@@ -3,8 +3,33 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 51;
 	objects = {
+
+/* Begin PBXAggregateTarget section */
+		B27115F8170830A800B936D5 /* deps.gettext */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = B27115F9170830A800B936D5 /* Build configuration list for PBXAggregateTarget "deps.gettext" */;
+			buildPhases = (
+				B2C129D921C6CBAF004364B2 /* Ninja Build */,
+			);
+			dependencies = (
+			);
+			name = deps.gettext;
+			productName = deps.gettext;
+		};
+		B2E270B421B6977700C33EA0 /* deps.icu */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = B2E270B521B6977700C33EA0 /* Build configuration list for PBXAggregateTarget "deps.icu" */;
+			buildPhases = (
+				B2C129D821C6CA07004364B2 /* Ninja Build */,
+			);
+			dependencies = (
+			);
+			name = deps.icu;
+			productName = deps.icu;
+		};
+/* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
 		B201EBE11DCF755900FFB541 /* configuration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B201EBDF1DCF755900FFB541 /* configuration.cpp */; };
@@ -12,7 +37,7 @@
 		B201EBE41DCF8C0100FFB541 /* configuration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B201EBDF1DCF755900FFB541 /* configuration.cpp */; };
 		B2083D131A87D17D00150BBF /* libcld2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B2083D121A87D17D00150BBF /* libcld2.a */; };
 		B209005E19CAD64400D6382E /* SuggestionTMTemplate.png in Resources */ = {isa = PBXBuildFile; fileRef = B209005D19CAD64400D6382E /* SuggestionTMTemplate.png */; };
-		B209006019CAD64A00D6382E /* SuggestionError.png in Resources */ = {isa = PBXBuildFile; fileRef = B209005F19CAD64A00D6382E /* SuggestionError.png */; };
+		B209006019CAD64A00D6382E /* SuggestionErrorTemplate.png in Resources */ = {isa = PBXBuildFile; fileRef = B209005F19CAD64A00D6382E /* SuggestionErrorTemplate.png */; };
 		B20960F319928C8500A2EB13 /* GettextToolsDummy.c in Sources */ = {isa = PBXBuildFile; fileRef = B20960F219928C8500A2EB13 /* GettextToolsDummy.c */; };
 		B20F24FB1E39113900906CA8 /* extractor_gettext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B20F24FA1E39113900906CA8 /* extractor_gettext.cpp */; };
 		B20F31CC216654D2005B7037 /* StatusErrorBlack@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B20F31CA216654D2005B7037 /* StatusErrorBlack@2x.png */; };
@@ -112,6 +137,7 @@
 		B29AE89A17103992008D1F8A /* toolbar.xrc in Resources */ = {isa = PBXBuildFile; fileRef = B27EB0671709DA4A009C1328 /* toolbar.xrc */; };
 		B29B282019D2E87600D27DC8 /* sidebar.png in Resources */ = {isa = PBXBuildFile; fileRef = B29B281E19D2E87600D27DC8 /* sidebar.png */; };
 		B29B282119D2E87600D27DC8 /* sidebar@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B29B281F19D2E87600D27DC8 /* sidebar@2x.png */; };
+		B2A012B321BEE4C5008051FD /* SuggestionTMTemplate@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B2E7F16F1E04534A005FA992 /* SuggestionTMTemplate@2x.png */; };
 		B2A3637C1E4B9DC800E96253 /* pretranslate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2A3637A1E4B9DC800E96253 /* pretranslate.cpp */; };
 		B2B7D472170DD93E00ED0AFE /* GettextTools.bundle in Copy Gettext bundle */ = {isa = PBXBuildFile; fileRef = B248B2DE170D765100EBA58E /* GettextTools.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		B2B7E81A1AD94194007FC4EB /* libwx_osx_base_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B2B7E8191AD94194007FC4EB /* libwx_osx_base_static.a */; };
@@ -122,8 +148,8 @@
 		B2BF84C1170847E60030AA22 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2BF84C0170847E60030AA22 /* IOKit.framework */; };
 		B2BF84C4170849D00030AA22 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2BF84BB170846940030AA22 /* Carbon.framework */; };
 		B2C62E191AA8A29000901D63 /* http_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2C62E181AA8A29000901D63 /* http_client.cpp */; };
-		B2CE2FEB1A94EBDE0020A620 /* CrowdinLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = B2CE2FE91A94EBDE0020A620 /* CrowdinLogo.png */; };
-		B2CE2FEC1A94EBDE0020A620 /* CrowdinLogo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B2CE2FEA1A94EBDE0020A620 /* CrowdinLogo@2x.png */; };
+		B2CE2FEB1A94EBDE0020A620 /* CrowdinLogoTemplate.png in Resources */ = {isa = PBXBuildFile; fileRef = B2CE2FE91A94EBDE0020A620 /* CrowdinLogoTemplate.png */; };
+		B2CE2FEC1A94EBDE0020A620 /* CrowdinLogoTemplate@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B2CE2FEA1A94EBDE0020A620 /* CrowdinLogoTemplate@2x.png */; };
 		B2CE2FEF1A94EBF50020A620 /* crowdin_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2CE2FED1A94EBF50020A620 /* crowdin_client.cpp */; };
 		B2CE2FF21A94F19D0020A620 /* Prefs-Accounts.png in Resources */ = {isa = PBXBuildFile; fileRef = B2CE2FF01A94F19D0020A620 /* Prefs-Accounts.png */; };
 		B2CE2FF31A94F19D0020A620 /* Prefs-Accounts@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B2CE2FF11A94F19D0020A620 /* Prefs-Accounts@2x.png */; };
@@ -150,8 +176,7 @@
 		B2E02A361CB812C500D18F5C /* unicode_helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2E02A341CB812C500D18F5C /* unicode_helpers.cpp */; };
 		B2E11F121A2C66FB00E4E42C /* text_control.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2E11F101A2C66FB00E4E42C /* text_control.cpp */; };
 		B2E2184C199A76B100EA2784 /* syntaxhighlighter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2E2184A199A76B100EA2784 /* syntaxhighlighter.cpp */; };
-		B2E7F16E1E045343005FA992 /* SuggestionError@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B2E7F16D1E045343005FA992 /* SuggestionError@2x.png */; };
-		B2E7F1701E04534A005FA992 /* SuggestionTMTemplate@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B2E7F16F1E04534A005FA992 /* SuggestionTMTemplate@2x.png */; };
+		B2E7F16E1E045343005FA992 /* SuggestionErrorTemplate@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B2E7F16D1E045343005FA992 /* SuggestionErrorTemplate@2x.png */; };
 		B2E836DE1709ECD600F31559 /* dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = B2E836DD1709ECD600F31559 /* dsa_pub.pem */; };
 		B2E836E91709ED2A00F31559 /* window-close.png in Resources */ = {isa = PBXBuildFile; fileRef = B2E836E01709ED2A00F31559 /* window-close.png */; };
 		B2E836EB1709ED2A00F31559 /* poedit-status-cat-mid.png in Resources */ = {isa = PBXBuildFile; fileRef = B2E836E21709ED2A00F31559 /* poedit-status-cat-mid.png */; };
@@ -185,13 +210,6 @@
 			remoteGlobalIDString = B248B2DD170D765100EBA58E;
 			remoteInfo = GettextTools;
 		};
-		B2B7D473170DDAAB00ED0AFE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B24ACD5316F6201F00399242 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B27115F8170830A800B936D5;
-			remoteInfo = ant_external_deps;
-		};
 		B2CE6D271AD00897007E6863 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B24ACD5316F6201F00399242 /* Project object */;
@@ -199,12 +217,19 @@
 			remoteGlobalIDString = B2CE6D191ACFCD95007E6863;
 			remoteInfo = PoeditQuicklook;
 		};
-		B2DAD7141AD19AAD00DCB398 /* PBXContainerItemProxy */ = {
+		B2E270B821B6979D00C33EA0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B24ACD5316F6201F00399242 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = B27115F8170830A800B936D5;
-			remoteInfo = ant_external_deps;
+			remoteGlobalIDString = B2E270B421B6977700C33EA0;
+			remoteInfo = deps.icu;
+		};
+		B2E270BA21B697AA00C33EA0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B24ACD5316F6201F00399242 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B2E270B421B6977700C33EA0;
+			remoteInfo = deps.icu;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -260,7 +285,7 @@
 		B201EBE01DCF755900FFB541 /* configuration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = configuration.h; sourceTree = "<group>"; };
 		B2083D121A87D17D00150BBF /* libcld2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcld2.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		B209005D19CAD64400D6382E /* SuggestionTMTemplate.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SuggestionTMTemplate.png; sourceTree = "<group>"; };
-		B209005F19CAD64A00D6382E /* SuggestionError.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SuggestionError.png; sourceTree = "<group>"; };
+		B209005F19CAD64A00D6382E /* SuggestionErrorTemplate.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SuggestionErrorTemplate.png; sourceTree = "<group>"; };
 		B20960F219928C8500A2EB13 /* GettextToolsDummy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GettextToolsDummy.c; path = macos/GettextToolsDummy.c; sourceTree = SOURCE_ROOT; };
 		B20F24FA1E39113900906CA8 /* extractor_gettext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = extractor_gettext.cpp; sourceTree = "<group>"; };
 		B20F31CA216654D2005B7037 /* StatusErrorBlack@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "StatusErrorBlack@2x.png"; sourceTree = "<group>"; };
@@ -326,7 +351,7 @@
 		B240FFC619C6F1A600777AFE /* suggestions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = suggestions.cpp; path = tm/suggestions.cpp; sourceTree = "<group>"; };
 		B248B2DE170D765100EBA58E /* GettextTools.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GettextTools.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		B248B2DF170D765100EBA58E /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
-		B248B2E3170D765100EBA58E /* GettextTools-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; name = "GettextTools-Info.plist"; path = "macos/GettextTools-Info.plist"; sourceTree = "<group>"; };
+		B248B2E3170D765100EBA58E /* GettextTools-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "GettextTools-Info.plist"; path = "macos/GettextTools-Info.plist"; sourceTree = SOURCE_ROOT; };
 		B24ACD5B16F6201F00399242 /* Poedit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Poedit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B24ACD5E16F6201F00399242 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		B24ACD6116F6201F00399242 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -486,15 +511,15 @@
 		B2BF84BD170847220030AA22 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		B2BF84C0170847E60030AA22 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		B2BF84C21708498B0030AA22 /* HIToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HIToolbox.framework; path = System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework; sourceTree = SDKROOT; };
+		B2C129D721C6C584004364B2 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2C62E181AA8A29000901D63 /* http_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = http_client.cpp; sourceTree = "<group>"; };
 		B2C67BBF19B0DE7200691FA4 /* eu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = eu; path = eu.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2C67BC019B0DE7C00691FA4 /* gl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = gl; path = gl.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2CDAA1B1A61866300261248 /* bg */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = bg; path = bg.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		B2CDAA1C1A61866300261248 /* bg */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = bg; path = bg.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2CDAA1D1A61867600261248 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		B2CDAA1E1A61867600261248 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/MoveApplication.strings; sourceTree = "<group>"; };
-		B2CE2FE91A94EBDE0020A620 /* CrowdinLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CrowdinLogo.png; sourceTree = "<group>"; };
-		B2CE2FEA1A94EBDE0020A620 /* CrowdinLogo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "CrowdinLogo@2x.png"; sourceTree = "<group>"; };
+		B2CE2FE91A94EBDE0020A620 /* CrowdinLogoTemplate.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CrowdinLogoTemplate.png; sourceTree = "<group>"; };
+		B2CE2FEA1A94EBDE0020A620 /* CrowdinLogoTemplate@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "CrowdinLogoTemplate@2x.png"; sourceTree = "<group>"; };
 		B2CE2FED1A94EBF50020A620 /* crowdin_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = crowdin_client.cpp; sourceTree = "<group>"; };
 		B2CE2FEE1A94EBF50020A620 /* crowdin_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crowdin_client.h; sourceTree = "<group>"; };
 		B2CE2FF01A94F19D0020A620 /* Prefs-Accounts.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Prefs-Accounts.png"; sourceTree = "<group>"; };
@@ -528,7 +553,7 @@
 		B2E11F111A2C66FB00E4E42C /* text_control.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = text_control.h; sourceTree = "<group>"; };
 		B2E2184A199A76B100EA2784 /* syntaxhighlighter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syntaxhighlighter.cpp; sourceTree = "<group>"; };
 		B2E2184B199A76B100EA2784 /* syntaxhighlighter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = syntaxhighlighter.h; sourceTree = "<group>"; };
-		B2E7F16D1E045343005FA992 /* SuggestionError@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "SuggestionError@2x.png"; sourceTree = "<group>"; };
+		B2E7F16D1E045343005FA992 /* SuggestionErrorTemplate@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "SuggestionErrorTemplate@2x.png"; sourceTree = "<group>"; };
 		B2E7F16F1E04534A005FA992 /* SuggestionTMTemplate@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "SuggestionTMTemplate@2x.png"; sourceTree = "<group>"; };
 		B2E836DD1709ECD600F31559 /* dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = dsa_pub.pem; path = macos/dsa_pub.pem; sourceTree = SOURCE_ROOT; };
 		B2E836E01709ED2A00F31559 /* window-close.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "window-close.png"; sourceTree = "<group>"; };
@@ -570,7 +595,6 @@
 		B2F672DA197A840D00DBFDB0 /* it */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2F672DB197A841200DBFDB0 /* ja */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2F672DC197A841600DBFDB0 /* ko */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/MoveApplication.strings; sourceTree = "<group>"; };
-		B2F672DD197A841C00DBFDB0 /* nb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2F672DE197A842100DBFDB0 /* nl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2FE29691AC85FFF005588E4 /* keytar_mac.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = keytar_mac.cc; path = keychain/keytar_mac.cc; sourceTree = "<group>"; };
 		B2FE296A1AC85FFF005588E4 /* keytar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = keytar.h; path = keychain/keytar.h; sourceTree = "<group>"; };
@@ -816,8 +840,8 @@
 				B2F287C2170DCC92004C1F41 /* AUTHORS */,
 				B2F287C3170DCC92004C1F41 /* COPYING */,
 			);
-			path = GettextTools;
-			sourceTree = "<group>";
+			name = GettextTools;
+			sourceTree = SOURCE_ROOT;
 		};
 		B24ACD5216F6201F00399242 = {
 			isa = PBXGroup;
@@ -1002,15 +1026,15 @@
 				B20F31CF216654DA005B7037 /* StatusWarningBlack@2x.png */,
 				B26D06561826A22C0069C378 /* PoeditWelcome.png */,
 				B26D06571826A22C0069C378 /* PoeditWelcome@2x.png */,
-				B209005F19CAD64A00D6382E /* SuggestionError.png */,
-				B2E7F16D1E045343005FA992 /* SuggestionError@2x.png */,
+				B209005F19CAD64A00D6382E /* SuggestionErrorTemplate.png */,
+				B2E7F16D1E045343005FA992 /* SuggestionErrorTemplate@2x.png */,
 				B2D52B841DE88A3D00E27B35 /* SuggestionPerfectMatch.png */,
 				B2D52B851DE88A3D00E27B35 /* SuggestionPerfectMatch@2x.png */,
 				B209005D19CAD64400D6382E /* SuggestionTMTemplate.png */,
 				B2E7F16F1E04534A005FA992 /* SuggestionTMTemplate@2x.png */,
 				B2E836E01709ED2A00F31559 /* window-close.png */,
-				B2CE2FE91A94EBDE0020A620 /* CrowdinLogo.png */,
-				B2CE2FEA1A94EBDE0020A620 /* CrowdinLogo@2x.png */,
+				B2CE2FE91A94EBDE0020A620 /* CrowdinLogoTemplate.png */,
+				B2CE2FEA1A94EBDE0020A620 /* CrowdinLogoTemplate@2x.png */,
 				B25DB35B1E3E5102006D7228 /* ExtractorsGNUgettext.png */,
 				B25DB35C1E3E5102006D7228 /* ExtractorsGNUgettext@2x.png */,
 			);
@@ -1029,23 +1053,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
-
-/* Begin PBXLegacyTarget section */
-		B27115F8170830A800B936D5 /* external_deps */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) ";
-			buildConfigurationList = B27115F9170830A800B936D5 /* Build configuration list for PBXLegacyTarget "external_deps" */;
-			buildPhases = (
-			);
-			buildToolPath = ./build_deps.sh;
-			buildWorkingDirectory = deps;
-			dependencies = (
-			);
-			name = external_deps;
-			passBuildSettingsInEnvironment = 1;
-			productName = external_deps;
-		};
-/* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
 		B248B2DD170D765100EBA58E /* GettextTools */ = {
@@ -1085,7 +1092,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				B2B7D474170DDAAB00ED0AFE /* PBXTargetDependency */,
+				B2E270B921B6979D00C33EA0 /* PBXTargetDependency */,
 				B248B2EE170D773000EBA58E /* PBXTargetDependency */,
 				B2CE6D281AD00897007E6863 /* PBXTargetDependency */,
 			);
@@ -1108,7 +1115,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				B2DAD7151AD19AAD00DCB398 /* PBXTargetDependency */,
+				B2E270BB21B697AA00C33EA0 /* PBXTargetDependency */,
 			);
 			name = PoeditQuicklook;
 			productName = PoeditQuicklook;
@@ -1122,7 +1129,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = PO;
-				LastUpgradeCheck = 1000;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = "Václav Slavík";
 				TargetAttributes = {
 					B2CE6D191ACFCD95007E6863 = {
@@ -1131,8 +1138,8 @@
 				};
 			};
 			buildConfigurationList = B24ACD5616F6201F00399242 /* Build configuration list for PBXProject "Poedit" */;
-			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			compatibilityVersion = "Xcode 10.0";
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
@@ -1147,9 +1154,6 @@
 				ko,
 				nb,
 				nl,
-				pt_BR,
-				pt_PT,
-				zh_Hans,
 				hu,
 				sr,
 				tr,
@@ -1162,11 +1166,10 @@
 				ms,
 				az,
 				co,
-				en_GB,
+				"en-GB",
 				id,
 				sv,
 				uz,
-				zh_Hant,
 				pa,
 				fa,
 				ro,
@@ -1190,6 +1193,8 @@
 				"pt-BR",
 				"pt-PT",
 				th,
+				Base,
+				hr,
 			);
 			mainGroup = B24ACD5216F6201F00399242;
 			productRefGroup = B24ACD5C16F6201F00399242 /* Products */;
@@ -1197,7 +1202,8 @@
 			projectRoot = "";
 			targets = (
 				B24ACD5A16F6201F00399242 /* Poedit */,
-				B27115F8170830A800B936D5 /* external_deps */,
+				B27115F8170830A800B936D5 /* deps.gettext */,
+				B2E270B421B6977700C33EA0 /* deps.icu */,
 				B248B2DD170D765100EBA58E /* GettextTools */,
 				B2CE6D191ACFCD95007E6863 /* PoeditQuicklook */,
 			);
@@ -1228,14 +1234,14 @@
 				B2CE2FF31A94F19D0020A620 /* Prefs-Accounts@2x.png in Resources */,
 				B29B282019D2E87600D27DC8 /* sidebar.png in Resources */,
 				B2E836E91709ED2A00F31559 /* window-close.png in Resources */,
-				B2E7F16E1E045343005FA992 /* SuggestionError@2x.png in Resources */,
+				B2E7F16E1E045343005FA992 /* SuggestionErrorTemplate@2x.png in Resources */,
 				B29A1C331A9F8C0A00BC3006 /* poedit-sync.png in Resources */,
 				B2E836EB1709ED2A00F31559 /* poedit-status-cat-mid.png in Resources */,
 				B20F31CD216654D2005B7037 /* StatusErrorBlack.png in Resources */,
 				B2E836EC1709ED2A00F31559 /* poedit-status-cat-no.png in Resources */,
 				B2E836ED1709ED2A00F31559 /* poedit-status-cat-ok.png in Resources */,
 				B22A5C86184E4B870034BEFD /* document-properties@2x.png in Resources */,
-				B209006019CAD64A00D6382E /* SuggestionError.png in Resources */,
+				B209006019CAD64A00D6382E /* SuggestionErrorTemplate.png in Resources */,
 				B2E836FB1709ED6300F31559 /* document-new.png in Resources */,
 				B2E836FD1709ED6300F31559 /* document-properties.png in Resources */,
 				B22A5C87184E4B870034BEFD /* poedit-update@2x.png in Resources */,
@@ -1249,11 +1255,10 @@
 				B29AE89017103992008D1F8A /* comment.xrc in Resources */,
 				B22A5C83184E4B870034BEFD /* edit-delete@2x.png in Resources */,
 				B292667621664C9500DC536C /* ItemBookmarkTemplate@2x.png in Resources */,
-				B2E7F1701E04534A005FA992 /* SuggestionTM@2x.png in Resources */,
-				B2E7F1701E04534A005FA992 /* SuggestionTMTemplate@2x.png in Resources */,
+				B2A012B321BEE4C5008051FD /* SuggestionTMTemplate@2x.png in Resources */,
 				B20F31D0216654DA005B7037 /* StatusWarningBlack.png in Resources */,
 				B20F31CC216654D2005B7037 /* StatusErrorBlack@2x.png in Resources */,
-				B2CE2FEB1A94EBDE0020A620 /* CrowdinLogo.png in Resources */,
+				B2CE2FEB1A94EBDE0020A620 /* CrowdinLogoTemplate.png in Resources */,
 				B2CE2FF21A94F19D0020A620 /* Prefs-Accounts.png in Resources */,
 				B29B282119D2E87600D27DC8 /* sidebar@2x.png in Resources */,
 				B2D52B861DE88A3D00E27B35 /* SuggestionPerfectMatch.png in Resources */,
@@ -1266,7 +1271,7 @@
 				B29AE89617103992008D1F8A /* properties.xrc in Resources */,
 				B29AE89717103992008D1F8A /* summary.xrc in Resources */,
 				B29AE89A17103992008D1F8A /* toolbar.xrc in Resources */,
-				B2CE2FEC1A94EBDE0020A620 /* CrowdinLogo@2x.png in Resources */,
+				B2CE2FEC1A94EBDE0020A620 /* CrowdinLogoTemplate@2x.png in Resources */,
 				B2EC60A41812D9D40059756A /* icudt57l.dat in Resources */,
 				B25DB35E1E3E5102006D7228 /* ExtractorsGNUgettext@2x.png in Resources */,
 				B24D196A1E84503B00C6DD8D /* StatusWarning@2x.png in Resources */,
@@ -1299,6 +1304,42 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		B2C129D821C6CA07004364B2 /* Ninja Build */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Ninja Build";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd deps && ./build_deps.sh icu\n\n";
+		};
+		B2C129D921C6CBAF004364B2 /* Ninja Build */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Ninja Build";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd deps && ./build_deps.sh gettext\n";
+		};
 		B2C1DA6A1AD2DC0E00CDABFF /* Link Resources/ to Embedding App */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1325,7 +1366,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "BUILD_NUMBER=`git rev-list HEAD --count`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"";
+			shellScript = "BUILD_NUMBER=`git rev-list HEAD --count`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
 		};
 		B2CC62E217DB7F670097461B /* Set bundle versions from deps/gettext */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1333,13 +1374,14 @@
 			files = (
 			);
 			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 			);
 			name = "Set bundle versions from deps/gettext";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "VERSION_NUMBER=`cat deps/gettext/.version`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $VERSION_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"";
+			shellScript = "VERSION_NUMBER=`cat deps/gettext/.version`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $VERSION_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
 		};
 		B2CE6D291AD008F6007E6863 /* Set CFBundleVersion from git */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1353,7 +1395,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "BUILD_NUMBER=`git rev-list HEAD --count`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"";
+			shellScript = "BUILD_NUMBER=`git rev-list HEAD --count`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
 		};
 		B2E83707170C96DB00F31559 /* Copy PO Translations */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1478,7 +1520,7 @@
 /* Begin PBXTargetDependency section */
 		B248B2EC170D772800EBA58E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B27115F8170830A800B936D5 /* external_deps */;
+			target = B27115F8170830A800B936D5 /* deps.gettext */;
 			targetProxy = B248B2EB170D772800EBA58E /* PBXContainerItemProxy */;
 		};
 		B248B2EE170D773000EBA58E /* PBXTargetDependency */ = {
@@ -1486,20 +1528,20 @@
 			target = B248B2DD170D765100EBA58E /* GettextTools */;
 			targetProxy = B248B2ED170D773000EBA58E /* PBXContainerItemProxy */;
 		};
-		B2B7D474170DDAAB00ED0AFE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B27115F8170830A800B936D5 /* external_deps */;
-			targetProxy = B2B7D473170DDAAB00ED0AFE /* PBXContainerItemProxy */;
-		};
 		B2CE6D281AD00897007E6863 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B2CE6D191ACFCD95007E6863 /* PoeditQuicklook */;
 			targetProxy = B2CE6D271AD00897007E6863 /* PBXContainerItemProxy */;
 		};
-		B2DAD7151AD19AAD00DCB398 /* PBXTargetDependency */ = {
+		B2E270B921B6979D00C33EA0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B27115F8170830A800B936D5 /* external_deps */;
-			targetProxy = B2DAD7141AD19AAD00DCB398 /* PBXContainerItemProxy */;
+			target = B2E270B421B6977700C33EA0 /* deps.icu */;
+			targetProxy = B2E270B821B6979D00C33EA0 /* PBXContainerItemProxy */;
+		};
+		B2E270BB21B697AA00C33EA0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B2E270B421B6977700C33EA0 /* deps.icu */;
+			targetProxy = B2E270BA21B697AA00C33EA0 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1576,7 +1618,6 @@
 				B2F672DA197A840D00DBFDB0 /* it */,
 				B2F672DB197A841200DBFDB0 /* ja */,
 				B2F672DC197A841600DBFDB0 /* ko */,
-				B2F672DD197A841C00DBFDB0 /* nb */,
 				B2F672DE197A842100DBFDB0 /* nl */,
 				B2A84663197EAEA4008A4ACA /* hu */,
 				B2A84664197EAEAD008A4ACA /* sr */,
@@ -1597,7 +1638,6 @@
 				B29A9D3B1A2DE28100195189 /* fa */,
 				B2AEFE141A3210CB003BEFAF /* ro */,
 				B2CDAA1C1A61866300261248 /* bg */,
-				B2CDAA1E1A61867600261248 /* nb */,
 				B2148A2E1A76B96E004516FC /* sq */,
 				B24F15801AF38E1A00B0022B /* fi */,
 				B28511ED1AF38F2400031975 /* is */,
@@ -1618,6 +1658,7 @@
 				B2EA5BF02103590000F470E3 /* pt-BR */,
 				B2EA5BF22103590800F470E3 /* pt-PT */,
 				B2EA5BF42103592D00F470E3 /* th */,
+				B2C129D721C6C584004364B2 /* nb */,
 			);
 			name = MoveApplication.strings;
 			sourceTree = "<group>";
@@ -1639,6 +1680,7 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = "macos/GettextTools-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.poedit.Poedit.${PRODUCT_NAME:rfc1034identifier}";
@@ -1658,6 +1700,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = "macos/GettextTools-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.poedit.Poedit.${PRODUCT_NAME:rfc1034identifier}";
@@ -1735,7 +1778,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				POEDIT_FEATURES = "";
-				POEDIT_VERSION = 2.2;
+				POEDIT_VERSION = 2.2.3;
 				SDKROOT = macosx;
 				WX_DEFINES = "__WXOSX_COCOA__ __WX__ __WXMAC_XCODE__=1 wxUSE_UNICODE_UTF8=0 wxUSE_UNICODE_WCHAR=1";
 			};
@@ -1803,10 +1846,10 @@
 					"$(DEPS_BUILD_DIR)/icu/include",
 				);
 				LIBRARY_SEARCH_PATHS = "$(DEPS_BUILD_DIR)/icu/lib";
-				LLVM_LTO = YES_THIN;
+				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				POEDIT_FEATURES = "";
-				POEDIT_VERSION = 2.2;
+				POEDIT_VERSION = 2.2.3;
 				SDKROOT = macosx;
 				WX_DEFINES = "__WXOSX_COCOA__ __WX__ __WXMAC_XCODE__=1 wxUSE_UNICODE_UTF8=0 wxUSE_UNICODE_WCHAR=1";
 			};
@@ -1953,6 +1996,31 @@
 			};
 			name = Release;
 		};
+		B2E270B621B6977700C33EA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				DEBUGGING_SYMBOLS = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		B2E270B721B6977700C33EA0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1983,7 +2051,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B27115F9170830A800B936D5 /* Build configuration list for PBXLegacyTarget "external_deps" */ = {
+		B27115F9170830A800B936D5 /* Build configuration list for PBXAggregateTarget "deps.gettext" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B27115FA170830A800B936D5 /* Debug */,
@@ -1997,6 +2065,15 @@
 			buildConfigurations = (
 				B2CE6D241ACFCD95007E6863 /* Debug */,
 				B2CE6D251ACFCD95007E6863 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B2E270B521B6977700C33EA0 /* Build configuration list for PBXAggregateTarget "deps.icu" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2E270B621B6977700C33EA0 /* Debug */,
+				B2E270B721B6977700C33EA0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

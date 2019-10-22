@@ -2,7 +2,7 @@
 
 set -e
 
-if [ "$1" = clean ] ; then
+if [ "$2" = clean ] ; then
     if [ ! -z "$DEPS_BUILD_DIR" ] ; then
         rm -rf "$DEPS_BUILD_DIR"/*
     fi
@@ -50,4 +50,7 @@ cflags_config = $cflags_config
 ldflags_config = $ldflags_config
 EOT
 
-ninja
+# don't produce error if the build is stopped for other reasons
+trap 'exit 0' INT
+
+ninja $1

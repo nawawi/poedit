@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2016-2018 Vaclav Slavik
+ *  Copyright (C) 2016-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -106,7 +106,14 @@ wxColour ColorScheme::DoGet(Color color, Mode mode)
         case Color::ItemContextFg:
             return mode == Dark ? sRGB(180, 222, 254) : sRGB(70, 109, 137);
         case Color::ItemContextBg:
-            return mode == Dark ? sRGB(67, 94, 147, 0.6) : sRGB(217, 232, 242);
+            if (mode == Dark)
+                #if wxCHECK_VERSION(3,1,0)
+                return sRGB(67, 94, 147, 0.6);
+                #else  // see https://github.com/vslavik/poedit/issues/524
+                return sRGB(67, 94, 147);
+                #endif
+            else
+                return sRGB(217, 232, 242);
         case Color::ItemContextBgHighlighted:
             #if defined(__WXMSW__)
             return sRGB(255, 255, 255, 0.50);

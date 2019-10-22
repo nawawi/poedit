@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2018 Vaclav Slavik
+ *  Copyright (C) 2014-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -26,6 +26,7 @@
 #include "syntaxhighlighter.h"
 
 #include "catalog.h"
+#include "str_helpers.h"
 
 #include <unicode/uchar.h>
 
@@ -135,15 +136,32 @@ public:
 
     void Highlight(const std::wstring& s, const CallbackType& highlight) override
     {
-        std::wsregex_iterator next(s.begin(), s.end(), m_re);
-        std::wsregex_iterator end;
-        while (next != end)
+        try
         {
-            auto match = *next++;
-            if (match.empty())
-                continue;
-            int pos = static_cast<int>(match.position());
-            highlight(pos, pos + static_cast<int>(match.length()), m_kind);
+            std::wsregex_iterator next(s.begin(), s.end(), m_re);
+            std::wsregex_iterator end;
+            while (next != end)
+            {
+                auto match = *next++;
+                if (match.empty())
+                    continue;
+                int pos = static_cast<int>(match.position());
+                highlight(pos, pos + static_cast<int>(match.length()), m_kind);
+            }
+        }
+        catch (std::regex_error& e)
+        {
+            switch (e.code())
+            {
+                case std::regex_constants::error_complexity:
+                case std::regex_constants::error_stack:
+                    // MSVC version of std::regex in particular can fail to match
+                    // e.g. HTML regex with backreferences on insanely large strings;
+                    // in that case, don't highlight instead of failing outright.
+                    return;
+                default:
+                    throw;
+            }
         }
     }
 
@@ -153,7 +171,7 @@ private:
 };
 
 
-std::wregex RE_HTML_MARKUP(LR"(<\/?[a-zA-Z:-]+(\s+[-:\w]+(=([-:\w+]|"[^"]*"|'[^']*'))?)*\s*\/?>)",
+std::wregex RE_HTML_MARKUP(LR"((<\/?[a-zA-Z0-9:-]+(\s+[-:\w]+(=([-:\w+]|"[^"]*"|'[^']*'))?)*\s*\/?>)|(&[^ ;]+;))",
                            std::regex_constants::ECMAScript | std::regex_constants::optimize);
 
 // php-format per http://php.net/manual/en/function.sprintf.php plus positionals
@@ -165,16 +183,21 @@ std::wregex RE_PHP_FORMAT(LR"(%(\d+\$)?[-+]{0,2}([ 0]|'.)?-?\d*(\..?\d+)?[%bcdeE
 std::wregex RE_C_FORMAT(LR"(%(\d+\$)?[-+ #0]{0,5}(\d+|\*)?(\.(\d+|\*))?(hh|ll|[hljztL])?[%csdioxXufFeEaAgGnp])",
                         std::regex_constants::ECMAScript | std::regex_constants::optimize);
 
+// variables expansion for %foo% (Twig), {foo} and {{foo}}
+std::wregex RE_COMMON_PLACEHOLDERS(LR"((%[0-9a-zA-Z_.-]+%)|(\{[0-9a-zA-Z_.-]+\})|(\{\{[0-9a-zA-Z_.-]+\}\}))",
+                    std::regex_constants::ECMAScript | std::regex_constants::optimize);
+
 } // anonymous namespace
 
 
 SyntaxHighlighterPtr SyntaxHighlighter::ForItem(const CatalogItem& item)
 {
     auto formatFlag = item.GetFormatFlag();
-    bool needsHTML = item.GetString().Contains('<');
+    bool needsHTML = std::regex_search(str::to_wstring(item.GetString()), RE_HTML_MARKUP);
+    bool needsPlaceholders = std::regex_search(str::to_wstring(item.GetString()), RE_COMMON_PLACEHOLDERS);
 
     static auto basic = std::make_shared<BasicSyntaxHighlighter>();
-    if (!needsHTML && formatFlag.empty())
+    if (!needsHTML && !needsPlaceholders && formatFlag.empty())
         return basic;
 
     auto all = std::make_shared<CompositeSyntaxHighlighter>();
@@ -184,6 +207,13 @@ SyntaxHighlighterPtr SyntaxHighlighter::ForItem(const CatalogItem& item)
     {
         static auto html = std::make_shared<RegexSyntaxHighlighter>(RE_HTML_MARKUP, TextKind::Markup);
         all->Add(html);
+    }
+
+    if (needsPlaceholders)
+    {
+        // If no format specified, heuristically apply highlighting of common variable markers
+        static auto placeholders = std::make_shared<RegexSyntaxHighlighter>(RE_COMMON_PLACEHOLDERS, TextKind::Format);
+        all->Add(placeholders);
     }
 
     // TODO: more/all languages

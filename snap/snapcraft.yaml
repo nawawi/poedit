@@ -1,10 +1,10 @@
 name: poedit
-version: 2.2
-summary: Translations editor for gettext
+version: 2.2.3
+summary: Simple translations editor
 description: >
-  Translations editor for gettext (PO files). It helps with translating
-  applications or WordPress themes and plugins into other languages, as well as
-  with developing localizable applications.
+  Translations editor for gettext (PO files) and XLIFF.
+  It helps with translating applications or WordPress themes and plugins into
+  other languages, as well as with developing localizable applications.
 
   By default Poedit snap can only open files under your home directory, to
   allow Poedit access files under /media you must connect this snap to the
@@ -19,12 +19,10 @@ description: >
 
 grade: stable
 confinement: strict
-icon: artwork/linux/appicon/256x256/apps/poedit.png
+icon: artwork/linux/appicon/256x256/apps/net.poedit.Poedit.png
 
 apps:
   poedit:
-    # WORKAROUND: Fix icon loading problem
-    # https://github.com/ubuntu/snapcraft-desktop-helpers/pull/121
     command: >
       desktop-launch poedit
     desktop: share/applications/net.poedit.Poedit.desktop
@@ -63,15 +61,20 @@ plugs:
   gsettings:
   mount-observe:
 
+  gnome-3-26-1604:
+    interface: content
+    target: $SNAP/gnome-platform
+    default-provider: gnome-3-26-1604:gnome-3-26-1604
+
 parts:
   poedit:
     after:
       - boostlib
+      - cpprest
       - ccache
       - gtkspell
       - patches
       - wxwidgets
-      - desktop-gtk3
 
     source: .
 
@@ -104,7 +107,6 @@ parts:
       - automake
       - gettext
       - libcld2-dev
-      - libcpprest-dev
       - libicu-dev
       - libjpeg-dev
       - liblucene++-dev
@@ -121,6 +123,8 @@ parts:
       ./bootstrap
       ./configure \
         --with-wx-prefix="$SNAPCRAFT_STAGE" \
+        --with-boost-libdir="${SNAPCRAFT_STAGE}/lib" \
+        CC=gcc-6 CPP=cpp-6 CXX=g++-6 \
         CPPFLAGS="-I${SNAPCRAFT_STAGE}/include -I${SNAPCRAFT_PART_INSTALL}/../build/deps/json/src" \
         LDFLAGS="-Wl,--copy-dt-needed-entries -L${SNAPCRAFT_STAGE}/lib" \
         PKG_CONFIG_PATH="${SNAPCRAFT_STAGE}"/lib/pkgconfig
@@ -133,6 +137,10 @@ parts:
         --file "${SNAPCRAFT_STAGE}"/patches/postprocess-desktop-entries.sed \
         "${SNAPCRAFT_PART_INSTALL}"/share/applications/net.poedit*.desktop
 
+    build-attributes:
+      # Gtk libraries provided by gnome-platform content shared snap
+      - no-system-libraries
+
     stage-packages:
       # Called by Poedit
       - gettext
@@ -143,11 +151,7 @@ parts:
       # Required by Unity/GNOME?
       - libcanberra-gtk3-module
 
-      - libboost-iostreams1.58.0
-      - libboost-regex1.58.0
-      - libboost-thread1.58.0
       - libcld2-0
-      - libcpprest2.8
       - libice6
       - liblucene++0v5
       - libsecret-1-0
@@ -159,39 +163,23 @@ parts:
         - bin/*
       files-in-stage-packages:
         - usr/*
-      freedesktop-desktop-entries:
-        - share/applications/*
-      icons:
-        - share/icons/*
-      localizations:
-        - share/locale/*
-      manpages:
-        - share/man/*
-      pixmaps:
-        - share/pixmaps/*
       resources:
-        - share/poedit/*
+        - share/*
 
     stage:
       - $executables
       - $files-in-stage-packages
-      - $freedesktop-desktop-entries
-      - $manpages
-      - $localizations
-      - $pixmaps
       - $resources
 
     prime:
       - $executables
       - $files-in-stage-packages
-      - $freedesktop-desktop-entries
-      - $manpages
-      - $localizations
-      - $pixmaps
       - $resources
 
     build-attributes:
       - no-system-libraries
+
+  desktop-gnome-platform:
 
   boostlib:
     after:
@@ -212,7 +200,7 @@ parts:
 
       ./bootstrap.sh \
         --prefix="${SNAPCRAFT_PART_INSTALL}" \
-        --with-libraries=iostreams,regex,system,thread \
+        --with-libraries=iostreams,regex,system,thread,random,filesystem,chrono,atomic,date_time \
         --with-icu=/usr
       ./b2 install \
         -j $(nproc) \
@@ -220,6 +208,44 @@ parts:
         --layout=system \
         link=static \
         threading=multi
+
+    filesets:
+      library-headers:
+        - include/*
+      libraries:
+        - lib/*
+    stage:
+      - $library-headers
+      - $libraries
+    override-prime: 'true'
+
+  cpprest:
+    after:
+      - ccache
+      - boostlib
+
+    source: deps/casablanca
+
+    build-packages:
+      # OPTIONAL: Use gcc installation from `gcc-6` part instead
+      #- gcc
+      #- g++
+      - libssl-dev
+      - cmake
+      - ninja-build
+
+    plugin: dump
+    override-build: |
+      set -eu
+
+      mkdir build.release
+      cd build.release
+      CC=gcc-6 CXX=g++-6 cmake -G Ninja .. \
+            -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=0 -DWERROR=OFF \
+            -DCMAKE_INSTALL_PREFIX:PATH="${SNAPCRAFT_PART_INSTALL}" \
+            -DBUILD_TESTS=OFF -DBUILD_SAMPLES=OFF
+      ninja -j4
+      ninja install
 
     filesets:
       library-headers:
@@ -260,6 +286,9 @@ parts:
       - libtiff5-dev
       - libxtst-dev
       - zlib1g-dev
+    build-attributes:
+      # Gtk libraries provided by gnome-platform content shared snap
+      - no-system-libraries
 
     plugin: autotools
     override-build: |
@@ -327,53 +356,17 @@ parts:
 
   # This pseudo part setups Compiler cache(ccache) to the stage dir.
   #
-  # To use it simply add a dependency to this part and prepend
-  # "$SNAPCRAFT_STAGE"/bin to the command search PATHs
+  # To use it simply add a dependency to this part for every part you'd
+  # prefer caching
   ccache:
     after:
       - gcc-6
-    override-pull: 'true'
-    build-packages:
-      - ccache
-    plugin: nil
-    override-build: |
-      mkdir \
-        --parents \
-        "${SNAPCRAFT_PART_INSTALL}"/bin
-      ln \
-        --force \
-        --symbolic \
-        "$(which ccache)" \
-        "${SNAPCRAFT_PART_INSTALL}"/bin/gcc-6
-      ln \
-        --force \
-        --symbolic \
-        "$(which ccache)" \
-        "${SNAPCRAFT_PART_INSTALL}"/bin/g++-6
-      ln \
-        --force \
-        --symbolic \
-        ./gcc-6 \
-        "${SNAPCRAFT_PART_INSTALL}"/bin/gcc
-      ln \
-        --force \
-        --symbolic \
-        ./g++-6 \
-        "${SNAPCRAFT_PART_INSTALL}"/bin/g++
-    filesets:
-      executables:
-        - bin/*
-    stage:
-      - $executables
-    override-prime: 'true'
 
   # This pseudo part setups version 6 of GCC, which is not available
   # in Ubuntu 16.04 software source.
   gcc-6:
+    source: snap/local/empty
     plugin: nil
-    # Poedit sources will be used when `source` is ommitted, avoid this
-    # behavior
-    override-pull: 'true'
     override-build: |
       sudo apt --yes install software-properties-common
 
@@ -414,10 +407,8 @@ parts:
     override-prime: 'true'
 
   spellcheck-dictionaries:
+    source: snap/local/empty
     plugin: nil
-    # Poedit sources will be used when `source` is ommitted, avoid this
-    # behavior
-    override-pull: 'true'
     override-build: |
       set -eu
 
@@ -450,7 +441,7 @@ parts:
       - $hunspell-dictionaries
 
   # Self-built GtkSpell Part #
-  # This part provides a patched old version of the GtkSpell library
+  # This part provides a patched recent version of the GtkSpell library
   # to fix the non-relocatable iso-codes data path.
   gtkspell:
     after:
@@ -504,6 +495,10 @@ parts:
       - $localization
     prime:
       - $localization
+
+    build-attributes:
+      # Gtk libraries provided by gnome-platform content shared snap
+      - no-system-libraries
 
   # Self-built Enchant Part #
   # This part provides a patched recent version of the Enchant spell-
@@ -588,11 +583,10 @@ parts:
       - $shared-libraries
 
   # Patched Ubuntu iso-codes installation
-  # This patch slightly patches iso-codes's pkg-config so that non-
+  # This part slightly patches iso-codes's pkg-config so that non-
   # relocable GtkSpell part can locate its data
   iso-codes:
-    override-pull: 'true'
-
+    source: snap/local/empty
     plugin: nil
     override-build: |
       set -eu
@@ -635,7 +629,7 @@ parts:
   # This pseudo part installs the patches required for building other
   # parts into the stage tree
   patches:
-    source: snap/patches
+    source: snap/local/patches
     plugin: dump
 
     # DISABLED: `organize:{ /: another-dir/ }` causes the items under host

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2018 Vaclav Slavik
+ *  Copyright (C) 1999-2019 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -63,6 +63,8 @@ FileViewer *FileViewer::GetAndActivate()
     if (!ms_instance)
         ms_instance = new FileViewer(nullptr);
     ms_instance->Show();
+    if (ms_instance->IsIconized())
+        ms_instance->Iconize(false);
     ms_instance->Raise();
     return ms_instance;
 }
