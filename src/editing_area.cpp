@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2019 Vaclav Slavik
+ *  Copyright (C) 1999-2020 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -125,7 +125,7 @@ public:
             const wxCoord minMSize = GetSizeInMajorDir(minSize);
             // If there's not enough space, make shrinkable item proportional,
             // it will be resized under its minimal size then.
-            m_shrinkable->SetProportion(totalSize < minMSize ? 10000 : 0);
+            m_shrinkable->SetProportion(totalSize > 20 && totalSize < minMSize ? 10000 : 0);
         }
 
         wxBoxSizer::RepositionChildren(minSize);
@@ -139,7 +139,7 @@ public:
             const wxCoord minSize = GetSizeInMajorDir(m_calculatedMinSize);
             // If there's not enough space, make shrinkable item proportional,
             // it will be resized under its minimal size then.
-            m_shrinkable->SetProportion(totalSize < minSize ? 10000 : 0);
+            m_shrinkable->SetProportion(totalSize > 20 && totalSize < minSize ? 10000 : 0);
         }
 
         wxBoxSizer::RecalcSizes();

@@ -2,16 +2,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2019-05-14 19:19+0200\n"
-"PO-Revision-Date: 2019-05-14 16:56\n"
-"Last-Translator: Václav Slavík (vslavik)\n"
+"POT-Creation-Date: 2020-02-03 14:13+0100\n"
+"PO-Revision-Date: 2020-02-03 13:11\n"
+"Last-Translator: Vaclav Slavik <vslavik>\n"
 "Language-Team: Estonian\n"
 "Language: et_EE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: crowdin.com\n"
 "X-Crowdin-Project: poedit\n"
 "X-Crowdin-Language: et\n"
 "X-Crowdin-File: /locales/poedit.pot\n"
@@ -36,7 +35,7 @@ msgid "Collecting source files…"
 msgstr "Lähtefailide kogumine…"
 
 msgid "Extracting translatable strings…"
-msgstr ""
+msgstr "Tõlgitavate stringide ekstraheerimine…"
 
 msgid "Failed to load extracted catalog."
 msgstr "Viga kataloogi lahtipakkimisel."
@@ -131,7 +130,7 @@ msgstr "Tõrge kataloogi salvestamisel"
 
 #, c-format
 msgid "Error loading file “%s”: %s."
-msgstr ""
+msgstr "Viga faili “%s” laadimisel:%s."
 
 #, c-format
 msgid "unsupported XLIFF version (%s)"
@@ -139,7 +138,7 @@ msgstr ""
 
 #. TRANSLATORS: Shown as error if a translation of XLIFF markup is not valid XML
 msgid "Broken markup in translation string."
-msgstr ""
+msgstr "Katkestatud märgistus tõlkestringis."
 
 msgid "(Use default language)"
 msgstr "(Kasuta vaikekeelt)"
@@ -293,7 +292,7 @@ msgstr "Kataloogi avamine"
 msgid "File “%s” doesn’t exist."
 msgstr "Faili \"%s\" pole olemas."
 
-msgid "Poedit is an easy to use translations editor."
+msgid "Poedit is an easy to use translation editor."
 msgstr "Poedit on lihtne tõlkimise abivahend."
 
 msgid "Catalogs Manager"
@@ -399,22 +398,22 @@ msgstr "Too kõik ette"
 msgid "PO Translation"
 msgstr "PO tõlge"
 
+msgid ""
+"The file may be either corrupted or in a format not recognized by Poedit."
+msgstr ""
+
 msgid "The file cannot be opened."
 msgstr "Faili ei saa avada."
 
 msgid "Invalid file"
 msgstr "Vigane fail"
 
-msgid ""
-"The file may be either corrupted or in a format not recognized by Poedit."
-msgstr ""
-
 msgid "You can’t drop more than one file on Poedit window."
 msgstr "Poedit aknasse saab lohistada vaid ühe faili."
 
 #, c-format
 msgid "File “%s” is not a translation file."
-msgstr ""
+msgstr "Fail “%s” ei ole tõlke fail."
 
 msgid "Poedit"
 msgstr "Poedit"
@@ -485,6 +484,20 @@ msgstr ""
 "Tõlked ei saanud värskendada lähtekoodist, sest määratud kaustast ei leitud "
 "koodi."
 
+msgid "Permission denied."
+msgstr ""
+
+msgid ""
+"You don’t have permission to read source code files from the location "
+"specified in the catalog’s Properties."
+msgstr ""
+
+#. TRANSLATORS: The System Preferences etc. references macOS system settings and should be translated EXACTLY as in the OS. If you don't use macOS and can't check, leave it untranslated.
+msgid ""
+"If you previously denied access to your files, you can allow it in System "
+"Preferences > Security & Privacy > Privacy > Files & Folders."
+msgstr ""
+
 msgid "Entries in the catalog are probably incorrect."
 msgstr "Kirjed kataloogis on tõenäoliselt vigased."
 
@@ -542,14 +555,14 @@ msgstr "Tõlgetest ei leitud vigu."
 msgid "The translation is ready for use, but %d entry is not translated yet."
 msgid_plural ""
 "The translation is ready for use, but %d entries are not translated yet."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Tõlge on kasutamiseks valmis, kuid %d kirje pole veel tõlgitud."
+msgstr[1] "Tõlge on kasutamiseks valmis, kuid %d kirjet pole veel tõlgitud."
 
 msgid "The translation is ready for use."
 msgstr "Tõlge on kasutamiseks valmis."
 
 msgid "Warnings have been disabled."
-msgstr ""
+msgstr "Hoiatused on keelatud."
 
 msgid ""
 "If you disabled the warnings because of excessive false positives, please "
@@ -798,7 +811,7 @@ msgstr "%i vorm"
 
 #, c-format
 msgid "Form %i (unused)"
-msgstr ""
+msgstr "Vorm %i (kasutamata)"
 
 msgid "Singular"
 msgstr "Ainsus"
@@ -1156,10 +1169,10 @@ msgid ""
 msgstr ""
 
 msgid "Custom Extractors:"
-msgstr ""
+msgstr "Kohandatud Ekstraktorid:"
 
 msgid "Custom extractors:"
-msgstr ""
+msgstr "Kohandatud ekstraktorid:"
 
 msgid "Edit…"
 msgstr "Redigeeri…"
@@ -1173,14 +1186,14 @@ msgid ""
 msgstr ""
 
 msgid "Delete extractor"
-msgstr ""
+msgstr "Kustuta ekstraktor"
 
 #, c-format
 msgid "Are you sure you want to delete the “%s” extractor?"
 msgstr ""
 
 msgid "Extractors"
-msgstr ""
+msgstr "Ekstraktorid"
 
 msgid "Accounts"
 msgstr "Kontod"
@@ -1888,8 +1901,8 @@ msgstr "Uuenda lähtekoodist"
 msgid "Update from Code"
 msgstr "Uuenda lähtekoodist"
 
-msgid "Update catalog - synchronize it with sources"
-msgstr "Uuenda kataloog - sünkroniseeri lähtekoodiga"
+msgid "Update from source code"
+msgstr "Uuenda lähtekoodist"
 
 msgid "Sidebar"
 msgstr "Külgriba"

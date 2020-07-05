@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2019 Vaclav Slavik
+ *  Copyright (C) 1999-2020 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -173,7 +173,7 @@ public:
 
     std::string SaveToBuffer() override;
 
-    ValidationResults Validate() override;
+    ValidationResults Validate(bool wasJustLoaded) override;
 
     /// Compiles the catalog into binary MO file.
     bool CompileToMO(const wxString& mo_file,

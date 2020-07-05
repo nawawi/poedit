@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2019 Vaclav Slavik
+ *  Copyright (C) 1999-2020 Vaclav Slavik
  *  Copyright (C) 2005 Olivier Sannier
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
@@ -512,6 +512,12 @@ PoeditListCtrl::PoeditListCtrl(wxWindow *parent, wxWindowID id, bool dispIDs)
 #ifdef __WXMSW__
     if (visualMode == ColorScheme::Dark)
         SetAlternateRowColour(GetBackgroundColour().ChangeLightness(108));
+
+    GetMainWindow()->Bind(wxEVT_MENU, [=](wxCommandEvent&) { 
+        SelectAll();
+        wxDataViewEvent le(wxEVT_DATAVIEW_SELECTION_CHANGED, this, GetSelection());
+        ProcessWindowEvent(le); 
+    }, wxID_SELECTALL);
 #endif
 
     Bind(wxEVT_SIZE, &PoeditListCtrl::OnSize, this);

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2019 Vaclav Slavik
+ *  Copyright (C) 1999-2020 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -222,8 +222,17 @@ bool g_focusToText = false;
     else
     {
         // NB: duplicated in ReadCatalog()
-        auto cat = Catalog::Create(filename);
-        if (!cat || !cat->IsOk())
+        try
+        {
+            auto cat = Catalog::Create(filename);
+            if (!cat || !cat->IsOk())
+                throw Exception(_("The file may be either corrupted or in a format not recognized by Poedit."));
+
+            f = new PoeditFrame();
+            f->Show(true);
+            f->ReadCatalog(cat);
+        }
+        catch (...)
         {
             wxMessageDialog dlg
             (
@@ -232,16 +241,10 @@ bool g_focusToText = false;
                 _("Invalid file"),
                 wxOK | wxICON_ERROR
             );
-            dlg.SetExtendedMessage(
-                _("The file may be either corrupted or in a format not recognized by Poedit.")
-            );
+            dlg.SetExtendedMessage(DescribeCurrentException());
             dlg.ShowModal();
             return nullptr;
         }
-
-        f = new PoeditFrame();
-        f->Show(true);
-        f->ReadCatalog(cat);
     }
 
     f->Show(true);
@@ -1341,6 +1344,10 @@ void PoeditFrame::NewFromPOT()
             return;
         }
 
+        // Silently fix duplicates because they are common in WP world:
+        if (pot->HasDuplicateItems())
+            pot->FixDuplicateItems();
+
         NewFromPOT(pot);
     }
 }
@@ -1622,6 +1629,27 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
                         wxOK | wxICON_ERROR
                     ));
                 dlg->SetExtendedMessage(_(L"Translations couldn’t be updated from the source code, because no code was found in the location specified in the catalog’s Properties."));
+                dlg->ShowWindowModalThenDo([dlg](int){});
+                break;
+            }
+            case UpdateResultReason::PermissionDenied:
+            {
+                wxWindowPtr<wxMessageDialog> dlg(new wxMessageDialog
+                    (
+                        this,
+                        _("Permission denied."),
+                        MSW_OR_OTHER(_("Updating failed"), ""),
+                        wxOK | wxICON_ERROR
+                    ));
+                wxString expl = _(L"You don’t have permission to read source code files from the location specified in the catalog’s Properties.");
+            #ifdef __WXOSX__
+                if (wxCheckOsVersion(10, 15))
+                {
+                    // TRANSLATORS: The System Preferences etc. references macOS system settings and should be translated EXACTLY as in the OS. If you don't use macOS and can't check, leave it untranslated.
+                    expl += "\n\n" + _("If you previously denied access to your files, you can allow it in System Preferences > Security & Privacy > Privacy > Files & Folders.");
+                }
+            #endif
+                dlg->SetExtendedMessage(expl);
                 dlg->ShowWindowModalThenDo([dlg](int){});
                 break;
             }
@@ -2199,12 +2227,15 @@ void PoeditFrame::ReadCatalog(const wxString& catalog)
     wxBusyCursor bcur;
 
     // NB: duplicated in PoeditFrame::Create()
-    auto cat = Catalog::Create(catalog);
-    if (cat && cat->IsOk())
+    try
     {
+        auto cat = Catalog::Create(catalog);
+        if (!cat || !cat->IsOk())
+            throw Exception(_("The file may be either corrupted or in a format not recognized by Poedit."));
+
         ReadCatalog(cat);
     }
-    else
+    catch (...)
     {
         wxMessageDialog dlg
         (
@@ -2213,9 +2244,7 @@ void PoeditFrame::ReadCatalog(const wxString& catalog)
             _("Invalid file"),
             wxOK | wxICON_ERROR
         );
-        dlg.SetExtendedMessage(
-            _("The file may be either corrupted or in a format not recognized by Poedit.")
-        );
+        dlg.SetExtendedMessage(DescribeCurrentException());
         dlg.ShowModal();
     }
 }
@@ -2229,6 +2258,10 @@ void PoeditFrame::ReadCatalog(const CatalogPtr& cat)
 #ifdef __WXMSW__
         wxWindowUpdateLocker no_updates(this);
 #endif
+        {
+            wxLogNull null;  // don't report non-item warnings
+            cat->Validate(/*wasJustLoaded:*/true);
+        }
 
         m_catalog = cat;
         m_pendingHumanEditedItem.reset();
@@ -3253,7 +3286,7 @@ void PoeditFrame::OnTextEditingCommand(wxCommandEvent& event)
 #ifdef __WXGTK__
     wxEventBlocker block(this, wxEVT_MENU);
 #endif
-    wxWindow *w = wxWindow::FindFocus();
+    wxWindow *w = FindFocusNoMenu();
     if (!w || w == this || !w->ProcessWindowEventLocally(event))
         event.Skip();
 }
@@ -3263,7 +3296,7 @@ void PoeditFrame::OnTextEditingCommandUpdate(wxUpdateUIEvent& event)
 #ifdef __WXGTK__
     wxEventBlocker block(this, wxEVT_UPDATE_UI);
 #endif
-    wxWindow *w = wxWindow::FindFocus();
+    wxWindow *w = FindFocusNoMenu();
     if (!w || w == this || !w->ProcessWindowEventLocally(event))
         event.Enable(false);
 }

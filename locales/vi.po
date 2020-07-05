@@ -2,16 +2,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2019-05-14 19:19+0200\n"
-"PO-Revision-Date: 2019-05-14 16:56\n"
-"Last-Translator: Václav Slavík (vslavik)\n"
+"POT-Creation-Date: 2020-02-03 14:13+0100\n"
+"PO-Revision-Date: 2020-02-03 13:10\n"
+"Last-Translator: Vaclav Slavik <vslavik>\n"
 "Language-Team: Vietnamese\n"
 "Language: vi_VN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: crowdin.com\n"
 "X-Crowdin-Project: poedit\n"
 "X-Crowdin-Language: vi\n"
 "X-Crowdin-File: /locales/poedit.pot\n"
@@ -46,11 +45,11 @@ msgstr "Đang trộn các khác biệt…"
 
 #, c-format
 msgid "“%s” is not a valid POT file."
-msgstr "“%s” is not a valid POT file."
+msgstr "Tập tin '%s' không hợp định dạng POT."
 
 #, c-format
 msgid "Malformed header: “%s”"
-msgstr "Bị thay đổi tiêu đề: \"%s\""
+msgstr "Phần đầu dị hình: “%s”"
 
 msgid "PO Translation Files"
 msgstr "PO Dịch Tập Tin"
@@ -291,7 +290,7 @@ msgstr "Mở catalog"
 msgid "File “%s” doesn’t exist."
 msgstr "Tập tin \"%s\" không tồn tại."
 
-msgid "Poedit is an easy to use translations editor."
+msgid "Poedit is an easy to use translation editor."
 msgstr "Poedit rất dễ dùng cho việc biên tập bản dịch."
 
 msgid "Catalogs Manager"
@@ -397,15 +396,15 @@ msgstr "Mang Tất Cả ra Trước"
 msgid "PO Translation"
 msgstr "PO Dịch"
 
+msgid ""
+"The file may be either corrupted or in a format not recognized by Poedit."
+msgstr "Tập tin có lẽ đã hư hỏng hoặc là Poedit không chấp nhận định dạng này."
+
 msgid "The file cannot be opened."
 msgstr "Không thể mở tập-tin."
 
 msgid "Invalid file"
 msgstr "Tập tin không hợp lệ"
-
-msgid ""
-"The file may be either corrupted or in a format not recognized by Poedit."
-msgstr "Tập tin có lẽ đã hư hỏng hoặc là Poedit không chấp nhận định dạng này."
 
 msgid "You can’t drop more than one file on Poedit window."
 msgstr "Bạn không thể kéo thả nhiều hơn một tập tin vào trong cửa sổ Poedit."
@@ -483,6 +482,20 @@ msgid ""
 msgstr ""
 "Bản dịch không thể được cập nhật từ mã nguồn, bởi vì không có mã nào được "
 "tìm thấy tại vị trí chỉ định trong Thuộc tính của danh mục."
+
+msgid "Permission denied."
+msgstr ""
+
+msgid ""
+"You don’t have permission to read source code files from the location "
+"specified in the catalog’s Properties."
+msgstr ""
+
+#. TRANSLATORS: The System Preferences etc. references macOS system settings and should be translated EXACTLY as in the OS. If you don't use macOS and can't check, leave it untranslated.
+msgid ""
+"If you previously denied access to your files, you can allow it in System "
+"Preferences > Security & Privacy > Privacy > Files & Folders."
+msgstr ""
 
 msgid "Entries in the catalog are probably incorrect."
 msgstr "Các mục từ trong catalog chắc chắn là không đúng."
@@ -886,7 +899,7 @@ msgid "Options"
 msgstr "Tùy chọn"
 
 msgid "Ignore case"
-msgstr "Trường hợp bỏ qua"
+msgstr "Không phân biệt HOA/thường"
 
 msgid "Wrap around"
 msgstr "Ngắt khoảng"
@@ -1186,14 +1199,14 @@ msgstr ""
 "(PHP, C/c + +, C#, Perl, Python, Java, JavaScript và những ngôn ngữ khác)."
 
 msgid "Delete extractor"
-msgstr "Xóa trình giải nén"
+msgstr "Xóa trình trích xuất"
 
 #, c-format
 msgid "Are you sure you want to delete the “%s” extractor?"
-msgstr "Bạn có chắc muốn xóa trình giải nén \"%s\"?"
+msgstr "Bạn có chắc muốn xóa trình trích xuất \"%s\"?"
 
 msgid "Extractors"
-msgstr "Trình giải nén"
+msgstr "Trình trích xuất"
 
 msgid "Accounts"
 msgstr "Tài khoản"
@@ -1750,10 +1763,10 @@ msgid ""
 "of keywords, %F to list of input files,\n"
 "%C to charset flag (see below)."
 msgstr ""
-"Đây là lệnh được dùng để khởi chạy trình giải nén.\n"
-"%o mở rộng tên của tập tin đầu ra, %K tới danh sách\n"
-"các từ khóa, %F tới danh sách tập tin đầu vào,\n"
-"%C tới cờ bộ mã ký tự (xem bên dưới)."
+"Đây là lệnh được dùng để khởi chạy Trình trích xuất.\n"
+"%o được khai triển thành tên của tập tin đầu ra, %K thành danh sách\n"
+"các từ khóa, %F thành danh sách tập tin đầu vào,\n"
+"%C thành cờ bộ mã ký tự (xem bên dưới)."
 
 msgid "An item in keywords list:"
 msgstr "Một mục tin trong danh sách các từ khóa:"
@@ -1901,8 +1914,8 @@ msgstr "Cập nhật từ mã"
 msgid "Update from Code"
 msgstr "Cập nhật từ mã"
 
-msgid "Update catalog - synchronize it with sources"
-msgstr "Cập nhật catalog - đồng bộ hóa nó với mã nguồn"
+msgid "Update from source code"
+msgstr "Cập nhật từ mã nguồn"
 
 msgid "Sidebar"
 msgstr "Thanh tiện ích"

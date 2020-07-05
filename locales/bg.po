@@ -2,16 +2,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2019-05-14 19:19+0200\n"
-"PO-Revision-Date: 2019-05-14 16:54\n"
-"Last-Translator: Václav Slavík (vslavik)\n"
+"POT-Creation-Date: 2020-02-03 14:13+0100\n"
+"PO-Revision-Date: 2020-02-03 13:09\n"
+"Last-Translator: Vaclav Slavik <vslavik>\n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: crowdin.com\n"
 "X-Crowdin-Project: poedit\n"
 "X-Crowdin-Language: bg\n"
 "X-Crowdin-File: /locales/poedit.pot\n"
@@ -231,10 +230,10 @@ msgid "No translation projects listed in your Crowdin account."
 msgstr "Няма проекти за превод във вашия профил в Crowdin."
 
 msgid "This project has no files that can be translated in Poedit."
-msgstr "Този проект няма файлове, които да могат да бъдат преведени с Poedit."
+msgstr "Проектът няма файлове, които да бъдат превеждани с Poedit."
 
 msgid "This file can only be edited in Crowdin’s web interface."
-msgstr "Този файл може да бъде редактиран само през уеб интерфейса на Crowdin."
+msgstr "Файлът може да бъде редактиран само през уеб интерфейса на Crowdin."
 
 msgid "Downloading latest translations…"
 msgstr "Изтегляне на текущите преводи…"
@@ -261,7 +260,7 @@ msgid "&Help"
 msgstr "Помо&щ"
 
 msgid "MO files can’t be directly edited in Poedit."
-msgstr "MO файлове не могат да бъдат директно редактирани в Poedit."
+msgstr "MO файловете не могат да бъдат директно променяни с Poedit."
 
 msgid "Error opening file"
 msgstr "Грешка при отваряне на файл"
@@ -270,11 +269,11 @@ msgid ""
 "Please open and edit the corresponding PO file instead. When you save it, "
 "the MO file will be updated as well."
 msgstr ""
-"Моля, вместо това отворете и редактирате съответния файл PO. Когато запазите "
-"вашите промени, файлът MO също ще бъде обновен."
+"Моля, вместо това отворете и променете съответния файл PO. При запазване на "
+"промените, файлът MO също ще бъде обновен."
 
 msgid "don’t delete temporary files (for debugging)"
-msgstr "временните файлове да не бъдат изтривани (в случай на проблеми)"
+msgstr "временните файлове да не бъдат премахвани (за отстраняване на дефекти)"
 
 msgid "handle a poedit:// URI"
 msgstr "управление на протокола poedit://"
@@ -296,7 +295,7 @@ msgstr "Отваряне на каталог"
 msgid "File “%s” doesn’t exist."
 msgstr "Файлът „%s“ не съществува."
 
-msgid "Poedit is an easy to use translations editor."
+msgid "Poedit is an easy to use translation editor."
 msgstr "Poedit е лесен за ползване редактор на преводи."
 
 msgid "Catalogs Manager"
@@ -402,15 +401,15 @@ msgstr "Всички на преден план"
 msgid "PO Translation"
 msgstr "Файл с превод PO"
 
+msgid ""
+"The file may be either corrupted or in a format not recognized by Poedit."
+msgstr "Файлът може да е повреден или е непознат за Poedit формат."
+
 msgid "The file cannot be opened."
 msgstr "Файлът не може да бъде отворен."
 
 msgid "Invalid file"
 msgstr "Невалиден файл"
-
-msgid ""
-"The file may be either corrupted or in a format not recognized by Poedit."
-msgstr "Файлът може да е повреден или е непознат за Poedit формат."
 
 msgid "You can’t drop more than one file on Poedit window."
 msgstr "Не може да пуснете повече от един файл в прозореца на Poedit."
@@ -488,6 +487,25 @@ msgid ""
 msgstr ""
 "Не всички преводи са обновени от изходния код, защото такъв не е открит на "
 "посоченото в настройките на каталога място."
+
+msgid "Permission denied."
+msgstr "Достъпът е отказан."
+
+msgid ""
+"You don’t have permission to read source code files from the location "
+"specified in the catalog’s Properties."
+msgstr ""
+"Нямате право за четене на файловете с изходния код от местоположението, "
+"посочено в свойствата на файла."
+
+#. TRANSLATORS: The System Preferences etc. references macOS system settings and should be translated EXACTLY as in the OS. If you don't use macOS and can't check, leave it untranslated.
+msgid ""
+"If you previously denied access to your files, you can allow it in System "
+"Preferences > Security & Privacy > Privacy > Files & Folders."
+msgstr ""
+"Ако сте забранили достъп до файловете си, можете да го разрешите в "
+"Системните настройки > Защита и поверителност > Поверителност > Файлове и "
+"папки."
 
 msgid "Entries in the catalog are probably incorrect."
 msgstr "Низовете в каталога вероятно са неправилни."
@@ -604,7 +622,7 @@ msgid ""
 "This catalog has entries with plural forms, but doesn’t have Plural-Forms "
 "header configured."
 msgstr ""
-"Този каталог има форми за множествено число, но заглавката „Plural-Forms“ "
+"Каталогът има форми за множествено число, но заглавката „Plural-Forms“ "
 "липсва."
 
 msgid ""
@@ -841,7 +859,7 @@ msgstr "Изходен текст"
 
 #, c-format
 msgid "Translation — %s"
-msgstr "Превод на %s"
+msgstr "Превод на — %s"
 
 msgid "ID"
 msgstr "Идентификатор"
@@ -917,7 +935,7 @@ msgid "Replace &all"
 msgstr "Замяна на &всички"
 
 msgid "&Replace"
-msgstr "&Замяна"
+msgstr "&Заменяне"
 
 msgid "< &Previous"
 msgstr "&< Предишен"
@@ -926,10 +944,10 @@ msgid "&Next >"
 msgstr "Следващ &>"
 
 msgid "String to find"
-msgstr "Търсете"
+msgstr "Търсене"
 
 msgid "Replacement string"
-msgstr "Заместете"
+msgstr "Заместване"
 
 #, c-format
 msgid "Cannot execute program: %s"
@@ -1019,7 +1037,7 @@ msgid "Check spelling"
 msgstr "Проверка на правописа"
 
 msgid "Always change focus to text input field"
-msgstr "полето за превод &винаги на фокус"
+msgstr "полето за превод да е &винаги на фокус"
 
 msgid ""
 "Never let the list of strings take focus. If enabled, you must use Ctrl-"
@@ -1168,8 +1186,8 @@ msgid ""
 "Source code extractors are used to find translatable strings in the source "
 "code files and extract them so that they can be translated."
 msgstr ""
-"Този инструмент намира годни за превод низове във файлове с изходен код и ги "
-"извлича, така че да могат да бъдат преведени."
+"Инструментът намира годни за превод низове във файлове с изходен код и ги "
+"извлича, за да бъдат преведени."
 
 msgid "Custom Extractors:"
 msgstr "Потребителски команди за извличане:"
@@ -1181,7 +1199,7 @@ msgid "Edit…"
 msgstr "Редактиране…"
 
 msgid "GNU gettext"
-msgstr "GNU Gettext"
+msgstr "GNU gettext"
 
 msgid ""
 "Supports all programming languages recognized by GNU gettext tools (PHP, C/C+"
@@ -1561,7 +1579,7 @@ msgid "&Find…"
 msgstr "&Търсене…"
 
 msgid "Replace…"
-msgstr "&Замяна…"
+msgstr "&Заменяне…"
 
 msgid "Find next"
 msgstr "&Следващо съвпадение"
@@ -1645,10 +1663,10 @@ msgid "C&atalog"
 msgstr "&Каталог"
 
 msgid "&Update from source code"
-msgstr "Актуализиране от &изходния код"
+msgstr "Обновяване от &изходния код"
 
 msgid "&Update from Source Code"
-msgstr "Актуализиране от &изходния код"
+msgstr "Обновяване от &изходния код"
 
 msgid "Update from &POT file…"
 msgstr "Обновяване от &файл POT…"
@@ -1856,11 +1874,11 @@ msgstr ""
 
 msgid "Also use default keywords for supported languages"
 msgstr ""
-"Също така да бъдат ползватни ключовите думи по подразбиране за поддържаните "
+"Също така да бъдат ползвани ключовите думи по подразбиране за поддържаните "
 "езици"
 
 msgid "Learn About Gettext Keywords"
-msgstr "Повече за ключовите думи на Gettext"
+msgstr "Повече за ключовите думи на gettext"
 
 msgid "Learn about gettext keywords"
 msgstr "Повече за ключовите думи на GNU gettext"
@@ -1904,13 +1922,13 @@ msgid "Check for errors in the translation"
 msgstr "Проверяване за грешки в превода"
 
 msgid "Update from code"
-msgstr "Актуализиране от кода"
+msgstr "Обновяване от кода"
 
 msgid "Update from Code"
-msgstr "Актуализиране от кода"
+msgstr "Обновяване от кода"
 
-msgid "Update catalog - synchronize it with sources"
-msgstr "Актуализиране на каталог — синхронизиране с изходния код"
+msgid "Update from source code"
+msgstr "Актуализиране от изходния код"
 
 msgid "Sidebar"
 msgstr "Странична лента"
@@ -1956,7 +1974,7 @@ msgid "No Matches Found"
 msgstr "Няма съвпадения"
 
 msgid "This string was found in Poedit’s translation memory."
-msgstr "Този низ е от паметта с преводи на Poedit."
+msgstr "Низ от паметта с преводи на Poedit."
 
 msgid "The TMX file is malformed."
 msgstr "Файлът TMX е повреден или неправилно форматиран."
