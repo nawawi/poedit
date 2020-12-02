@@ -26,6 +26,7 @@
 #ifndef Poedit_customcontrols_h
 #define Poedit_customcontrols_h
 
+#include "colorscheme.h"
 #include "concurrency.h"
 #include "language.h"
 
@@ -95,7 +96,7 @@ public:
     static const int CHECKBOX_INDENT = 25;
 #endif
 
-    static wxColour GetTextColor();
+    static wxColour GetTextColor() { return ColorScheme::Get(Color::SecondaryLabel); }
 };
 
 /// Like ExplanationLabel, but nonwrapping
@@ -167,11 +168,51 @@ private:
 };
 
 
-// A bit nicer (macOS) and easier to use image button
+/// A bit nicer (macOS), color scheme aware, and easier to use image button
 class ImageButton : public wxBitmapButton
 {
 public:
-    ImageButton(wxWindow *parent, const wxBitmap& bmp);
+    ImageButton(wxWindow *parent, const wxString& bitmapName);
+
+private:
+    wxString m_bitmapName;
 };
+
+
+/// Color scheme aware static bitmap
+class StaticBitmap : public wxStaticBitmap
+{
+public:
+    StaticBitmap(wxWindow *parent, const wxString& bitmapName);
+
+    void SetBitmapName(const wxString& bitmapName);
+
+private:
+    wxString m_bitmapName;
+};
+
+
+/// Avatar icon
+class AvatarIcon : public wxWindow
+{
+public:
+    AvatarIcon(wxWindow *parent, const wxSize& size);
+
+    /// Set name to be used if image can't be loaded
+    void SetUserName(const wxString& name);
+    void LoadIcon(const wxFileName& f);
+
+    bool HasTransparentBackground() override { return true; }
+
+private:
+    void InitForSize();
+    void OnPaint(wxPaintEvent&);
+
+private:
+    wxRegion m_clipping;
+    wxBitmap m_bitmap;
+    wxString m_placeholder;
+};
+
 
 #endif // Poedit_customcontrols_h

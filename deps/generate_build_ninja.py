@@ -5,8 +5,8 @@ from collections import OrderedDict
 from glob import glob
 from ninja_syntax import Writer
 
-GETTEXT_TARBALL = 'gettext-0.20.1.tar.gz'
-GETTEXT_SHA256 = '66415634c6e8c3fa8b71362879ec7575e27da43da562c798a8a2f223e6e47f5c'
+GETTEXT_TARBALL = 'gettext-0.21.tar.gz'
+GETTEXT_SHA256 = 'c77d0da3102aec9c07f43671e60611ebff89a996ef159497ce8e59d075786b12'
 
 _exclusion_list = [
     '.DS_Store',
@@ -145,8 +145,8 @@ with open('build.ninja', 'w') as buildfile:
                                  ],
                                  build_commands=[
                                      # Prevent automake regeneration:
-                                     'touch `find . -name configure`',
                                      'touch `find . -name aclocal.m4`',
+                                     'touch `find . -name configure`',
                                      'touch `find . -name config.h.in`',
                                      'touch `find . -name Makefile.in`',
                                      'touch `find . -name *.1`',

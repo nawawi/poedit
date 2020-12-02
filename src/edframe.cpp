@@ -92,20 +92,85 @@
 namespace
 {
 
-// Splitters with customized appearance to blend with EditingArea:
-
+/// Splitters with customized appearance to blend with EditingArea:
 class ThinSplitter : public wxSplitterWindow
 {
 public:
-    ThinSplitter(wxWindow *parent, const wxColour& color)
+    ThinSplitter(wxWindow *parent, Color color, Color childBackground = Color::Max)
         : wxSplitterWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_NOBORDER | wxSP_LIVE_UPDATE)
     {
+        m_extraDraggableSpace = 0;
+
+        ColorScheme::SetupWindowColors(this, [=]
+        {
 #ifdef __WXOSX__
-        SetBackgroundColour(color);
+            SetBackgroundColour(ColorScheme::Get(color));
+            (void)childBackground;
 #else
-        m_color = color;
+            m_color = ColorScheme::Get(color);
+            if (childBackground != Color::Max)
+                m_childBackgroundColor = ColorScheme::Get(childBackground);
 #endif
+        });
     }
+
+#ifndef __WXGTK__
+    /// Setup the 2nd child window to handle events used for dragging the sash,
+    /// so that the draggable area is larger and more accessible.
+    ///
+    /// Getting this hack to work with wxGTK proved difficult even with the bundled version,
+    /// let alone others, plus GTK+ sash is larger; therefore, this is for macOS and Windows only.
+    void SetupDraggingMarginInChild(wxWindow *win, int extraDraggableSpace)
+    {
+        m_extraDraggableSpace = extraDraggableSpace;
+
+        win->Bind(wxEVT_LEFT_DOWN, [=](wxMouseEvent& event)
+        {
+            event.Skip();
+            if (!this->IsWithinExtraDraggableSpace(event))
+                return;
+
+            auto p = event.GetPosition();
+            event.SetPosition(p + win->GetPosition());
+            this->ProcessWindowEvent(event);
+            event.SetPosition(p);
+        });
+
+        auto motionHandler = [=](wxMouseEvent& event)
+        {
+            event.Skip();
+            if (!event.Leaving() && this->IsWithinExtraDraggableSpace(event))
+            {
+                win->SetCursor(m_splitMode == wxSPLIT_VERTICAL ? m_sashCursorWE : m_sashCursorNS);
+            }
+            else
+            {
+                win->SetCursor(*wxSTANDARD_CURSOR);
+            }
+        };
+        win->Bind(wxEVT_MOTION, motionHandler);
+        win->Bind(wxEVT_ENTER_WINDOW, motionHandler);
+        win->Bind(wxEVT_LEAVE_WINDOW, motionHandler);
+    }
+
+    bool IsWithinExtraDraggableSpace(const wxMouseEvent& event) const
+    {
+        auto pos = event.GetPosition();
+        int z = m_splitMode == wxSPLIT_VERTICAL ? pos.x : pos.y;
+        return z < m_extraDraggableSpace;
+    }
+
+    bool SashHitTest(int x, int y) override
+    {
+        if ( m_windowTwo == NULL || m_sashPosition == 0)
+            return false; // No sash
+
+        int z = m_splitMode == wxSPLIT_VERTICAL ? x : y;
+        int hitMax = m_sashPosition + m_extraDraggableSpace;
+
+        return z >= m_sashPosition && z < hitMax;
+    }
+#endif // !__WXGTK__
 
 #ifndef __WXOSX__
     void DrawSash(wxDC& dc) override
@@ -138,7 +203,7 @@ public:
                 rect.width -= PX(1);
             }
 
-            auto bg = GetWindow2()->GetBackgroundColour();
+            auto bg = m_childBackgroundColor.IsOk() ? m_childBackgroundColor : GetWindow2()->GetBackgroundColour();
             dc.SetPen(bg);
             dc.SetBrush(bg);
             dc.DrawRectangle(rect);
@@ -146,8 +211,11 @@ public:
     }
 
 private:
-    wxColour m_color;
+    wxColour m_color, m_childBackgroundColor;
 #endif // !__WXOSX__
+
+private:
+    int m_extraDraggableSpace;
 };
 
 } // anonymous namespace
@@ -596,10 +664,10 @@ void PoeditFrame::EnsureContentView(Content type)
     m_contentType = type;
     m_contentWrappingSizer->Add(m_contentView, wxSizerFlags(1).Expand());
     Layout();
-#ifdef __WXMSW__
+
+    // force correct layout:
     m_contentView->Show();
     Layout();
-#endif
 }
 
 void PoeditFrame::EnsureAppropriateContentView()
@@ -637,12 +705,14 @@ wxWindow* PoeditFrame::CreateContentViewPO(Content type)
     main->Hide();
 #endif
 
-    m_sidebarSplitter = new ThinSplitter(main, ColorScheme::Get(Color::SidebarSeparator));
+    auto sidebarSplitter = new ThinSplitter(main, Color::SidebarSeparator);
+    m_sidebarSplitter = sidebarSplitter;
     m_sidebarSplitter->Bind(wxEVT_SPLITTER_SASH_POS_CHANGING, &PoeditFrame::OnSidebarSplitterSashMoving, this);
 
     mainSizer->Add(m_sidebarSplitter, wxSizerFlags(1).Expand());
 
-    m_splitter = new ThinSplitter(m_sidebarSplitter, ColorScheme::Get(Color::EditingSeparator));
+    auto editingSplitter = new ThinSplitter(m_sidebarSplitter, Color::EditingSeparator, Color::EditingThickSeparator);
+    m_splitter = editingSplitter;
     m_splitter->Bind(wxEVT_SPLITTER_SASH_POS_CHANGING, &PoeditFrame::OnSplitterSashMoving, this);
 
     // make only the upper part grow when resizing
@@ -722,6 +792,12 @@ wxWindow* PoeditFrame::CreateContentViewPO(Content type)
 
         if (m_sidebar)
             m_sidebar->SetUpperHeight(m_splitter->GetSashPosition());
+
+#ifndef __WXGTK__
+        // Setup extended draggable areas around splitters to make them easier to resize
+        editingSplitter->SetupDraggingMarginInChild(m_editingArea, m_editingArea->GetTopRowHeight());
+        sidebarSplitter->SetupDraggingMarginInChild(m_sidebar, PX(8));
+#endif
     });
 
     return main;
@@ -736,7 +812,8 @@ wxWindow* PoeditFrame::CreateContentViewWelcome()
 
 wxWindow* PoeditFrame::CreateContentViewEmptyPO()
 {
-    return new EmptyPOScreenPanel(this);
+    bool isGettext = m_catalog->GetFileType() == Catalog::Type::PO || m_catalog->GetFileType() == Catalog::Type::POT;
+    return new EmptyPOScreenPanel(this, isGettext);
 }
 
 
@@ -1098,8 +1175,6 @@ void PoeditFrame::OnOpenFromCrowdin(wxCommandEvent&)
     DoIfCanDiscardCurrentDoc([=]{
         CrowdinOpenFile(this, [=](wxString name){
             DoOpenFile(name);
-            if (m_catalog)
-                m_catalog->AttachCloudSync(std::make_shared<CrowdinSyncDestination>());
         });
     });
 }
@@ -1701,8 +1776,8 @@ void PoeditFrame::OnUpdateFromSources(wxCommandEvent&)
 void PoeditFrame::OnUpdateFromSourcesUpdate(wxUpdateUIEvent& event)
 {
     event.Enable(m_catalog &&
-                 !m_catalog->IsFromCrowdin() &&
-                 m_catalog->HasSourcesConfigured());
+                 m_catalog->HasSourcesConfigured() &&
+                 !CanSyncWithCrowdin(m_catalog));
 }
 
 void PoeditFrame::OnUpdateFromPOT(wxCommandEvent&)
@@ -1764,20 +1839,50 @@ void PoeditFrame::OnUpdateFromPOTUpdate(wxUpdateUIEvent& event)
 #ifdef HAVE_HTTP_CLIENT
 void PoeditFrame::OnUpdateFromCrowdin(wxCommandEvent&)
 {
-    DoIfCanDiscardCurrentDoc([=]{
-        CrowdinSyncFile(this, m_catalog, [=](std::shared_ptr<Catalog> cat){
-            m_catalog = cat;
-            EnsureAppropriateContentView();
-            NotifyCatalogChanged(m_catalog);
-            RefreshControls();
-        });
+    if (m_modified)
+    {
+        struct SupressCloudSync
+        {
+            SupressCloudSync(CatalogPtr c) : m_catalog(c)
+            {
+                m_supressed = m_catalog->GetCloudSync();
+                m_catalog->AttachCloudSync(nullptr);
+            }
+            ~SupressCloudSync()
+            {
+                m_catalog->AttachCloudSync(m_supressed);
+            }
+
+            CatalogPtr m_catalog;
+            std::shared_ptr<CloudSyncDestination> m_supressed;
+        } supress(m_catalog);
+
+        WriteCatalog(GetFileName());
+    }
+
+    CrowdinSyncFile(this, m_catalog, [=](std::shared_ptr<Catalog> cat)
+    {
+        // preserve any syncing-on-save setup:
+        auto cloudsync = m_catalog->GetCloudSync();
+
+        m_catalog = cat;
+
+        EnsureAppropriateContentView();
+        NotifyCatalogChanged(m_catalog);
+        RefreshControls();
+
+        WriteCatalog(GetFileName());
+
+        // make sure to attach it only _after_ WriteCatalog() call to avoid redundant immediate upload:
+        m_catalog->AttachCloudSync(cloudsync);
     });
 }
 
 void PoeditFrame::OnUpdateFromCrowdinUpdate(wxUpdateUIEvent& event)
 {
-    event.Enable(m_catalog && m_catalog->IsFromCrowdin() &&
-                 m_catalog->HasCapability(Catalog::Cap::Translations));
+    event.Enable(m_catalog &&
+                 m_catalog->HasCapability(Catalog::Cap::Translations) &&
+                 CanSyncWithCrowdin(m_catalog));
 }
 #endif
 
@@ -1786,7 +1891,7 @@ void PoeditFrame::OnUpdateSmart(wxCommandEvent& event)
     if (!m_catalog)
         return;
 #ifdef HAVE_HTTP_CLIENT
-    if (m_catalog->IsFromCrowdin())
+    if (CanSyncWithCrowdin(m_catalog))
         OnUpdateFromCrowdin(event);
     else
 #endif
@@ -1799,7 +1904,7 @@ void PoeditFrame::OnUpdateSmartUpdate(wxUpdateUIEvent& event)
     if (m_catalog)
     {
 #ifdef HAVE_HTTP_CLIENT
-       if (m_catalog->IsFromCrowdin())
+       if (CanSyncWithCrowdin(m_catalog))
             OnUpdateFromCrowdinUpdate(event);
         else
 #endif
@@ -2063,10 +2168,15 @@ void PoeditFrame::OnToggleWarnings(wxCommandEvent& e)
                 this,
                 _("Warnings have been disabled."),
                 "Poedit",
-                wxOK
+                wxYES|wxNO
             ));
         err->SetExtendedMessage(_("If you disabled the warnings because of excessive false positives, please consider sending a sample file to help@poedit.net to help improve them."));
-        err->ShowWindowModalThenDo([err](int){});
+        // TRANSLATORS: This is a button to send email with feedback when clicked
+        err->SetYesNoLabels(wxID_OK, MSW_OR_OTHER(_("Send feedback"), _("Send Feedback")));
+        err->ShowWindowModalThenDo([err](int retcode){
+            if (retcode == wxID_NO) // "Send feedback"
+                wxLaunchDefaultBrowser("mailto:help@poedit.net?subject=Warnings");
+        });
     }
 }
 
@@ -2297,7 +2407,13 @@ void PoeditFrame::ReadCatalog(const CatalogPtr& cat)
     // Can't do this with the window being frozen, because positioning the toolbar
     // in presence of mCtrl menubar would not size & repaint properly:
 #ifdef HAVE_HTTP_CLIENT
-    m_toolbar->EnableSyncWithCrowdin(m_catalog->IsFromCrowdin());
+    if (!m_catalog->GetCloudSync())
+    {
+        if (ShouldSyncToCrowdinAutomatically(m_catalog))
+            m_catalog->AttachCloudSync(std::make_shared<CrowdinSyncDestination>());
+    }
+
+    m_toolbar->EnableSyncWithCrowdin(CanSyncWithCrowdin(m_catalog));
 #endif
 
     FixDuplicatesIfPresent();
@@ -2423,7 +2539,7 @@ void PoeditFrame::WarnAboutLanguageIssues()
         }
         else // no error, check for warning-worthy stuff
         {
-            if (lang.IsValid() && plForms != lang.DefaultPluralFormsExpr() && !m_catalog->IsFromCrowdin())
+            if (lang.IsValid() && plForms != lang.DefaultPluralFormsExpr() && !CanSyncWithCrowdin(m_catalog))
             {
                 AttentionMessage msg
                     (
@@ -3365,15 +3481,17 @@ int PoeditFrame::NavigateGetNextItem(const int start,
     }
 }
 
-void PoeditFrame::Navigate(int step, NavigatePredicate predicate, bool wrap)
+bool PoeditFrame::Navigate(int step, NavigatePredicate predicate, bool wrap)
 {
     if (!m_list)
-        return;
+        return false;
     auto i = NavigateGetNextItem(m_list->GetCurrentItemListIndex(), step, predicate, wrap, nullptr);
     if (i == -1)
-        return;
+        return false;
 
     m_list->SelectAndFocus(i);
+
+    return true;
 }
 
 void PoeditFrame::OnPrev(wxCommandEvent&)
@@ -3421,7 +3539,13 @@ void PoeditFrame::OnDoneAndNext(wxCommandEvent&)
     }
 
     // like "next unfinished", but wraps
-    Navigate(+1, Pred_UnfinishedItem, /*wrap=*/true);
+    if (!Navigate(+1, Pred_UnfinishedItem, /*wrap=*/true))
+    {
+        // This was the last such item. Since the selection didn't change, we need to explicitly
+        // redraw the list & editing area to refect item changes made above:
+        UpdateToTextCtrl(EditingArea::UndoableEdit | EditingArea::DontTouchText);
+        m_list->RefreshItem(m_list->GetCurrentItem());
+    }
 }
 
 void PoeditFrame::OnPrevPage(wxCommandEvent&)

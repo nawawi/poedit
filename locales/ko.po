@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: poedit\n"
 "Report-Msgid-Bugs-To: help@poedit.net\n"
-"POT-Creation-Date: 2020-02-03 14:13+0100\n"
-"PO-Revision-Date: 2020-02-03 13:10\n"
-"Last-Translator: Vaclav Slavik <vslavik>\n"
+"POT-Creation-Date: 2020-07-18 14:48+0200\n"
+"PO-Revision-Date: 2020-08-10 16:16\n"
+"Last-Translator: \n"
 "Language-Team: Korean\n"
 "Language: ko_KR\n"
 "MIME-Version: 1.0\n"
@@ -12,8 +12,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Crowdin-Project: poedit\n"
+"X-Crowdin-Project-ID: 53425\n"
 "X-Crowdin-Language: ko\n"
 "X-Crowdin-File: /locales/poedit.pot\n"
+"X-Crowdin-File-ID: 3\n"
 
 msgid "Hide this notification message"
 msgstr "이 알림 메시지 숨김"
@@ -88,7 +90,7 @@ msgid ""
 "There were errors when loading the catalog. Some data may be missing or "
 "corrupted as the result."
 msgstr ""
-"카탈로그를 읽어들일 때 오류가 발생했습니다. 일부가 누락되거나 손상될 수 있습"
+"카탈로그를 읽어드릴 때 오류가 발생했습니다. 일부가 누락되거나 손상될 수 있습"
 "니다."
 
 #, c-format
@@ -166,11 +168,14 @@ msgstr "%s 동기화에 실패했습니다."
 msgid "Syncing error"
 msgstr "동기화 오류"
 
-msgid "Downloading translations is disabled in this project."
-msgstr "이 프로젝트에서는 번역을 다운로드할 수 없습니다."
+msgid "JSON request error"
+msgstr ""
 
 msgid "Not authorized, please sign in again."
 msgstr "인증되지 않았습니다. 다시 로그인하십시오."
+
+msgid "Downloading translations is disabled in this project."
+msgstr "이 프로젝트에서는 번역을 다운로드할 수 없습니다."
 
 msgid ""
 "Crowdin is an online localization management platform and collaborative "
@@ -197,9 +202,6 @@ msgstr "인증 대기 중…"
 msgid "Updating user information…"
 msgstr "사용자 정보 업데이트 중…"
 
-msgid "Signed in as:"
-msgstr "다음 사용자로 로그인 함:"
-
 msgid "Learn More About Crowdin"
 msgstr "Crowdin 더 알아보기"
 
@@ -208,6 +210,9 @@ msgstr "Crowdin 더 알아보기"
 
 msgid "Sign in to Crowdin"
 msgstr "Crowdin에 로그인"
+
+msgid "File"
+msgstr "파일"
 
 msgid "Open Crowdin translation"
 msgstr "Crowdin 번역 열기"
@@ -218,17 +223,11 @@ msgstr "프로젝트:"
 msgid "Language:"
 msgstr "언어:"
 
-msgid "File:"
-msgstr "파일:"
+msgid "Signed in as:"
+msgstr "다음 사용자로 로그인 함:"
 
 msgid "No translation projects listed in your Crowdin account."
 msgstr "Crowdin 계정에 번역 프로젝트가 없습니다."
-
-msgid "This project has no files that can be translated in Poedit."
-msgstr "이 프로젝트에는 Poedit로 편집할 수 있는 파일이 없습니다."
-
-msgid "This file can only be edited in Crowdin’s web interface."
-msgstr "이 파일은 Crowdin 웹 인터페이스에서만 편집할 수 있습니다."
 
 msgid "Downloading latest translations…"
 msgstr "최신 번역 다운로드 중…"
@@ -264,7 +263,8 @@ msgid ""
 "Please open and edit the corresponding PO file instead. When you save it, "
 "the MO file will be updated as well."
 msgstr ""
-"대신 관련 PO 파일을 열어 편집하세요. 저장할 때 MO 파일도 함께 업데이트됩니다."
+"대신 관련 PO 파일을 열어 편집하십시오. 저장하면, 마찬가지로 MO 파일도 업데이"
+"트합니다."
 
 msgid "don’t delete temporary files (for debugging)"
 msgstr "임시 파일을 삭제하지 마세요 (디버깅용)"
@@ -439,7 +439,7 @@ msgid "Save changes"
 msgstr "변경 사항 저장"
 
 msgid "Your changes will be lost if you don’t save them."
-msgstr "저장하지 않을 경우 변경 사항은 손실됩니다."
+msgstr "저장하지 않으면 바뀐 내용을 잃어버립니다."
 
 msgid "Save"
 msgstr "저장"
@@ -567,6 +567,13 @@ msgstr ""
 "오검이 너무 많아 경고를 끄셨다면, help@poedit.net으로 샘플을 보내주는 것을 고"
 "려해주시기 바랍니다."
 
+msgid "Send Feedback"
+msgstr "피드백 보내기"
+
+#. TRANSLATORS: This is a button to send email with feedback when clicked
+msgid "Send feedback"
+msgstr "피드백 보내기"
+
 #, c-format
 msgid "Poedit automatically fixed invalid content in the file “%s”."
 msgstr "Poedit가 “%s” 파일의 잘못된 내용을 자동으로 수정했습니다."
@@ -690,8 +697,8 @@ msgid ""
 "permanently removed. You will have to translate them again if they are added "
 "back in the future."
 msgstr ""
-"제거를 진행하면 삭제한 것으로 표시한 모든 번역이 완전히 제거됩니다. 해당 문자"
-"열이 도로 추가되면 다시 번역해야 합니다."
+"계속 제거를 진행하면 삭제한 것으로 표시한 모든 번역을 완전히 제거합니다. 다음"
+"에 다시 추가하면 다시 번역해야 합니다."
 
 msgid "Keep"
 msgstr "그대로 유지"
@@ -1008,8 +1015,8 @@ msgid ""
 "Your name and email address are only used to set the Last-Translator header "
 "of GNU gettext files."
 msgstr ""
-"이름 및 이메일 주소는 GNU gettext 파일의 Last-Translator 헤더를 설정할 때만 "
-"사용됩니다."
+"이름 및 전자메일 주소는 GNU gettext 파일의 Last-Translator 헤더를 설정할 때"
+"만 사용합니다."
 
 msgid "Editing"
 msgstr "편집 중"
@@ -1155,8 +1162,8 @@ msgid ""
 "Resetting the translation memory will irrevocably delete all stored "
 "translations from it. You can’t undo this operation."
 msgstr ""
-"번역 기억 장소를 초기화하면 저장된 모든 번역이 완전히 삭제됩니다. 이 동작은 "
-"취소할 수 없습니다."
+"번역 기억장소를 초기화하면 저장한 모든 번역을 완전히 삭제합니다. 이 동작은 취"
+"소할 수 없습니다."
 
 msgid "Cancel"
 msgstr "취소"
@@ -1405,10 +1412,10 @@ msgid "The translation should start with a lowercase character."
 msgstr "번역문은 소문자로 시작되어야 합니다."
 
 msgid "The translation doesn’t start with a space."
-msgstr "번역문은 공백으로 시작하지 않습니다."
+msgstr "번역문이 공백으로 시작하지 않았습니다."
 
 msgid "The translation starts with a space, but the source text doesn’t."
-msgstr "번역문은 공백으로 시작되나 원문은 공백으로 시작하지 않습니다."
+msgstr "번역문이 공백으로 시작했으나, 원문은 그렇지 않습니다."
 
 msgid "The translation is missing a newline at the end."
 msgstr "번역문의 끝에 줄 바꿈이 없습니다."
@@ -1417,10 +1424,10 @@ msgid "The translation ends with a newline, but the source text doesn’t."
 msgstr "번역문의 끝은 줄 바꿈이 되나 원문은 줄 바꿈이 되지 않습니다."
 
 msgid "The translation is missing a space at the end."
-msgstr "번역문의 끝에 공백이 없습니다."
+msgstr "번역문 마지막에 공백이 없습니다."
 
 msgid "The translation ends with a space, but the source text doesn’t."
-msgstr "번역문의 긑에 공백이 있지만 원문은 공백이 없습니다."
+msgstr "번역문 마지막에 공백이 있으나, 원문은 그렇지 않습니다."
 
 #, c-format
 msgid "The translation should end with “%s”."
@@ -2134,9 +2141,6 @@ msgstr "삭제(&D)"
 
 msgid "&Quit"
 msgstr "끝내기(&Q)"
-
-msgid "File"
-msgstr "파일"
 
 msgid "Help"
 msgstr "도움말"

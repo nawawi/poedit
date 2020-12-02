@@ -493,6 +493,9 @@ void Catalog::CreateNewHeader(const Catalog::HeaderData& pot_header)
     HeaderData &dt = Header();
     dt = pot_header;
 
+    if ( !dt.RevisionDate.empty() )
+        dt.RevisionDate = GetCurrentTimeString();
+
     // UTF-8 should be used by default no matter what the POT uses
     dt.Charset = "UTF-8";
 
@@ -533,7 +536,7 @@ int Catalog::FindItemIndexByLine(int lineno)
 int Catalog::SetBookmark(int id, Bookmark bookmark)
 {
     int previous = (bookmark==NO_BOOKMARK)?-1:m_header.Bookmarks[bookmark];
-    if (previous >= m_items.size())
+    if (previous >= (int)m_items.size())
         previous = -1;
 
     // unset previous bookmarks, if any
