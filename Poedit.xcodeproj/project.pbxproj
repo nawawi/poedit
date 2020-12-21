@@ -143,7 +143,6 @@
 		B2B7E81A1AD94194007FC4EB /* libwx_osx_base_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B2B7E8191AD94194007FC4EB /* libwx_osx_base_static.a */; };
 		B2BC828B20A1F0DC007652D6 /* catalog_po.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2BC828920A1F0DC007652D6 /* catalog_po.cpp */; };
 		B2BC828C20A34AB6007652D6 /* catalog_po.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2BC828920A1F0DC007652D6 /* catalog_po.cpp */; };
-		B2BF84BA170846290030AA22 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2BF84B9170846290030AA22 /* OpenGL.framework */; };
 		B2BF84BE170847220030AA22 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B2BF84BD170847220030AA22 /* libz.dylib */; };
 		B2BF84C1170847E60030AA22 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2BF84C0170847E60030AA22 /* IOKit.framework */; };
 		B2BF84C4170849D00030AA22 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2BF84BB170846940030AA22 /* Carbon.framework */; };
@@ -504,7 +503,6 @@
 		B2B814861E82F7B80050DCBF /* ga */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ga; path = ga.lproj/MoveApplication.strings; sourceTree = "<group>"; };
 		B2BC828920A1F0DC007652D6 /* catalog_po.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = catalog_po.cpp; sourceTree = "<group>"; };
 		B2BC828A20A1F0DC007652D6 /* catalog_po.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = catalog_po.h; sourceTree = "<group>"; };
-		B2BF84B9170846290030AA22 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		B2BF84BB170846940030AA22 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		B2BF84BD170847220030AA22 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		B2BF84C0170847E60030AA22 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
@@ -615,7 +613,6 @@
 				B24ACD5F16F6201F00399242 /* Cocoa.framework in Frameworks */,
 				B25FAE61249527BC00B9A1A1 /* QuartzCore.framework in Frameworks */,
 				B2BF84C4170849D00030AA22 /* Carbon.framework in Frameworks */,
-				B2BF84BA170846290030AA22 /* OpenGL.framework in Frameworks */,
 				B2BF84C1170847E60030AA22 /* IOKit.framework in Frameworks */,
 				B2284A55183BE68200E097C7 /* Security.framework in Frameworks */,
 				B256797517075E6000C52BC5 /* Sparkle.framework in Frameworks */,
@@ -881,7 +878,6 @@
 				B2BF84C0170847E60030AA22 /* IOKit.framework */,
 				B24ACD5E16F6201F00399242 /* Cocoa.framework */,
 				B2BF84BB170846940030AA22 /* Carbon.framework */,
-				B2BF84B9170846290030AA22 /* OpenGL.framework */,
 				B248B2DF170D765100EBA58E /* CoreFoundation.framework */,
 				B24ACD6016F6201F00399242 /* Other Frameworks */,
 			);
@@ -1350,7 +1346,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "BUILD_NUMBER=`git rev-list HEAD --count`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
+			shellScript = "APP_INFO_PLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\nDSYM_INFO_PLIST=\"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist\"\n\nBUILD_NUMBER=`git rev-list HEAD --count`\n\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"$APP_INFO_PLIST\"\nif [ -f \"$DSYM_INFO_PLIST\" ] ; then\n    /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"$DSYM_INFO_PLIST\"\nfi\n";
 		};
 		B2CC62E217DB7F670097461B /* Set bundle versions from deps/gettext */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1365,7 +1361,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "VERSION_NUMBER=`cat deps/gettext/.version`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $VERSION_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
+			shellScript = "VERSION_NUMBER=`sed -n 's/GETTEXT_VERSION = \"\\([0-9.]*\\)\".*/\\1/p' deps/generate_build_ninja.py`\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $VERSION_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION_NUMBER\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
 		};
 		B2CE6D291AD008F6007E6863 /* Set CFBundleVersion from git */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1407,7 +1403,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/bin\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/lib\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/share\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n\nfor i in ${GETTEXT_BINARIES}; do\n  cp -a ${DEPS_BUILD_DIR}/gettext/bin/$i \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/bin\"\n  cp -a ${DEPS_BUILD_DIR}/gettext/bin/$i.bin \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/bin\"\ndone\ncp -a ${DEPS_BUILD_DIR}/gettext/lib/lib*.*.dylib \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/lib\"\n\ncp -a ${DEPS_BUILD_DIR}/gettext/share/gettext-* \"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/gettext\"\ncp -a ${DEPS_BUILD_DIR}/gettext/share/locale \"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/\"\n\n(cd \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/share\" && rm -f locale && ln -s ../../Resources/locale .)\n(cd \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/share\" && rm -f gettext && ln -s ../../Resources/gettext .)\n";
+			shellScript = "mkdir -p \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/bin\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/lib\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/share\"\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n\nfor i in ${GETTEXT_BINARIES}; do\n  cp -a ${DEPS_BUILD_DIR}/gettext/bin/$i \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/bin\"\ndone\ncp -a ${DEPS_BUILD_DIR}/gettext/lib/lib*.*.dylib \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/lib\"\n\ncp -a ${DEPS_BUILD_DIR}/gettext/share/gettext-* \"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/gettext\"\ncp -a ${DEPS_BUILD_DIR}/gettext/share/locale \"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/\"\n\n(cd \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/share\" && rm -f locale && ln -s ../../Resources/locale .)\n(cd \"${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}/share\" && rm -f gettext && ln -s ../../Resources/gettext .)\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1724,6 +1720,7 @@
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
@@ -1767,7 +1764,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				POEDIT_FEATURES = "";
-				POEDIT_VERSION = 2.4.1;
+				POEDIT_VERSION = 2.4.2;
 				SDKROOT = macosx;
 				WX_DEFINES = "__WXOSX_COCOA__ __WX__ __WXMAC_XCODE__=1 wxUSE_UNICODE_UTF8=0 wxUSE_UNICODE_WCHAR=1";
 			};
@@ -1798,6 +1795,7 @@
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
@@ -1838,7 +1836,7 @@
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				POEDIT_FEATURES = "";
-				POEDIT_VERSION = 2.4.1;
+				POEDIT_VERSION = 2.4.2;
 				SDKROOT = macosx;
 				WX_DEFINES = "__WXOSX_COCOA__ __WX__ __WXMAC_XCODE__=1 wxUSE_UNICODE_UTF8=0 wxUSE_UNICODE_WCHAR=1";
 			};

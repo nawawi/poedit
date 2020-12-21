@@ -59,13 +59,17 @@
     using boost::regex;
     using boost::wregex;
     using boost::regex_match;
+    using boost::regex_search;
     using boost::smatch;
+    using boost::cmatch;
 #else
     #include <regex>
     using std::regex;
     using std::wregex;
     using std::regex_match;
+    using std::regex_search;
     using std::smatch;
+    using std::cmatch;
 #endif
 
 namespace
@@ -234,13 +238,29 @@ std::string DoGetLanguageTag(const Language& lang)
     auto c = lang.Country();
     auto v = lang.Variant();
 
-    auto tag = l;
+    std::string tag = l;
+
     if (v == "latin")
+    {
         tag += "-Latn";
+        v.clear();
+    }
     else if (v == "cyrillic")
+    {
         tag += "-Cyrl";
+        v.clear();
+    }
+
     if (!c.empty())
         tag += "-" + c;
+
+    if (!v.empty())
+    {
+        // Encode variant that wasn't special-handled as a private use subtag, see
+        // https://tools.ietf.org/html/rfc5646#section-2.2.7 (e.g. "de-DE-x-formal")
+        tag += "-x-" + v;
+    }
+
     return tag;
 }
 
@@ -268,11 +288,13 @@ void Language::Init(const std::string& code)
     if (IsValid())
     {
         m_tag = DoGetLanguageTag(*this);
+        m_icuLocale = m_tag;
         m_direction = DoIsRTL(*this) ? TextDirection::RTL : TextDirection::LTR;
     }
     else
     {
         m_tag.clear();
+        m_icuLocale.clear();
         m_direction = TextDirection::LTR;
     }
 }
@@ -347,6 +369,11 @@ Language Language::TryParse(const std::wstring& s)
     if (i != names.namesEng.end())
         return Language(i->second);
 
+    // Maybe it was a BCP 47 language tag?
+    auto fromTag = FromLanguageTag(str::to_utf8(s));
+    if (fromTag.IsValid())
+        return fromTag;
+
     return Language(); // invalid
 }
 
@@ -363,6 +390,34 @@ Language Language::TryParseWithValidation(const std::wstring& s)
     auto country = lang.Country();
     if (!country.empty() && !IsISOCountry(country))
         return Language(); // invalid
+
+    return lang;
+}
+
+
+Language Language::FromLanguageTag(const std::string& tag)
+{
+    char locale[512];
+    UErrorCode status = U_ZERO_ERROR;
+    uloc_forLanguageTag(tag.c_str(), locale, 512, NULL, &status);
+    if (U_FAILURE(status))
+        return Language();
+
+    Language lang;
+    lang.m_tag = tag;
+    lang.m_icuLocale = locale;
+
+    char buf[512];
+    if (uloc_getLanguage(locale, buf, 512, &status))
+        lang.m_code = buf;
+    if (uloc_getCountry(locale, buf, 512, &status))
+        lang.m_code += "_" + std::string(buf);
+
+    // ICU converts private use subtag into 'x' keyword, e.g. de-DE-x-formal => de_DE@x=formal
+    static const regex re_private_subtag("@x=([^@]+)$");
+    cmatch m;
+    if (regex_search(locale, m, re_private_subtag))
+        lang.m_code += "@" + m.str(1);
 
     return lang;
 }

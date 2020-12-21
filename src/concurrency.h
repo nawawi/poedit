@@ -67,6 +67,7 @@
     #endif
 #endif
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 
@@ -587,6 +588,30 @@ inline auto on_main(F&& f) -> future<typename detail::future_unwrapper<typename 
         return detail::call_and_unwrap_if_future(f);
     })};
 }
+
+
+
+/// MT-safe token for cancelling long-running async operations.
+class cancellation_token
+{
+public:
+    cancellation_token() : m_cancelled(false) {}
+
+    /// Signal the operation to cancel when the return value is no longer wanted
+    void cancel() { m_cancelled = true; }
+
+    /// Should the operation be cancelled?
+    bool is_cancelled() const { return m_cancelled; }
+
+private:
+    std::atomic_bool m_cancelled;
+};
+
+/// Pointer to cancellation_token
+typedef std::shared_ptr<cancellation_token> cancellation_token_ptr;
+
+
+
 
 
 /// @internal Call on shutdown to terminate queues and close executors

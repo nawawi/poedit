@@ -49,9 +49,34 @@
 wxString EscapeMarkup(const wxString& str)
 {
     wxString s(str);
-    s.Replace("&", "&amp;");
-    s.Replace("<", "&lt;");
-    s.Replace(">", "&gt;");
+
+    size_t pos = 0;
+    while (true)
+    {
+        pos = s.find_first_of(L"&<>", pos);
+        if (pos == wxString::npos)
+            break;
+
+        std::string replacement;
+        switch ((wchar_t)s[pos])
+        {
+            case '&':
+                s.replace(pos, 1, L"&amp;");
+                pos += 5;
+                break;
+            case '<':
+                s.replace(pos, 1, L"&lt;");
+                pos += 4;
+                break;
+            case '>':
+                s.replace(pos, 1, L"&gt;");
+                pos += 4;
+                break;
+            default: // can't happen
+                break;
+        }
+    };
+
     return s;
 }
 
@@ -421,11 +446,18 @@ void RestoreWindowState(wxTopLevelWindow *win, const wxSize& defaultSize, int fl
 #endif // __WXMSW__/__WXOSX__
 
     // If the window is larger than current screen, resize it to fit:
-    int display = wxDisplay::GetFromWindow(win);
-    if ( display == wxNOT_FOUND )
+#if wxCHECK_VERSION(3,1,0)
+    wxDisplay display(win);
+#else
+    int display_num = wxDisplay::GetFromWindow(win);
+    if (display_num == wxNOT_FOUND)
+        return;
+    wxDisplay display(display_num);
+#endif
+    if (!display.IsOk())
         return;
 
-    wxRect screenRect = wxDisplay(display).GetClientArea();
+    wxRect screenRect = display.GetClientArea();
 
     wxRect winRect = win->GetRect();
     if ( winRect.GetPosition() == wxDefaultPosition )

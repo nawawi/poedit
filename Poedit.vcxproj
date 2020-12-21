@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Gettext.Tools.0.21.0\build\Gettext.Tools.props" Condition="Exists('packages\Gettext.Tools.0.21.0\build\Gettext.Tools.props')" />
+  <Import Project="packages\Gettext.Tools.0.21.0.1\build\Gettext.Tools.props" Condition="Exists('packages\Gettext.Tools.0.21.0.1\build\Gettext.Tools.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -53,7 +53,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>HAVE_CLD2;HAVE_HTTP_CLIENT;XML_STATIC;_NO_ASYNCRTIMP;WIN32;_DEBUG;DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;deps\custom_build\config;deps\wx\include;deps\boost;deps\winsparkle\include;deps\lucene;deps\lucene\LucenePlusPlus\include;deps\cld2;deps\icu4c\include;deps\icu4c\source\i18n;deps\casablanca\Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;deps\custom_build\config;deps\wx\include;deps\boost;deps\lucene;deps\lucene\LucenePlusPlus\include;deps\cld2;deps\icu4c\include;deps\icu4c\source\i18n;deps\casablanca\Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <DisableSpecificWarnings>4800</DisableSpecificWarnings>
@@ -83,7 +83,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>HAVE_CLD2;HAVE_HTTP_CLIENT;XML_STATIC;_NO_ASYNCRTIMP;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;deps\custom_build\config;deps\wx\include;deps\boost;deps\winsparkle\include;deps\lucene;deps\lucene\LucenePlusPlus\include;deps\cld2;deps\icu4c\include;deps\icu4c\source\i18n;deps\casablanca\Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;deps\custom_build\config;deps\wx\include;deps\boost;deps\lucene;deps\lucene\LucenePlusPlus\include;deps\cld2;deps\icu4c\include;deps\icu4c\source\i18n;deps\casablanca\Release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4800</DisableSpecificWarnings>
       <PrecompiledHeaderFile>Poedit-Prefix.pch</PrecompiledHeaderFile>
@@ -299,9 +299,6 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
-    <ProjectReference Include="deps\winsparkle\WinSparkle-2019.vcxproj">
-      <Project>{524cccf2-61ea-5b64-a1d9-ff5497027b5f}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -324,12 +321,14 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\MSBuildTasks.1.5.0.196\build\MSBuildTasks.targets" Condition="Exists('packages\MSBuildTasks.1.5.0.196\build\MSBuildTasks.targets')" />
     <Import Project="Poedit.targets" />
+    <Import Project="packages\WinSparkle.0.8.0-beta2\build\native\WinSparkle.targets" Condition="Exists('packages\WinSparkle.0.8.0-beta2\build\native\WinSparkle.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('packages\MSBuildTasks.1.5.0.196\build\MSBuildTasks.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\MSBuildTasks.1.5.0.196\build\MSBuildTasks.targets'))" />
-    <Error Condition="!Exists('packages\Gettext.Tools.0.21.0\build\Gettext.Tools.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Gettext.Tools.0.21.0\build\Gettext.Tools.props'))" />
+    <Error Condition="!Exists('packages\WinSparkle.0.8.0-beta2\build\native\WinSparkle.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\WinSparkle.0.8.0-beta2\build\native\WinSparkle.targets'))" />
+    <Error Condition="!Exists('packages\Gettext.Tools.0.21.0.1\build\Gettext.Tools.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Gettext.Tools.0.21.0.1\build\Gettext.Tools.props'))" />
   </Target>
 </Project>
