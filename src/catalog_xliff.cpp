@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2018-2020 Vaclav Slavik
+ *  Copyright (C) 2018-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -50,6 +50,11 @@ namespace
 //        currently not accessible from XLIFFCatalogItem, hence a global.
 std::mutex gs_documentMutex;
 
+// Flags required for correct parsing of XML files with no loss of information
+// FIXME: This includes parse_eol, which is undesirable: it converts files to Unix
+//        line endings on save. OTOH without it, we'd have to do the conversion
+//        manually both ways when extracting _and_ editing text.
+constexpr auto PUGI_PARSE_FLAGS = parse_full | parse_ws_pcdata | parse_fragment;
 
 // Skip over a tag, starting at its '<' with forward iterator or '>' with reverse;
 // return iterator right after the tag or end if malformed
@@ -113,10 +118,53 @@ inline xml_attribute attribute(xml_node node, const char *name)
     return a ? a : node.append_attribute(name);
 }
 
-inline std::string get_node_text(xml_node node, bool isPlainText)
+inline bool has_multiple_text_children(xml_node node)
+{
+    bool alreadyFoundOne = false;
+    for (auto child = node.first_child(); child; child = child.next_sibling())
+    {
+        if (child.type() == node_pcdata || child.type() == node_cdata)
+        {
+            if (alreadyFoundOne)
+                return true;
+            else
+                alreadyFoundOne = true;
+        }
+    }
+    return false;
+}
+
+inline std::string get_node_text(xml_node node)
+{
+    // xml_node::text() returns the first text child, but that's not enough,
+    // because some (weird) files in the wild mix text and CDATA content
+    if (has_multiple_text_children(node))
+    {
+        std::string s;
+        for (auto child = node.first_child(); child; child = child.next_sibling())
+            if (child.type() == node_pcdata || child.type() == node_cdata)
+                s.append(child.text().get());
+        return s;
+    }
+    else
+    {
+        return node.text().get();
+    }
+}
+
+inline void set_node_text(xml_node node, const std::string& text)
+{
+    // see get_node_text() for explanation
+    if (has_multiple_text_children(node))
+        remove_all_children(node);
+
+    node.text() = text.c_str();
+}
+
+inline std::string get_node_text_or_markup(xml_node node, bool isPlainText)
 {
     if (isPlainText)
-        return node.text().get();
+        return get_node_text(node);
     else
         return get_subtree_markup(node);
 }
@@ -129,7 +177,7 @@ inline void apply_placeholders(std::string& s, const XLIFFStringMetadata& metada
 
 inline std::string get_node_text_with_metadata(xml_node node, const XLIFFStringMetadata& metadata)
 {
-    auto s = get_node_text(node, metadata.isPlainText);
+    auto s = get_node_text_or_markup(node, metadata.isPlainText);
     if (!metadata.isPlainText)
         apply_placeholders(s, metadata);
     return s;
@@ -139,7 +187,7 @@ bool set_node_text_with_metadata(xml_node node, std::string&& text, const XLIFFS
 {
     if (metadata.isPlainText)
     {
-        node.text() = text.c_str();
+        set_node_text(node, text);
         return true;
     }
     else
@@ -149,7 +197,7 @@ bool set_node_text_with_metadata(xml_node node, std::string&& text, const XLIFFS
             boost::replace_all(s, ph.placeholder, ph.markup);
 
         remove_all_children(node);
-        auto result = node.append_buffer(s.c_str(), s.size(), parse_default, encoding_utf8);
+        auto result = node.append_buffer(s.c_str(), s.size(), PUGI_PARSE_FLAGS, encoding_utf8);
         switch (result.status)
         {
             case status_no_document_element:
@@ -175,7 +223,7 @@ public:
     {
         const bool has_children = has_child_elements(node);
         metadata.isPlainText = !has_children;
-        extractedText = get_node_text(node, metadata.isPlainText);
+        extractedText = get_node_text_or_markup(node, metadata.isPlainText);
         return has_children;
     }
 
@@ -424,10 +472,8 @@ bool XLIFFCatalog::CanLoadFile(const wxString& extension)
 
 std::shared_ptr<XLIFFCatalog> XLIFFCatalog::Open(const wxString& filename)
 {
-    constexpr auto parse_flags = parse_full | parse_ws_pcdata | parse_fragment;
-
     xml_document doc;
-    auto result = doc.load_file(filename.fn_str(), parse_flags);
+    auto result = doc.load_file(filename.fn_str(), PUGI_PARSE_FLAGS);
     if (!result)
         throw XLIFFReadException(filename, result.description());
 
@@ -497,8 +543,10 @@ Catalog::ValidationResults XLIFFCatalog::Validate(bool)
 
     res.errors = 0;
 
+#if wxUSE_GUI
     if (Config::ShowWarnings())
         res.warnings = QAChecker::GetFor(*this)->Check(*this);
+#endif
 
     return res;
 }
@@ -579,7 +627,7 @@ public:
             auto ws_after = m_node.first_child();
             auto source = m_node.child("source");
             target = m_node.insert_child_after("target", source);
-            // add appropriate padding:
+            // indent the <target> tag in the same way <source> is indented under its parent:
             if (ws_after.type() == node_pcdata)
                 m_node.insert_child_after(node_pcdata, source).text() = ws_after.text().get();
         }
@@ -753,7 +801,7 @@ public:
             auto ws_after = m_node.first_child();
             auto source = m_node.child("source");
             target = m_node.insert_child_after("target", source);
-            // add appropriate padding:
+            // indent the <target> tag in the same way <source> is indented under its parent:
             if (ws_after.type() == node_pcdata)
                 m_node.insert_child_after(node_pcdata, source).text() = ws_after.text().get();
         }

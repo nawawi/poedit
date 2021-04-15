@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2020 Vaclav Slavik
+ *  Copyright (C) 2015-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -71,7 +71,8 @@
 
 CrowdinLoginPanel::CrowdinLoginPanel(wxWindow *parent, int flags)
     : wxPanel(parent, wxID_ANY),
-      m_state(State::Uninitialized)
+      m_state(State::Uninitialized),
+      m_activity(nullptr)
 {
     wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
     sizer->SetMinSize(PX(400), -1);
@@ -161,9 +162,9 @@ void CrowdinLoginPanel::CreateLoginInfoControls(State state)
             auto text = (state == State::Authenticating)
                       ? _(L"Waiting for authentication…")
                       : _(L"Updating user information…");
-            auto waitingLabel = new ActivityIndicator(this);
-            sizer->Add(waitingLabel, wxSizerFlags().Center());
-            waitingLabel->Start(text);
+            m_activity = new ActivityIndicator(this, ActivityIndicator::Centered);
+            sizer->Add(m_activity, wxSizerFlags().Expand());
+            m_activity->Start(text);
             break;
         }
 
@@ -216,7 +217,7 @@ void CrowdinLoginPanel::UpdateUserInfo()
             m_userAvatar = u.avatar;
             ChangeState(State::SignedIn);
         })
-        .catch_all([](dispatch::exception_ptr){});
+        .catch_all(m_activity->HandleError);
 }
 
 void CrowdinLoginPanel::OnSignIn(wxCommandEvent&)
@@ -242,7 +243,7 @@ void CrowdinLoginPanel::OnSignOut(wxCommandEvent&)
 LearnAboutCrowdinLink::LearnAboutCrowdinLink(wxWindow *parent, const wxString& text)
     : LearnMoreLink(parent,
                     CrowdinClient::AttributeLink("/"),
-                    text.empty() ? (MSW_OR_OTHER(_("Learn more about Crowdin"), _("Learn More About Crowdin"))) : text)
+                    text.empty() ? (_("Learn more about Crowdin")) : text)
 {
 }
 
@@ -346,9 +347,9 @@ private:
             wxString text = wxString::Format
             (
                 "%s\n<small><span %s>%s</span></small>",
-                EscapeCString(f.title),
+                EscapeMarkup(f.title),
                 secondaryFormatting,
-                EscapeCString(details)
+                EscapeMarkup(details)
             );
         #else
             wxString text = str::to_wx(f.title);
@@ -415,11 +416,10 @@ public:
         auto loginSizer = new wxBoxSizer(wxHORIZONTAL);
         topsizer->AddSpacer(PX(6));
         topsizer->Add(loginSizer, wxSizerFlags().Right().PXDoubleBorder(wxLEFT|wxRIGHT));
-        auto loginText = new SecondaryLabel(this, "");
-        auto loginImage = new AvatarIcon(this, wxSize(PX(24), PX(24)));
-        loginSizer->Add(loginText, wxSizerFlags().ReserveSpaceEvenIfHidden().Center().Border(wxRIGHT, PX(5)));
-        loginSizer->Add(loginImage, wxSizerFlags().ReserveSpaceEvenIfHidden().Center());
-        FetchLoginInfo(loginText, loginImage);
+        m_loginText = new SecondaryLabel(this, "");
+        m_loginImage = new AvatarIcon(this, wxSize(PX(24), PX(24)));
+        loginSizer->Add(m_loginText, wxSizerFlags().ReserveSpaceEvenIfHidden().Center().Border(wxRIGHT, PX(5)));
+        loginSizer->Add(m_loginImage, wxSizerFlags().ReserveSpaceEvenIfHidden().Center());
 
         auto pickers = new wxFlexGridSizer(2, wxSize(PX(5),PX(6)));
         pickers->AddGrowableCol(1);
@@ -451,7 +451,6 @@ public:
     #endif
 
         SetSizerAndFit(topsizer);
-        CenterOnParent();
 
         m_project->Bind(wxEVT_CHOICE, [=](wxCommandEvent&){ OnProjectSelected(); });
         ok->Bind(wxEVT_UPDATE_UI, &CrowdinOpenDialog::OnUpdateOK, this);
@@ -459,40 +458,44 @@ public:
 
         ok->Disable();
         EnableAllChoices(false);
+    }
 
+    void LoadFromCrowdin()
+    {
         FetchProjects();
+        FetchLoginInfo();
     }
 
     wxString OutLocalFilename;
 
 private:
-    void FetchLoginInfo(SecondaryLabel *label, AvatarIcon *icon)
+    void FetchLoginInfo()
     {
-        label->Hide();
-        icon->Hide();
+        m_loginText->Hide();
+        m_loginImage->Hide();
 
         CrowdinClient::Get().GetUserInfo()
         .then_on_window(this, [=](CrowdinClient::UserInfo u)
         {
-            label->SetLabel(_("Signed in as:") + " " + u.name);
-            icon->SetUserName(u.name);
+            m_loginText->SetLabel(_("Signed in as:") + " " + u.name);
+            m_loginImage->SetUserName(u.name);
             if (u.avatar.empty())
             {
-                icon->Show();
+                m_loginImage->Show();
             }
             else
             {
                 http_client::download_from_anywhere(u.avatar)
                 .then_on_window(this, [=](downloaded_file f)
                 {
-                    icon->LoadIcon(f.filename());
-                    icon->Show();
+                    m_loginImage->LoadIcon(f.filename());
+                    m_loginImage->Show();
                 });
             }
             Layout();
-            label->Show();
+            m_loginText->Show();
         })
-        .catch_all([](dispatch::exception_ptr){});
+        .catch_all(m_activity->HandleError);
     }
 
     void EnableAllChoices(bool enable = true)
@@ -655,6 +658,8 @@ private:
     }
 
 private:
+    SecondaryLabel *m_loginText;
+    AvatarIcon *m_loginImage;
     wxButton *m_ok;
     wxChoice *m_project, *m_language;
     CrowdinFileList *m_files;
@@ -744,25 +749,33 @@ bool ShouldSyncToCrowdinAutomatically(CatalogPtr cat)
 }
 
 
-void CrowdinOpenFile(wxWindow *parent, std::function<void(wxString)> onLoaded)
+void CrowdinOpenFile(wxWindow *parent, std::function<void(int, wxString)> onDone)
 {
-    if (!CrowdinClient::Get().IsSignedIn())
-    {
-        wxWindowPtr<CrowdinLoginDialog> login(new CrowdinLoginDialog(parent));
-        login->ShowWindowModalThenDo([login,parent,onLoaded](int retval){
-            if (retval == wxID_OK)
-                CrowdinOpenFile(parent, onLoaded);
-        });
-        return;
-    }
-
     wxWindowPtr<CrowdinOpenDialog> dlg(new CrowdinOpenDialog(parent));
 
-    dlg->ShowWindowModalThenDo([dlg,onLoaded](int retval) {
-        dlg->Hide();
-        if (retval == wxID_OK)
-            onLoaded(dlg->OutLocalFilename);
-    });
+    if (CrowdinClient::Get().IsSignedIn())
+    {
+        dlg->LoadFromCrowdin();
+    }
+    else
+    {
+        // We need to show this window-modall after the ShowModal() call below is
+        // executed. Use CallAfter() to delay:
+        dlg->CallAfter([=]
+        {
+            wxWindowPtr<CrowdinLoginDialog> login(new CrowdinLoginDialog(dlg.get()));
+            login->ShowWindowModalThenDo([dlg,login](int retval)
+            {
+                if (retval == wxID_OK)
+                    dlg->LoadFromCrowdin();
+                else
+                    dlg->EndModal(wxID_CANCEL);
+            });
+        });
+    }
+
+    auto retval = dlg->ShowModal(); // FIXME: Use global modal-less dialog
+    onDone(retval, dlg->OutLocalFilename);
 }
 
 

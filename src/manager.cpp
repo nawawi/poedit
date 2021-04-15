@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2001-2020 Vaclav Slavik
+ *  Copyright (C) 2001-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -82,13 +82,7 @@ ManagerFrame::ManagerFrame() :
             wxDEFAULT_FRAME_STYLE | wxNO_FULL_REPAINT_ON_RESIZE,
             "manager")
 {
-#if defined(__WXGTK__)
-    wxIconBundle appicons;
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(16,16)));
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(32,32)));
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(48,48)));
-    SetIcons(appicons);
-#elif defined(__WXMSW__)
+#ifdef __WXMSW__
     SetIcons(wxIconBundle(wxStandardPaths::Get().GetResourcesDir() + "\\Resources\\Poedit.ico"));
 #endif
 
@@ -273,7 +267,7 @@ void ManagerFrame::UpdateListCat(int id)
     m_listCat->Freeze();
 
     m_listCat->ClearAll();
-    m_listCat->InsertColumn(0, _("Catalog"));
+    m_listCat->InsertColumn(0, _("File"));
     m_listCat->InsertColumn(1, _("Total"));
     m_listCat->InsertColumn(2, _("Untrans"));
     m_listCat->InsertColumn(3, wxGETTEXT_IN_CONTEXT("column/row header", "Needs Work"));
@@ -465,34 +459,41 @@ void ManagerFrame::OnUpdateProject(wxCommandEvent&)
     if (wxMessageBox(_("Do you really want to do mass update of\nall catalogs in this project?"),
                _("Confirmation"), wxYES_NO | wxICON_QUESTION, this) == wxYES)
     {
-        wxBusyCursor bcur;
-
-        for (size_t i = 0; i < m_catalogs.GetCount(); i++)
+        ProgressWindow::RunCancellableTaskThenDo(this, ("Updating project catalogs"),
+        [=](dispatch::cancellation_token_ptr cancellationToken)
         {
-            // FIXME: there should be only one progress bar for _all_
-            //        catalogs, it shouldn't restart on next catalog
-            //ProgressInfo pinfo(this, _("Updating catalog"));
+            Progress progress((int)m_catalogs.GetCount());
 
-            wxString f = m_catalogs[i];
-            PoeditFrame *fr = PoeditFrame::Find(f);
-            if (fr)
+            for (size_t i = 0; i < m_catalogs.GetCount(); i++)
             {
-                fr->UpdateCatalog();
-            }
-            else
-            {
-                auto cat = std::make_shared<POCatalog>(f);
-                UpdateResultReason reason;
-                if (PerformUpdateFromSources(this, cat, reason, Update_DontShowSummary))
+                if (cancellationToken->is_cancelled())
+                    return;
+
+                wxString f = m_catalogs[i];
+                PoeditFrame *fr = PoeditFrame::Find(f);
+                if (fr)
                 {
-                    Catalog::ValidationResults validation_results;
-                    Catalog::CompilationStatus mo_status;
-                    cat->Save(f, false, validation_results, mo_status);
+                    fr->UpdateCatalog();
                 }
-            }
-         }
+                else
+                {
+                    Progress subtask(1, progress, 1);
 
-        UpdateListCat();
+                    auto cat = std::make_shared<POCatalog>(f);
+                    UpdateResultReason reason;
+                    if (PerformUpdateFromSources(cat, reason))
+                    {
+                        Catalog::ValidationResults validation_results;
+                        Catalog::CompilationStatus mo_status;
+                        cat->Save(f, false, validation_results, mo_status);
+                    }
+                }
+             }
+        },
+        [=](bool /*finished*/)
+        {
+            UpdateListCat();
+        });
     }
 }
 

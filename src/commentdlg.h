@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2001-2020 Vaclav Slavik
+ *  Copyright (C) 2001-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -55,7 +55,7 @@ class CommentDialog : public wxDialog
     private:
         wxTextCtrl *m_text;
 
-        void OnClear(wxCommandEvent& event);
+        void OnDelete(wxCommandEvent& event);
         DECLARE_EVENT_TABLE()
 };
 

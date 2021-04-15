@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2020 Vaclav Slavik
+ *  Copyright (C) 2000-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -32,12 +32,20 @@ class WXDLLIMPEXP_FWD_CORE wxWindow;
 
 
 /// Result of PerformUpdateFromSources()
-enum class UpdateResultReason
+struct UpdateResultReason
 {
-    CancelledByUser,
-    Unspecified,
-    NoSourcesFound,
-    PermissionDenied
+    enum Code
+    {
+        CancelledByUser,
+        Unspecified,
+        NoSourcesFound,
+        PermissionDenied
+    };
+
+    UpdateResultReason(Code c = Unspecified) : code(c) {}
+
+    Code code;
+    wxString file;
 };
 
 enum UpdateFlags
@@ -49,18 +57,20 @@ enum UpdateFlags
     Update catalog from source code, if configured, and provide UI
     during the operation.
  */
-bool PerformUpdateFromSources(wxWindow *parent,
-                              POCatalogPtr catalog,
-                              UpdateResultReason& reason,
-                              int flags = 0);
+bool PerformUpdateFromSources(POCatalogPtr catalog, UpdateResultReason& reason);
+
+bool PerformUpdateFromSourcesWithUI(wxWindow *parent,
+                                    POCatalogPtr catalog,
+                                    UpdateResultReason& reason,
+                                    int flags = 0);
 
 /**
     Similarly for updating from a POT file.
  */
-bool PerformUpdateFromPOT(wxWindow *parent,
-                          POCatalogPtr catalog,
-                          const wxString& pot_file,
-                          UpdateResultReason& reason);
+bool PerformUpdateFromPOTWithUI(wxWindow *parent,
+                                POCatalogPtr catalog,
+                                const wxString& pot_file,
+                                UpdateResultReason& reason);
 
 
 #endif // Poedit_cat_update_h

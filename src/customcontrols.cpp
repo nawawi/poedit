@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2020 Vaclav Slavik
+ *  Copyright (C) 2015-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -175,8 +175,18 @@ AutoWrappingText::AutoWrappingText(wxWindow *parent, const wxString& label)
 {
     m_text.Replace("\n", " ");
 
-    SetInitialSize(wxSize(10,10));
+    SetMinSize(wxDefaultSize);
     Bind(wxEVT_SIZE, &AutoWrappingText::OnSize, this);
+}
+
+void AutoWrappingText::SetLabel(const wxString& label) {
+    wxString escapedLabel(label);
+
+    // Escape '&' to avoid wxStaticText treating it
+    // as if to mark an accelerator key (Windows),
+    // or not showing it at all (Mac).
+    escapedLabel.Replace("&", "&&");
+    wxStaticText::SetLabel(escapedLabel);
 }
 
 void AutoWrappingText::SetLanguage(Language lang)
@@ -205,34 +215,41 @@ void AutoWrappingText::SetAndWrapLabel(const wxString& label)
     if (!m_language.IsValid())
         SetAlignment(bidi::get_base_direction(m_text));
 
-    wxWindowUpdateLocker lock(this);
-    m_wrapWidth = GetSize().x;
-    SetLabelText(WrapTextAtWidth(label, m_wrapWidth, m_language, this));
+    m_wrapWidth = -1; // force rewrap
 
-    InvalidateBestSize();
-    SetMinSize(wxDefaultSize);
-    SetMinSize(GetBestSize());
+    RewrapForWidth(GetSize().x);
+}
+
+bool AutoWrappingText::InformFirstDirection(int direction, int size, int /*availableOtherDir*/)
+{
+    if (direction == wxVERTICAL)
+        return RewrapForWidth(size);
+    return false;
 }
 
 void AutoWrappingText::OnSize(wxSizeEvent& e)
 {
     e.Skip();
-    int w = wxMax(0, e.GetSize().x - PX(4));
-    if (w == m_wrapWidth)
-        return;
+    RewrapForWidth(e.GetSize().x);
+}
+
+bool AutoWrappingText::RewrapForWidth(int width)
+{
+    if (width == m_wrapWidth)
+        return false;
 
     // refuse to participate in crazy-small sizes sizing (will be undone anyway):
-    if (w < 50)
-        return;
+    if (width < 50)
+        return false;
 
+    m_wrapWidth = width;
+
+    const int wrapAt = wxMax(0, width - PX(4));
     wxWindowUpdateLocker lock(this);
-
-    m_wrapWidth = w;
-    SetLabel(WrapTextAtWidth(m_text, w, m_language, this));
+    SetLabel(WrapTextAtWidth(m_text, wrapAt, m_language, this));
 
     InvalidateBestSize();
-    SetMinSize(wxDefaultSize);
-    SetMinSize(GetBestSize());
+    return true;
 }
 
 
@@ -249,9 +266,9 @@ SelectableAutoWrappingText::SelectableAutoWrappingText(wxWindow *parent, const w
     // at least allow copying
     static wxWindowID idCopy = wxNewId();
     Bind(wxEVT_CONTEXT_MENU, [=](wxContextMenuEvent&){
-        wxMenu *menu = new wxMenu();
-        menu->Append(idCopy, _("&Copy"));
-        PopupMenu(menu);
+        wxMenu menu;
+        menu.Append(idCopy, _("&Copy"));
+        PopupMenu(&menu);
     });
     Bind(wxEVT_MENU, [=](wxCommandEvent&){
         wxClipboardLocker lock;
@@ -306,13 +323,7 @@ SecondaryLabel::SecondaryLabel(wxWindow *parent, const wxString& label)
 LearnMoreLink::LearnMoreLink(wxWindow *parent, const wxString& url, wxString label, wxWindowID winid)
 {
     if (label.empty())
-    {
-#ifdef __WXMSW__
         label = _("Learn more");
-#else
-        label = _("Learn More");
-#endif
-    }
 
     wxHyperlinkCtrl::Create(parent, winid, label, url);
 
@@ -361,6 +372,7 @@ ActivityIndicator::ActivityIndicator(wxWindow *parent, int flags)
     SetSizer(sizer);
 
     m_spinner = new wxActivityIndicator(this, wxID_ANY);
+    m_spinner->Hide();
     m_spinner->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
     m_label = new wxStaticText(this, wxID_ANY, "");
 #ifdef __WXOSX__

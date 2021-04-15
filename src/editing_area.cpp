@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -41,6 +41,10 @@
 #include <wx/sizer.h>
 #include <wx/statbmp.h>
 #include <wx/stattext.h>
+
+#if !wxCHECK_VERSION(3,1,0)
+    #define CenterVertical() Center()
+#endif
 
 #include <algorithm>
 
@@ -268,9 +272,8 @@ protected:
 
         m_label->SetForegroundColour(m_fg);
 #ifdef __WXMSW__
-        m_label->SetBackgroundColour(m_bg);
-        if (m_icon)
-            m_icon->SetBackgroundColour(m_bg);
+        for (auto c : GetChildren())
+            c->SetBackgroundColour(m_bg);
 #endif
     }
 
@@ -291,7 +294,7 @@ protected:
     }
 #endif
 
-private:
+protected:
     void OnPaint(wxPaintEvent&)
     {
         wxPaintDC dc(this);
@@ -328,9 +331,12 @@ public:
         SetIcon(m_iconError);
     }
 
-    void SetIssue(const CatalogItem::Issue& issue)
+    std::shared_ptr<CatalogItem::Issue> GetIssue() const { return m_issue; }
+
+    void SetIssue(const std::shared_ptr<CatalogItem::Issue>& issue)
     {
-        switch (issue.severity)
+        m_issue = issue;
+        switch (issue->severity)
         {
             case CatalogItem::Issue::Error:
                 SetIcon(m_iconError);
@@ -341,12 +347,49 @@ public:
                 SetColor(Color::TagWarningLineFg, Color::TagWarningLineBg);
                 break;
         }
-        SetLabel(issue.message);
-        SetToolTip(issue.message);
+        SetLabel(issue->message);
+        SetToolTip(issue->message);
     }
 
-private:
+protected:
+
+    std::shared_ptr<CatalogItem::Issue> m_issue;
     wxBitmap m_iconError, m_iconWarning;
+};
+
+
+class EditingArea::CharCounter : public SecondaryLabel
+{
+public:
+    CharCounter(wxWindow *parent, Mode mode) : SecondaryLabel(parent, "MMMM | MMMM"), m_mode(mode)
+    {
+        SetWindowStyleFlag(wxALIGN_RIGHT | wxST_NO_AUTORESIZE);
+
+        switch (mode)
+        {
+            case Editing:
+                SetToolTip(_("String length in characters: translation | source"));
+                break;
+            case POT:
+                SetToolTip(_("String length in characters"));
+                break;
+        }
+    }
+
+    void UpdateSourceLength(int i) { m_source = i; UpdateText(); }
+    void UpdateTranslationLength(int i) { m_translation = i; UpdateText(); }
+
+private:
+    void UpdateText()
+    {
+        if (m_mode == Editing)
+            SetLabel(wxString::Format("%d | %d", m_translation, m_source));
+        else
+            SetLabel(wxString::Format("%d", m_source));
+    }
+
+    Mode m_mode;
+    int m_source = 0, m_translation = 0;
 };
 
 
@@ -375,7 +418,7 @@ EditingArea::EditingArea(wxWindow *parent, PoeditListCtrl *associatedList, Mode 
 
     Bind(wxEVT_PAINT, &EditingArea::OnPaint, this);
 
-    m_labelSource = new wxStaticText(this, -1, _("Source text:"));
+    m_labelSource = new wxStaticText(this, -1, _("Source text"));
 #ifdef __WXOSX__
     m_labelSource->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
@@ -384,20 +427,25 @@ EditingArea::EditingArea(wxWindow *parent, PoeditListCtrl *associatedList, Mode 
     m_tagContext = new TagLabel(this, Color::TagContextFg, Color::TagContextBg);
     m_tagFormat = new TagLabel(this, Color::TagSecondaryFg, Color::TagSecondaryBg);
 
+    m_charCounter = new CharCounter(this, mode);
+
     auto sourceLineSizer = new ShrinkableBoxSizer(wxHORIZONTAL);
     sourceLineSizer->Add(m_labelSource, wxSizerFlags().Center());
     sourceLineSizer->AddSpacer(PX(4));
     sourceLineSizer->Add(m_tagContext, wxSizerFlags().Center().Border(wxRIGHT, PX(4)));
     sourceLineSizer->Add(m_tagFormat, wxSizerFlags().Center().Border(wxRIGHT, PX(4)));
+    sourceLineSizer->AddStretchSpacer(1);
+    sourceLineSizer->Add(m_charCounter, wxSizerFlags().Center());
+    sourceLineSizer->AddSpacer(PX(4));
     sourceLineSizer->SetShrinkableWindow(m_tagContext);
     sourceLineSizer->SetMinSize(-1, m_tagContext->GetBestSize().y);
 
-    m_labelSingular = new wxStaticText(this, -1, _("Singular:"));
+    m_labelSingular = new wxStaticText(this, -1, _("Singular"));
     m_labelSingular->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
     m_labelSingular->SetFont(m_labelSingular->GetFont().Bold());
     m_textOrig = new SourceTextCtrl(this, wxID_ANY);
 
-    m_labelPlural = new wxStaticText(this, -1, _("Plural:"));
+    m_labelPlural = new wxStaticText(this, -1, _("Plural"));
     m_labelPlural->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
     m_labelPlural->SetFont(m_labelPlural->GetFont().Bold());
     m_textOrigPlural = new SourceTextCtrl(this, wxID_ANY);
@@ -432,6 +480,7 @@ EditingArea::EditingArea(wxWindow *parent, PoeditListCtrl *associatedList, Mode 
         SetBackgroundColour(ColorScheme::Get(Color::EditingBackground));
     #ifdef __WXMSW__
         m_labelSource->SetBackgroundColour(ColorScheme::Get(Color::EditingThickSeparator));
+        m_charCounter->SetBackgroundColour(ColorScheme::Get(Color::EditingThickSeparator));
     #endif
         m_labelSingular->SetForegroundColour(ColorScheme::Get(Color::SecondaryLabel));
         m_labelPlural->SetForegroundColour(ColorScheme::Get(Color::SecondaryLabel));
@@ -441,7 +490,7 @@ EditingArea::EditingArea(wxWindow *parent, PoeditListCtrl *associatedList, Mode 
 
 void EditingArea::CreateEditControls(wxBoxSizer *sizer)
 {
-    m_labelTrans = new wxStaticText(this, -1, _("Translation:"));
+    m_labelTrans = new wxStaticText(this, -1, _("Translation"));
 #ifdef __WXOSX__
     m_labelTrans->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
@@ -518,33 +567,35 @@ void EditingArea::CreateEditControls(wxBoxSizer *sizer)
         e.Skip();
     });
 
-#ifdef __WXMSW__
     m_pluralNotebook->Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, [=](wxBookCtrlEvent& e){
         e.Skip();
+        UpdateCharCounter(m_associatedList->GetCurrentCatalogItem());
+    #ifdef __WXMSW__
         auto focused = FindFocus();
         if (focused && (focused == m_pluralNotebook || focused->GetParent() == m_pluralNotebook))
             m_pluralNotebook->GetPage(e.GetSelection())->SetFocus();
+    #endif
     });
-#endif
 }
 
 
 void EditingArea::CreateTemplateControls(wxBoxSizer *panelSizer)
 {
     auto win = new wxPanel(this, wxID_ANY);
-    auto sizer = new wxBoxSizer(wxVERTICAL);
+    auto sizer = new wxBoxSizer(wxHORIZONTAL);
 
-    auto explain = new wxStaticText(win, wxID_ANY, _(L"POT files are only templates and don’t contain any translations themselves.\nTo make a translation, create a new PO file based on the template."), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
+    auto explain = new wxStaticText(win, wxID_ANY, _(L"POT files are only templates and don’t contain any translations themselves.\nTo make a translation, create a new PO file based on the template."));
 #ifdef __WXOSX__
     explain->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
 #endif
 
-    auto button = new wxButton(win, XRCID("button_new_from_this_pot"), MSW_OR_OTHER(_("Create new translation"), _("Create New Translation")));
+    auto button = new ActionButton(
+                       win, XRCID("button_new_from_this_pot"), "CreateTranslation",
+                       _("Create new translation"),
+                       _("Make a new translation from this POT file."));
 
-    sizer->AddStretchSpacer();
-    sizer->Add(explain, wxSizerFlags().Center().Border(wxLEFT|wxRIGHT, PX(100)));
-    sizer->Add(button, wxSizerFlags().Center().Border(wxTOP|wxBOTTOM, PX(10)));
-    sizer->AddStretchSpacer();
+    sizer->Add(button, wxSizerFlags().CenterVertical().Border(wxLEFT, PX(30)));
+    sizer->Add(explain, wxSizerFlags(1).CenterVertical().Border(wxLEFT|wxRIGHT, PX(20)));
 
     win->SetSizerAndFit(sizer);
 
@@ -958,6 +1009,29 @@ void EditingArea::UpdateAuxiliaryInfo(CatalogItemPtr item)
             ShowPart(m_issueLine, false);
         }
         Layout();
+    }
+
+    UpdateCharCounter(item);
+}
+
+void EditingArea::UpdateCharCounter(CatalogItemPtr item)
+{
+    if (!m_charCounter || !item)
+        return;
+
+    if (item->HasPlural())
+    {
+        int index = m_pluralNotebook->GetSelection();
+        if (index == 0)
+            m_charCounter->UpdateSourceLength((int)item->GetString().length());
+        else
+            m_charCounter->UpdateSourceLength((int)item->GetPluralString().length());
+        m_charCounter->UpdateTranslationLength((int)item->GetTranslation(index).length());
+    }
+    else
+    {
+        m_charCounter->UpdateSourceLength((int)item->GetString().length());
+        m_charCounter->UpdateTranslationLength((int)item->GetTranslation().length());
     }
 }
 

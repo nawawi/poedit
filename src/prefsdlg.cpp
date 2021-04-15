@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2020 Vaclav Slavik
+ *  Copyright (C) 2000-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -68,6 +68,7 @@
 #include "errors.h"
 #include "extractors/extractor_legacy.h"
 #include "spellchecking.h"
+#include "str_helpers.h"
 #include "utility.h"
 #include "customcontrols.h"
 #include "unicode_helpers.h"
@@ -84,14 +85,30 @@
     #define HAS_UPDATES_CHECK
 #endif
 
+// Handling of different page icons
+#ifdef __WXOSX__
+inline wxBitmap MacPageIcon(const char *macos10, const char *macos11)
+{
+    (void)macos11;
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_16
+    if (@available(macOS 11.0, *))
+        return wxBitmap([NSImage imageWithSystemSymbolName:str::to_NS(macos11) accessibilityDescription:nil]);
+    else
+#endif
+        return wxArtProvider::GetBitmap(macos10);
+}
+#else
+inline wxBitmap MacPageIcon(const char*, const char*) { return wxNullBitmap; }
+#endif
+
 namespace
 {
 
-class PrefsPanel : public wxPanel
+class PrefsPanel : public WindowWith2DSizingConstraints<wxPanel>
 {
 public:
     PrefsPanel(wxWindow *parent)
-        : wxPanel(parent), m_suppressDataTransfer(0)
+        : WindowWith2DSizingConstraints<wxPanel>(parent), m_suppressDataTransfer(0)
     {
 #ifdef __WXOSX__
         // Refresh the content of prefs panels when re-opening it.
@@ -180,7 +197,7 @@ public:
         auto emailLabel = new wxStaticText(this, wxID_ANY, _("Email:"));
         translator->Add(emailLabel, wxSizerFlags().CenterVertical().Right().BORDER_MACOS(wxTOP, 1));
         m_userEmail = new wxTextCtrl(this, wxID_ANY);
-        m_userEmail->SetHint(_("your_email@example.com"));
+        m_userEmail->SetHint(_("you@example.com"));
         translator->Add(m_userEmail, wxSizerFlags(1).Expand().CenterVertical());
         translator->AddSpacer(PX(1));
         translator->Add(new ExplanationLabel(this, _("Your name and email address are only used to set the Last-Translator header of GNU gettext files.")), wxSizerFlags(1).Expand().PXBorder(wxRIGHT));
@@ -197,7 +214,7 @@ public:
 
         m_compileMo = new wxCheckBox(this, wxID_ANY, _("Automatically compile MO file when saving"));
         sizer->Add(m_compileMo);
-        m_showSummary = new wxCheckBox(this, wxID_ANY, _("Show summary after catalog update"));
+        m_showSummary = new wxCheckBox(this, wxID_ANY, _("Show summary after updating files"));
         sizer->Add(m_showSummary, wxSizerFlags().PXBorder(wxTOP));
 
         sizer->AddSpacer(PX(10));
@@ -350,7 +367,7 @@ class GeneralPage : public wxPreferencesPage
 {
 public:
     wxString GetName() const override { return _("General"); }
-    wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-General"); }
+    wxBitmap GetLargeIcon() const override { return MacPageIcon("Prefs-General", "gearshape"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new GeneralPageWindow(parent); }
 };
 
@@ -490,28 +507,28 @@ private:
         static const auto idExportTMX = wxNewId();
         static const auto idReset = wxNewId();
 
-        wxMenu *menu = new wxMenu();
+        wxMenu menu;
 #ifdef __WXOSX__
-        [menu->GetHMenu() setFont:[NSFont systemFontOfSize:13]];
+        [menu.GetHMenu() setFont:[NSFont systemFontOfSize:13]];
 #endif
-        menu->Append(idLearn, MSW_OR_OTHER(_(L"Import translation files…"), _(L"Import Translation Files…")));
-        menu->AppendSeparator();
-        menu->Append(idImportTMX, MSW_OR_OTHER(_(L"Import from TMX…"), _(L"Import From TMX…")));
-        menu->Append(idExportTMX, MSW_OR_OTHER(_(L"Export to TMX…"), _(L"Export To TMX…")));
-        menu->AppendSeparator();
+        menu.Append(idLearn, MSW_OR_OTHER(_(L"Import translation files…"), _(L"Import Translation Files…")));
+        menu.AppendSeparator();
+        menu.Append(idImportTMX, MSW_OR_OTHER(_(L"Import from TMX…"), _(L"Import From TMX…")));
+        menu.Append(idExportTMX, MSW_OR_OTHER(_(L"Export to TMX…"), _(L"Export To TMX…")));
+        menu.AppendSeparator();
         // TRANSLATORS: This is a button that deletes everything in the translation memory (i.e. clears/resets it).
-        menu->Append(idReset, _("Reset"));
+        menu.Append(idReset, _("Reset"));
 
-        menu->Bind(wxEVT_MENU, &TMPageWindow::OnImportIntoTM, this, idLearn);
-        menu->Bind(wxEVT_MENU, &TMPageWindow::OnImportTMX, this, idImportTMX);
-        menu->Bind(wxEVT_MENU, &TMPageWindow::OnExportTMX, this, idExportTMX);
-        menu->Bind(wxEVT_MENU, &TMPageWindow::OnResetTM, this, idReset);
+        menu.Bind(wxEVT_MENU, &TMPageWindow::OnImportIntoTM, this, idLearn);
+        menu.Bind(wxEVT_MENU, &TMPageWindow::OnImportTMX, this, idImportTMX);
+        menu.Bind(wxEVT_MENU, &TMPageWindow::OnExportTMX, this, idExportTMX);
+        menu.Bind(wxEVT_MENU, &TMPageWindow::OnResetTM, this, idReset);
 
         auto win = dynamic_cast<wxButton*>(e.GetEventObject());
 #ifdef __WXOSX__
-        win->PopupMenu(menu, 5, 26);
+        win->PopupMenu(&menu, 5, 26);
 #else
-        win->PopupMenu(menu, 0, win->GetSize().y);
+        win->PopupMenu(&menu, 0, win->GetSize().y);
 #endif
     }
 
@@ -700,7 +717,7 @@ public:
         return _("Translation Memory");
 #endif
     }
-    wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-TM"); }
+    wxBitmap GetLargeIcon() const override { return MacPageIcon("Prefs-TM", "internaldrive"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new TMPageWindow(parent); }
 };
 
@@ -742,14 +759,18 @@ public:
         m_list->SetMinSize(wxSize(PX(400),PX(200)));
 #ifdef __WXOSX__
         m_list->SetWindowVariant(wxWINDOW_VARIANT_SMALL);
+    #if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_16
+        if (@available(macOS 11.0, *))
+            ((NSTableView*)[((NSScrollView*)m_list->GetHandle()) documentView]).style = NSTableViewStyleFullWidth;
+    #endif
 #endif
         listSizer->Add(m_list, wxSizerFlags(1).Expand().Border(wxLEFT|wxRIGHT, PX(5)));
 
         sizer->Add(listPanel, wxSizerFlags(1).Expand().BORDER_WIN(wxLEFT, 1));
 
 #if defined(__WXOSX__)
-        m_new = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSAddTemplate"), wxDefaultPosition, wxSize(18, 18), wxBORDER_SUNKEN);
-        m_delete = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSRemoveTemplate"), wxDefaultPosition, wxSize(18,18), wxBORDER_SUNKEN);
+        m_new = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSAddTemplate"), wxDefaultPosition, wxSize(18, 18), wxBORDER_SIMPLE);
+        m_delete = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSRemoveTemplate"), wxDefaultPosition, wxSize(18,18), wxBORDER_SIMPLE);
         int editButtonStyle = wxBU_EXACTFIT | wxBORDER_SIMPLE;
 #elif defined(__WXMSW__)
         m_new = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-add"), wxDefaultPosition, wxSize(PX(19),PX(19)));
@@ -986,7 +1007,7 @@ class ExtractorsPage : public wxPreferencesPage
 {
 public:
     wxString GetName() const override { return _("Extractors"); }
-    wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-Extractors"); }
+    wxBitmap GetLargeIcon() const override { return MacPageIcon("Prefs-Extractors", "doc.text.viewfinder"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new ExtractorsPageWindow(parent); }
 };
 
@@ -1043,7 +1064,7 @@ class AccountsPage : public wxPreferencesPage
 {
 public:
     wxString GetName() const override { return _("Accounts"); }
-    wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-Accounts"); }
+    wxBitmap GetLargeIcon() const override { return MacPageIcon("Prefs-Accounts", "at"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new AccountsPageWindow(parent); }
 };
 #endif // HAVE_HTTP_CLIENT
@@ -1111,7 +1132,7 @@ class UpdatesPage : public wxPreferencesPage
 {
 public:
     wxString GetName() const override { return _("Updates"); }
-    wxBitmap GetLargeIcon() const override { return wxArtProvider::GetBitmap("Prefs-Updates"); }
+    wxBitmap GetLargeIcon() const override { return MacPageIcon("Prefs-Updates", "arrow.down.circle"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new UpdatesPageWindow(parent); }
 };
 #endif // HAS_UPDATES_CHECK
@@ -1203,6 +1224,7 @@ class AdvancedPage : public wxStockPreferencesPage
 public:
     AdvancedPage() : wxStockPreferencesPage(Kind_Advanced) {}
     wxString GetName() const override { return _("Advanced"); }
+    wxBitmap GetLargeIcon() const override { return MacPageIcon("Prefs-Advanced", "gearshape.2"); }
     wxWindow *CreateWindow(wxWindow *parent) override { return new AdvancedPageWindow(parent); }
 };
 

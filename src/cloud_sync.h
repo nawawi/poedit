@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2017-2020 Vaclav Slavik
+ *  Copyright (C) 2017-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -59,7 +59,7 @@ class CloudSyncDestination
 public:
     virtual ~CloudSyncDestination() {}
 
-    /// Name of the destionation (e.g. Crowding or hostname)
+    /// Name of the destination (e.g. Crowding or hostname)
     virtual wxString GetName() const = 0;
 
     /// Asynchronously uploads the file. Returned future throws on error.

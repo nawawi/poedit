@@ -87,8 +87,8 @@ def gen_configure(n, prj, tarball=None, patches=[], srcdir=None, configure='conf
                 ('configure', configure),
                 ('configure_flags', all_flags),
                 ('srcdir', '$top_srcdir/%s' % (srcdir if srcdir else prj)),
-                ('destdir', '$builddir/%s' % prj),
-                ('workdir', '$intdir/%s' % prj),
+                ('destdir', '$builddir/%s.$arch' % prj),
+                ('workdir', '$intdir/%s.$arch' % prj),
             ]))
     n.build([prj], 'phony', target)
     return target
@@ -161,7 +161,7 @@ with open('build.ninja', 'w') as buildfile:
                                      # delete unwanted stuff
                                      'rm -f $destdir/bin/{autopoint,envsubst,gettext*,ngettext,recode-sr-latin}',
                                      # fix dylib references to work
-                                     '$top_srcdir/../macos/fixup-dylib-deps.sh //lib @executable_path/../lib $destdir/lib $destdir/bin/*',
+                                     '$top_srcdir/../macos/fixup-dylib-deps.sh /lib @rpath $destdir/lib $destdir/bin/*',
                                      # strip executables
                                      'strip -S -u -r $destdir/bin/{msgfmt,msgmerge,msgunfmt,msgcat,xgettext}',
                                      'strip -S -x $destdir/lib/lib*.*.dylib',

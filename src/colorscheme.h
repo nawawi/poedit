@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2016-2020 Vaclav Slavik
+ *  Copyright (C) 2016-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -142,7 +142,7 @@ public:
             // appearance that we rely on:
             win->CallAfter([=]
             {
-                // Invalidate global cached data. This is effecient if called
+                // Invalidate global cached data. This is efficient if called
                 // repeatedly, so we can do it for every affected window without
                 // worrying about performance impact:
                 InvalidateCachesIfNeeded();

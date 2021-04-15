@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2004-2020 Vaclav Slavik
+ *  Copyright (C) 2004-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -77,14 +77,9 @@ bool ShouldBeMirorredInRTL(const wxArtID& id, const wxArtClient& client)
     (void)client;
 
     static std::set<wxString> s_directional = {
-        "ContributeOn",
         "poedit-status-comment",
         "follow-link",
-        "sidebar",
-        "Welcome_EditTranslation",
-        "Welcome_CreateTranslation",
-        "Welcome_WordPress",
-        "Welcome_Collaborate"
+        "sidebar"
     };
 
     bool mirror = s_directional.find(id) != s_directional.end();

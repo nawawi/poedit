@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2013-2020 Vaclav Slavik
+ *  Copyright (C) 2013-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -266,7 +266,7 @@ namespace
 static const int DEFAULT_MAXHITS = 10;
 
 // Normalized score that must be met for a suggestion to be shown. This is
-// an empirical guess of what constitues good matches.
+// an empirical guess of what constitutes good matches.
 static const double QUALITY_THRESHOLD = 0.6;
 
 // Maximum allowed difference in phrase length, in #terms.
@@ -623,8 +623,8 @@ public:
         if (item->HasError())
             return;
 
-        // ignore untranslated or unfinished translations
-        if (item->IsFuzzy() || !item->IsTranslated())
+        // ignore untranslated, pre-translated and non-revised or unfinished translations
+        if (item->IsFuzzy() || item->IsPreTranslated() || !item->IsTranslated())
             return;
 
         // always store at least the singular translation

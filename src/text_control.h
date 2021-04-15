@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -37,7 +37,7 @@
 /**
     Text control with some Poedit-specific customizations:
     
-    - Allow setting text programatically, without user-input processing (macOS)
+    - Allow setting text programmatically, without user-input processing (macOS)
     - Disable user-usable rich text support
     - Stylistic tweaks (padding and such)
     - Generic undo/redo implementation for GTK
@@ -69,6 +69,8 @@ protected:
 #ifdef __WXOSX__
     void DoSetValue(const wxString& value, int flags) override;
     wxString DoGetValue() const override;
+    wxString GetRange(long from, long to) const override;
+    wxString DoGetValueForRange(long from, long to) const;
 #endif
 
     bool DoCopy();

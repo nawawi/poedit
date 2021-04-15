@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2020 Vaclav Slavik
+ *  Copyright (C) 2000-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -26,6 +26,7 @@
 #include <wx/utils.h>
 #include <wx/log.h>
 #include <wx/process.h>
+#include <wx/thread.h>
 #include <wx/txtstrm.h>
 #include <wx/string.h>
 #include <wx/intl.h>
@@ -33,23 +34,12 @@
 #include <wx/translation.h>
 #include <wx/filename.h>
 
+#include <regex>
 #include <boost/throw_exception.hpp>
 
+#include "concurrency.h"
 #include "gexecute.h"
 #include "errors.h"
-
-// GCC's libstdc++ didn't have functional std::regex implementation until 4.9
-#if (defined(__GNUC__) && !defined(__clang__) && !wxCHECK_GCC_VERSION(4,9))
-    #include <boost/regex.hpp>
-    using boost::wregex;
-    using boost::wsmatch;
-    using boost::regex_match;
-#else
-    #include <regex>
-    using std::wregex;
-    using std::wsmatch;
-    using std::regex_match;
-#endif
 
 namespace
 {
@@ -124,8 +114,9 @@ bool ReadOutput(wxInputStream& s, wxArrayString& out)
     return true;
 }
 
-long DoExecuteGettext(const wxString& cmdline_, wxArrayString& gstderr)
+std::pair<long, wxArrayString> DoExecuteGettextImpl(const wxString& cmdline_)
 {
+    wxArrayString gstderr;
     wxExecuteEnv env;
     wxString cmdline(cmdline_);
 
@@ -160,7 +151,23 @@ long DoExecuteGettext(const wxString& cmdline_, wxArrayString& gstderr)
         BOOST_THROW_EXCEPTION(Exception(wxString::Format(_("Cannot execute program: %s"), cmdline.c_str())));
     }
 
-    return retcode;
+    return std::make_pair(retcode, gstderr);
+}
+
+std::pair<long, wxArrayString> DoExecuteGettext(const wxString& cmdline)
+{
+#if wxUSE_GUI
+    if (wxThread::IsMain())
+    {
+        return DoExecuteGettextImpl(cmdline);
+    }
+    else
+    {
+        return dispatch::on_main([=]{ return DoExecuteGettextImpl(cmdline); }).get();
+    }
+#else
+    return DoExecuteGettextImpl(cmdline);
+#endif
 }
 
 void LogUnrecognizedError(const wxString& err)
@@ -185,7 +192,8 @@ void LogUnrecognizedError(const wxString& err)
 bool ExecuteGettext(const wxString& cmdline)
 {
     wxArrayString gstderr;
-    long retcode = DoExecuteGettext(cmdline, gstderr);
+    long retcode;
+    std::tie(retcode, gstderr) = DoExecuteGettext(cmdline);
 
     wxString pending;
     for (auto& ln: gstderr)
@@ -217,9 +225,10 @@ bool ExecuteGettext(const wxString& cmdline)
 bool ExecuteGettextAndParseOutput(const wxString& cmdline, GettextErrors& errors)
 {
     wxArrayString gstderr;
-    long retcode = DoExecuteGettext(cmdline, gstderr);
+    long retcode;
+    std::tie(retcode, gstderr) = DoExecuteGettext(cmdline);
 
-    static const wregex RE_ERROR(L".*\\.po:([0-9]+)(:[0-9]+)?: (.*)");
+    static const std::wregex RE_ERROR(L".*\\.po:([0-9]+)(:[0-9]+)?: (.*)");
 
     for (const auto& ewx: gstderr)
     {
@@ -230,8 +239,8 @@ bool ExecuteGettextAndParseOutput(const wxString& cmdline, GettextErrors& errors
 
         GettextError rec;
 
-        wsmatch match;
-        if (regex_match(e, match, RE_ERROR))
+        std::wsmatch match;
+        if (std::regex_match(e, match, RE_ERROR))
         {
             rec.line = std::stoi(match.str(1));
             rec.text = match.str(3);

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -24,8 +24,10 @@
  */
 
 
-#ifndef _EDAPP_H_
-#define _EDAPP_H_
+#ifndef Poedit_edapp_h
+#define Poedit_edapp_h
+
+#include "menus.h"
 
 #include <wx/app.h>
 #include <wx/string.h>
@@ -36,11 +38,10 @@
 
 class WXDLLIMPEXP_FWD_BASE wxConfigBase;
 class WXDLLIMPEXP_FWD_BASE wxSingleInstanceChecker;
-class WXDLLIMPEXP_FWD_CORE wxMenuBar;
 
 
-/// wxApp for use with 
-class PoeditApp : public wxApp
+/// wxApp for use with
+class PoeditApp : public wxApp, public MenusManager
 {
     public:
         PoeditApp();
@@ -49,10 +50,11 @@ class PoeditApp : public wxApp
         /** wxWin initialization hook. Shows PoeditFrame and initializes
             configuration entries to default values if they were missing.
          */
-        virtual bool OnInit();
-        virtual int OnExit();
+        bool OnInit() override;
+        void OnEventLoopEnter(wxEventLoopBase *loop) override;
+        int OnExit() override;
 
-        virtual wxLayoutDirection GetLayoutDirection() const;
+        wxLayoutDirection GetLayoutDirection() const override;
 
         /// Returns Poedit version string.
         wxString GetAppVersion() const;
@@ -65,31 +67,22 @@ class PoeditApp : public wxApp
         // opens empty frame or catalogs manager
         void OpenNewFile();
 
-#ifndef __WXOSX__
-        wxFileHistory& FileHistory() { return m_history; }
-#endif
-
 #ifdef __WXOSX__
-        virtual void MacOpenFiles(const wxArrayString& names);
-        virtual void MacNewFile() { OpenNewFile(); }
-        virtual void MacOpenURL(const wxString &url) { HandleCustomURI(url); }
+        void MacOpenFiles(const wxArrayString& names) override;
+        void MacNewFile() override { OpenNewFile(); }
+        void MacOpenURL(const wxString &url) override { HandleCustomURI(url); }
 #endif
 
         void EditPreferences();
 
-        virtual bool OnExceptionInMainLoop();
+        bool OnExceptionInMainLoop() override;
 
         // Open page on poedit.net in the browser
         void OpenPoeditWeb(const wxString& path);
 
 #ifdef __WXOSX__
-        // Make OSX-specific modifications to the menus, e.g. adding items into
-        // the apple menu etc. Call on every newly created menubar
-        void TweakOSXMenuBar(wxMenuBar *bar);
-        void CreateFakeOpenRecentMenu();
-        void FixupMenusForMac(wxMenuBar *bar);
         void OnIdleFixupMenusForMac(wxIdleEvent& event);
-        virtual void OSXOnWillFinishLaunching();
+        void OSXOnWillFinishLaunching() override;
         void OnCloseWindowCommand(wxCommandEvent& event);
 #endif
 
@@ -100,8 +93,8 @@ class PoeditApp : public wxApp
          */
         void SetDefaultCfg(wxConfigBase *cfg);
         
-        void OnInitCmdLine(wxCmdLineParser& parser);
-        bool OnCmdLineParsed(wxCmdLineParser& parser);
+        void OnInitCmdLine(wxCmdLineParser& parser) override;
+        bool OnCmdLineParsed(wxCmdLineParser& parser) override;
         
     private:
         void HandleCustomURI(const wxString& uri);
@@ -109,13 +102,13 @@ class PoeditApp : public wxApp
         void SetupLanguage();
 
         // App-global menu commands:
-        void OnNew(wxCommandEvent& event);
+        void OnNewFromScratch(wxCommandEvent& event);
+        void OnNewFromPOT(wxCommandEvent& event);
         void OnOpen(wxCommandEvent& event);
         void OnOpenFromCrowdin(wxCommandEvent& event);
-#ifndef __WXOSX__
         void OnOpenHist(wxCommandEvent& event);
-#endif
         void OnAbout(wxCommandEvent& event);
+        void OnWelcomeWindow(wxCommandEvent& event);
         void OnManager(wxCommandEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
@@ -134,8 +127,6 @@ class PoeditApp : public wxApp
 #ifdef __WXOSX__
         class NativeMacAppData;
         std::unique_ptr<NativeMacAppData> m_nativeMacAppData;
-#else
-        wxFileHistory m_history;
 #endif
 
         std::unique_ptr<PoeditPreferencesEditor> m_preferences;
@@ -153,4 +144,4 @@ class PoeditApp : public wxApp
 DECLARE_APP(PoeditApp);
 
 
-#endif // _EDAPP_H_
+#endif // Poedit_edapp_h

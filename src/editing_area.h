@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -116,6 +116,7 @@ public:
 
 private:
     void UpdateAuxiliaryInfo(CatalogItemPtr item);
+    void UpdateCharCounter(CatalogItemPtr item);
 
     void CreateEditControls(wxBoxSizer *sizer);
     void CreateTemplateControls(wxBoxSizer *sizer);
@@ -130,6 +131,7 @@ private:
 private:
     class TagLabel;
     class IssueLabel;
+    class CharCounter;
 
     PoeditListCtrl *m_associatedList;
 
@@ -151,6 +153,8 @@ private:
     TagLabel *m_tagPretranslated;
 
     IssueLabel *m_issueLine;
+
+    CharCounter *m_charCounter;
 };
 
 #endif // Poedit_editing_area_h

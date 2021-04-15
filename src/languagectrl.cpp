@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2013-2020 Vaclav Slavik
+ *  Copyright (C) 2013-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -165,6 +165,8 @@ void LanguageCtrl::Init(Language lang)
 
     if (lang.IsValid())
         SetValue(lang.FormatForRoundtrip());
+
+    Bind(wxEVT_KILL_FOCUS, [=](wxFocusEvent&){ NormalizeValue(); });
 }
 
 void LanguageCtrl::SetLang(const Language& lang)
@@ -173,11 +175,20 @@ void LanguageCtrl::SetLang(const Language& lang)
         Init(lang);
     else
         SetValue(lang.FormatForRoundtrip());
+
+    SetToolTip(lang.DisplayName() + "\n" + lang.LanguageTag());
 }
 
 Language LanguageCtrl::GetLang() const
 {
     return Language::TryParse(GetValue().Strip(wxString::both).ToStdWstring());
+}
+
+void LanguageCtrl::NormalizeValue()
+{
+    auto lang = GetLang();
+    if (lang.IsValid())
+        SetLang(lang);
 }
 
 #ifdef __WXMSW__

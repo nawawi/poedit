@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -47,19 +47,19 @@ enum PreTranslateFlags
     
     If not nullptr, report # of pre-translated items in @a matchesCount.
     
-    Returns true if any changes were made.
+    Returns number of pre-translated (i.e. changed) items.
  */
 template<typename T>
-bool PreTranslateCatalog(wxWindow *window, CatalogPtr catalog, const T& range, int flags, int *matchesCount);
+int PreTranslateCatalog(wxWindow *window, CatalogPtr catalog, const T& range, int flags);
 
 /**
     Pre-translate all items in the catalog.
     
     If not nullptr, report # of pre-translated items in @a matchesCount
 
-    Returns true if any changes were made.
+    Returns number of pre-translated (i.e. changed) items.
  */
-bool PreTranslateCatalog(wxWindow *window, CatalogPtr catalog, int flags, int *matchesCount);
+int PreTranslateCatalog(wxWindow *window, CatalogPtr catalog, int flags);
 
 /**
     Show UI for choosing pre-translation choices, then proceed with

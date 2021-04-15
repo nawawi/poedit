@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -228,7 +228,7 @@ class CatalogItem
 
         bool HasIssue() const { return m_issue != nullptr; }
         bool HasError() const { return m_issue && m_issue->severity == Issue::Error; }
-        const Issue& GetIssue() const { return *m_issue; }
+        const std::shared_ptr<Issue>& GetIssue() const { return m_issue; }
 
         void ClearIssue() { m_issue.reset(); }
         void SetIssue(std::shared_ptr<Issue> issue) { m_issue = issue; }

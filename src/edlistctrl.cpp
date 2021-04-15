@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *  Copyright (C) 2005 Olivier Sannier
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
@@ -337,7 +337,7 @@ void PoeditListCtrl::Model::GetValueByRow(wxVariant& variant, unsigned row, unsi
         {
             if (d->HasIssue())
             {
-                switch (d->GetIssue().severity)
+                switch (d->GetIssue()->severity)
                 {
                     case CatalogItem::Issue::Error:
                         variant << m_iconError;

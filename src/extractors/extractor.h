@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2017-2020 Vaclav Slavik
+ *  Copyright (C) 2017-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -61,10 +61,11 @@ enum class ExtractionError
 class ExtractionException : public std::runtime_error
 {
 public:
-    ExtractionException(ExtractionError error_)
-        : std::runtime_error("extraction error"), error(error_) {}
+    ExtractionException(ExtractionError error_, const wxString& file_ = wxString())
+        : std::runtime_error("extraction error"), error(error_), file(file_) {}
 
     ExtractionError error;
+    wxString file;
 };
 
 

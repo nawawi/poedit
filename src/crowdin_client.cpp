@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2020 Vaclav Slavik
+ *  Copyright (C) 2015-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -37,6 +37,7 @@
 #include <stack>
 #include <iostream>
 #include <ctime>
+#include <regex>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -47,19 +48,6 @@
 #include <wx/utils.h>
 
 #include <iostream>
-
-// GCC's libstdc++ didn't have functional std::regex implementation until 4.9
-#if (defined(__GNUC__) && !defined(__clang__) && !wxCHECK_GCC_VERSION(4,9))
-    #include <boost/regex.hpp>
-    using boost::regex;
-    using boost::regex_search;
-    using boost::smatch;
-#else
-    #include <regex>
-    using std::regex;
-    using std::regex_search;
-    using std::smatch;
-#endif
 
 // ----------------------------------------------------------------
 // Implementation
@@ -171,14 +159,14 @@ void CrowdinClient::HandleOAuthCallback(const std::string& uri)
 {
     wxLogTrace("poedit.crowdin", "Callback URI %s", uri.c_str());
 
-    smatch m;
+    std::smatch m;
 
-    if (!(regex_search(uri, m, regex("state=([^&]+)"))
+    if (!(std::regex_search(uri, m, std::regex("state=([^&]+)"))
             && m.size() > 1
             && m.str(1) == m_authCallbackExpectedState))
         return;
 
-    if (!(regex_search(uri, m, regex("access_token=([^&]+)"))
+    if (!(std::regex_search(uri, m, std::regex("access_token=([^&]+)"))
             && m.size() > 1))
         return;
 
@@ -212,7 +200,7 @@ dispatch::future<CrowdinClient::UserInfo> CrowdinClient::GetUserInfo()
             try
             {
                 fullName = d.at("fullName");
-                // if indvidual (not enterprise) account
+                // if individual (not enterprise) account
             }
             catch (...) // or enterpise otherwise
             {

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2015-2020 Vaclav Slavik
+ *  Copyright (C) 2015-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -74,6 +74,7 @@ protected:
     virtual void OnUserSignedIn();
 
     State m_state;
+    ActivityIndicator *m_activity;
     wxBoxSizer *m_loginInfo;
     wxButton *m_signIn, *m_signOut;
     wxString m_userName, m_userLogin;
@@ -108,9 +109,9 @@ bool ShouldSyncToCrowdinAutomatically(CatalogPtr cat);
     Let the user choose a Crowdin file, download it and open in Poedit.
     
     @param parent    PoeditFrame the UI should be shown under.
-    @param onLoaded  Called with the name of loaded PO file.
+    @param onDone    Called with the dialog return value (wxID_OK/CANCEL) and name of loaded PO file.
  */
-void CrowdinOpenFile(wxWindow *parent, std::function<void(wxString)> onLoaded);
+void CrowdinOpenFile(wxWindow *parent, std::function<void(int, wxString)> onDone);
 
 /**
     Synces the catalog with Crowdin, uploading and downloading translations.

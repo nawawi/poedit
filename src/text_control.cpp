@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -257,11 +257,11 @@ void CustomizedTextCtrl::DoSetValue(const wxString& value, int flags)
     SendTextUpdatedEventIfAllowed();
 }
 
-wxString CustomizedTextCtrl::DoGetValue() const
+wxString CustomizedTextCtrl::DoGetValueForRange(long from, long to) const
 {
     // wx's implementation is not sufficient and neither is [NSTextView string]
     // (which wx uses): they ignore formatting, which would be desirable, but
-    // they also include embedded Unicode marks such as U+202A (Left-to-Right Embedding)
+    // they also ignore embedded Unicode marks such as U+202A (Left-to-Right Embedding)
     // or U+202C (Pop Directional Format) that are essential for correct
     // handling of BiDi text.
     //
@@ -275,11 +275,28 @@ wxString CustomizedTextCtrl::DoGetValue() const
                              NSDocumentTypeDocumentAttribute: NSPlainTextDocumentType,
                              NSCharacterEncodingDocumentAttribute: @(NSUTF8StringEncoding)
                            };
-    NSData *data = [text dataFromRange:NSMakeRange(0, [text length]) documentAttributes:attrs error:nil];
+    const long length = (to == -1) ? [text length] : (to - from);
+    NSData *data = [text dataFromRange:NSMakeRange(from, length) documentAttributes:attrs error:nil];
     if (data && [data length] > 0)
         return wxString::FromUTF8((const char*)[data bytes], [data length]);
     else
+        return wxString();
+}
+
+wxString CustomizedTextCtrl::DoGetValue() const
+{
+    auto s = DoGetValueForRange(0, -1);
+    if (s.empty())
         return wxTextCtrl::DoGetValue();
+    return s;
+}
+
+wxString CustomizedTextCtrl::GetRange(long from, long to) const
+{
+    auto s = DoGetValueForRange(from, to);
+    if (s.empty())
+        return wxTextCtrl::GetRange(from, to);
+    return s;
 }
 
 #else // !__WXOSX__
@@ -338,7 +355,7 @@ WXDWORD CustomizedTextCtrl::MSWGetStyle(long style, WXDWORD *exstyle) const
 // override copy/cut/paste commands. Plus, the richedit control
 // (or wx's use of it) has a bug in it that causes it to copy wrong
 // data when copying from the same text control to itself after its
-// content was programatically changed:
+// content was programmatically changed:
 // https://sourceforge.net/tracker/index.php?func=detail&aid=1910234&group_id=27043&atid=389153
 
 // Note that GTK has a very similar problem with pasting rich text,
@@ -746,7 +763,7 @@ wxString AnyTranslatableTextCtrl::DoCopyText(long from, long to)
 
 void AnyTranslatableTextCtrl::DoPasteText(long from, long to, const wxString& s)
 {
-    Replace(from, to, EscapePlainText(s));
+    Replace(from, to, EscapePlainText(bidi::strip_pointless_control_chars(s, m_language.Direction())));
 }
 
 void AnyTranslatableTextCtrl::DoSetValue(const wxString& value, int flags)

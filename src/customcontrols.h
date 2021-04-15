@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2020 Vaclav Slavik
+ *  Copyright (C) 2014-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -42,14 +42,14 @@ class WXDLLIMPEXP_ADV wxActivityIndicator;
 #include <functional>
 
 
-// Label marking a subsection of a dialog:
+/// Label marking a subsection of a dialog:
 class HeadingLabel : public wxStaticText
 {
 public:
     HeadingLabel(wxWindow *parent, const wxString& label);
 };
 
-// Label that auto-wraps itself to fit surrounding control's width.
+/// Label that auto-wraps itself to fit surrounding control's width.
 class AutoWrappingText : public wxStaticText
 {
 public:
@@ -60,13 +60,42 @@ public:
 
     void SetAndWrapLabel(const wxString& label);
 
+    bool InformFirstDirection(int direction, int size, int availableOtherDir) override;
+
+    void SetLabel(const wxString& label) override;
+
 protected:
     void OnSize(wxSizeEvent& e);
+    bool RewrapForWidth(int width);
 
     wxString m_text;
     int m_wrapWidth;
     Language m_language;
 };
+
+/// A helper class that implements better sizer behavior for a window that contains AutoWrappingText
+template<typename Base>
+class WindowWith2DSizingConstraints : public Base
+{
+public:
+    using Base::Base;
+
+    void Fit() override
+    {
+        // iterate sizing because performing layout may invalidate some best
+        // sizes (AutoWrappingText) and may need to be redone.
+        wxSize best = this->GetBestSize();
+        while ( true )
+        {
+            this->SetSize(best);
+            wxSize updatedBest = this->GetBestSize();
+            if ( best == updatedBest )
+                break;
+            best = updatedBest;
+        }
+    }
+};
+
 
 /// Like AutoWrappingText, but allows selecting (macOS) or at least copying (Windows)
 /// the text too.

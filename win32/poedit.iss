@@ -1,7 +1,7 @@
 ﻿;
 ;   This file is part of Poedit (https://poedit.net)
 ;
-;   Copyright (C) 1999-2020 Vaclav Slavik
+;   Copyright (C) 1999-2021 Vaclav Slavik
 ;
 ;   Permission is hereby granted, free of charge, to any person obtaining a
 ;   copy of this software and associated Docsumentation files (the "Software"),
@@ -30,7 +30,7 @@
 
 #include "../" + CONFIG + "/git_build_number.h"
 
-#define VERSION          "2.4.2"
+#define VERSION          "3.0"
 #define VERSION_WIN      VERSION + "." + Str(POEDIT_GIT_BUILD_NUMBER)
 
 #ifndef CRT_REDIST
@@ -68,7 +68,7 @@ InternalCompressLevel=ultra
 AppID={{68EB2C37-083A-4303-B5D8-41FA67E50B8F}
 VersionInfoVersion={#VERSION_WIN}
 VersionInfoTextVersion={#VERSION}
-AppCopyright=Copyright © 1999-2020 Vaclav Slavik
+AppCopyright=Copyright © 1999-2021 Vaclav Slavik
 AppPublisher=Vaclav Slavik
 AppSupportURL=https://poedit.net/support
 AppUpdatesURL=https://poedit.net/download
@@ -87,7 +87,7 @@ SignTool={#SIGNTOOL}
 #endif
 VersionInfoCompany=Vaclav Slavik
 VersionInfoDescription=Poedit Installer
-VersionInfoCopyright=Copyright © 1999-2020 Vaclav Slavik
+VersionInfoCopyright=Copyright © 1999-2021 Vaclav Slavik
 VersionInfoProductName=Poedit
 VersionInfoProductVersion={#VERSION_WIN}
 VersionInfoProductTextVersion={#VERSION}

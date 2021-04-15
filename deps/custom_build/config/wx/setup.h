@@ -546,7 +546,7 @@
 // Default is 1
 //
 // Recommended setting: 1
-#define wxUSE_FSWATCHER     0
+#define wxUSE_FSWATCHER     1
 
 // Setting wxUSE_CONFIG to 1 enables the use of wxConfig and related classes
 // which allow the application to store its settings in the persistent
@@ -653,6 +653,19 @@
 
 // wxMimeTypesManager class
 #define wxUSE_MIMETYPE 1
+
+// wxWebRequest allows usage of system libraries for HTTP(S) requests.
+//
+// Note that for wxWebRequest to be built, at least one of its backends must be
+// available. Under MSW and macOS this will always be the case unless
+// explicitly disabled.
+//
+// Default is 1
+//
+// Recommended setting: 1, setting it to 0 may be useful to avoid dependencies
+// on libcurl on Unix systems.
+#define wxUSE_WEBREQUEST 0
+
 
 // wxProtocol and related classes: if you want to use either of wxFTP, wxHTTP
 // or wxURL you need to set this to 1.
@@ -761,7 +774,7 @@
 // Default is 1
 //
 // Recommended setting: 1
-#define wxUSE_STC 1
+#define wxUSE_STC 0
 
 // Use wxWidget's web viewing classes
 //
@@ -777,6 +790,7 @@
 // Recommended setting: 1
 #ifdef __WXMSW__
 #define wxUSE_WEBVIEW_IE 1
+#define wxUSE_WEBVIEW_EDGE 0
 #else
 #define wxUSE_WEBVIEW_IE 0
 #endif
@@ -929,6 +943,14 @@
 #define wxUSE_TOGGLEBTN     1   // requires wxButton
 #define wxUSE_TREECTRL      1   // wxTreeCtrl
 #define wxUSE_TREELISTCTRL  1   // wxTreeListCtrl
+
+// Use generic version of wxDataViewCtrl even if a native one is available?
+//
+// Default is 1.
+//
+// Recommended setting: 1, but can be set to 0 if your program is affected by
+// the native control limitations.
+#define wxUSE_NATIVE_DATAVIEWCTRL 1
 
 // Use a status bar class? Depending on the value of wxUSE_NATIVE_STATUSBAR
 // below either wxStatusBar95 or a generic wxStatusBar will be used.
@@ -1135,6 +1157,13 @@
 //
 // Recommended setting: 1 (can't be disabled under MSW)
 #define wxUSE_MENUS         1
+
+// Use wxMenuBar.
+//
+// Default is 1.
+//
+// Recommended setting: 1 (can't be disabled under MSW)
+#define wxUSE_MENUBAR       1
 
 // Use wxNotificationMessage.
 //
@@ -1696,6 +1725,13 @@
 //
 // Recommended setting: 0, nobody uses .INI files any more
 #define wxUSE_INICONF 0
+
+// Set to 1 if you need to include <winsock2.h> over <winsock.h>
+//
+// Default is 0.
+//
+// Recommended setting: 0, set to 1 automatically if wxUSE_IPV6 is 1.
+#define wxUSE_WINSOCK2 0
 
 // ----------------------------------------------------------------------------
 // Generic versions of native controls

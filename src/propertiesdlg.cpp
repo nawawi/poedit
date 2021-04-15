@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2020 Vaclav Slavik
+ *  Copyright (C) 2000-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -58,6 +58,7 @@
 #include "propertiesdlg.h"
 
 #include "colorscheme.h"
+#include "customcontrols.h"
 #include "hidpi.h"
 #include "language.h"
 #include "str_helpers.h"
@@ -273,8 +274,12 @@ public:
         sizer->Add(m_list, wxSizerFlags(1).Expand().BORDER_WIN(wxLEFT, 1));
 
 #if defined(__WXOSX__)
-        auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSAddTemplate"), wxDefaultPosition, wxSize(18, 18), wxBORDER_SUNKEN);
-        auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSRemoveTemplate"), wxDefaultPosition, wxSize(18,18), wxBORDER_SUNKEN);
+  #if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_16
+        if (@available(macOS 11.0, *))
+            ((NSTableView*)[((NSScrollView*)m_list->GetHandle()) documentView]).style = NSTableViewStyleFullWidth;
+  #endif
+        auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSAddTemplate"), wxDefaultPosition, wxSize(18, 18), wxBORDER_SIMPLE);
+        auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("NSRemoveTemplate"), wxDefaultPosition, wxSize(18,18), wxBORDER_SIMPLE);
 #elif defined(__WXMSW__)
         auto add = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-add"), wxDefaultPosition, wxSize(PX(19),PX(19)));
         auto remove = new wxBitmapButton(this, wxID_ANY, wxArtProvider::GetBitmap("list-remove"), wxDefaultPosition, wxSize(PX(19),PX(19)));
@@ -304,17 +309,28 @@ public:
             Remove(s);
         });
 
-#if 0
-        // TODO: Add background overlay with instructions:
-        _("<big>Drag and Drop Folders Here</big>\n\nor use the + button")
-        _("<big>Drag and drop folders here</big>\n\nor use the + button")
+        m_placeholder = new wxStaticText(this, wxID_ANY, MSW_OR_OTHER(_("Drag folders or files here"), _("Drag Folders or Files Here")));
+        m_placeholder->SetForegroundColour(ExplanationLabel::GetTextColor());
+#ifdef __WXOSX__
+        m_placeholder->SetWindowVariant(wxWINDOW_VARIANT_NORMAL);
+#endif
+
+        m_list->Bind(wxEVT_SIZE, &PathsList::OnListResized, this);
+        m_list->Bind(wxEVT_CONTEXT_MENU, &PathsList::OnRightClick, this);
+
+#ifdef __WXMSW__
+        m_list->Bind(wxEVT_SET_FOCUS, [=](wxFocusEvent& e){
+            e.Skip();
+            m_placeholder->Lower(); // move to the top in Z-order, above the list (yeah, really)
+        });
 #endif
     }
 
     void UpdateFromData()
     {
+        auto& array = Array();
         m_list->Clear();
-        for (auto& p: Array())
+        for (auto& p: array)
         {
             wxString s;
             if (wxIsWild(p))
@@ -323,6 +339,8 @@ public:
                 s = RelativePath(p, m_data->basepath, wxPATH_NATIVE);
             m_list->Append(bidi::platform_mark_direction(s));
         }
+
+        m_placeholder->Show(array.empty());
     }
 
     void Add(const wxArrayString& files)
@@ -375,6 +393,14 @@ protected:
 
         PathsList *m_parent;
     };
+
+    void OnListResized(wxSizeEvent& e)
+    {
+        e.Skip();
+        wxSize size = m_list->GetSize();
+        size -= m_placeholder->GetSize();
+        m_placeholder->SetPosition(m_list->GetPosition() + size / 2);
+    }
 
     void OnAddMenu(wxCommandEvent& e)
     {
@@ -432,8 +458,61 @@ protected:
 #endif
     }
 
+    void OnRightClick(wxContextMenuEvent& event)
+    {
+        event.Skip();
+
+        auto pos = event.GetPosition();
+        if (!pos.IsFullySpecified())
+            pos = wxGetMousePosition();
+        auto item = m_list->HitTest(m_list->ScreenToClient(pos));
+        if (item == wxNOT_FOUND)
+            return;
+
+        m_list->DeselectAll();
+        m_list->Select(item);
+
+        wxString file = Array()[item];
+        if (wxIsWild(file))
+            return;
+
+        event.Skip(false);
+
+        static wxWindowID idShowInFolder = wxNewId();
+        wxMenu menu;
+        auto menuItem = menu.Append(idShowInFolder,
+#if defined(__WXOSX__)
+            // TRANSLATORS: Used on macOS, should match standard translation of this in other apps (incl. name of the Finder app)
+            _("Reveal in Finder")
+#elif defined(__WXMSW__)
+            // TRANSLATORS: Used on Windows to show in the Explorer file manager, should match standard translation of "Explorer"
+            _("Show in Explorer")
+#else
+            _("Show in Folder")
+#endif
+            );
+        if (!wxFileExists(file) && !wxDirExists(file))
+            menuItem->Enable(false);
+        menu.Bind(wxEVT_MENU, [=](wxCommandEvent&){ ShowInFolder(file); }, idShowInFolder);
+        PopupMenu(&menu);
+    }
+
+    void ShowInFolder(const wxString& path)
+    {
+#if defined(__WXOSX__)
+        NSURL *url = [NSURL fileURLWithPath:str::to_NS(path)];
+        [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[url]];
+#elif defined(__WXMSW__)
+        wxExecute(wxString::Format("explorer.exe /select,\"%s\"", path));
+#else
+        wxLaunchDefaultApplication(wxFileName(path).GetPath());
+#endif
+    }
+
+
     std::shared_ptr<PathsData> m_data;
     wxListBox *m_list;
+    wxStaticText *m_placeholder;
 };
 
 class PropertiesDialog::SourcePathsList : public PropertiesDialog::PathsList
@@ -845,7 +924,7 @@ void PropertiesDialog::TransferFrom(const CatalogPtr& cat)
 
         if (m_pluralFormsDefault->GetValue() && cat->Header().Lang.IsValid())
         {
-            // make sure we don't overwite catalog's expression if the user didn't modify and
+            // make sure we don't overwrite catalog's expression if the user didn't modify and
             // it differs only cosmetically from the default
             PluralFormsExpr pf_def(cat->Header().Lang.DefaultPluralFormsExpr());
             PluralFormsExpr pf_cat(cat->Header().GetHeader("Plural-Forms").ToStdString());

@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -84,6 +84,7 @@
 #include "languagectrl.h"
 #include "welcomescreen.h"
 #include "errors.h"
+#include "recent_files.h"
 #include "sidebar.h"
 #include "spellchecking.h"
 #include "str_helpers.h"
@@ -220,7 +221,6 @@ private:
 
 } // anonymous namespace
 
-
 // this should be high enough to not conflict with any wxNewId-allocated value,
 PoeditFrame::PoeditFramesList PoeditFrame::ms_instances;
 
@@ -257,16 +257,6 @@ bool g_focusToText = false;
             return n;
     }
     return NULL;
-}
-
-/*static*/ PoeditFrame *PoeditFrame::UnusedWindow(bool active)
-{
-    for (auto win: ms_instances)
-    {
-        if ((!active || win->IsActive()) && win->m_catalog == nullptr)
-            return win;
-    }
-    return nullptr;
 }
 
 /*static*/ bool PoeditFrame::AnyWindowIsModified()
@@ -332,31 +322,10 @@ bool g_focusToText = false;
     return f;
 }
 
-/*static*/ PoeditFrame *PoeditFrame::CreateWelcome()
-{
-    PoeditFrame *f = new PoeditFrame;
-    f->EnsureContentView(Content::Welcome);
-    f->Show(true);
-
-    return f;
-}
-
 
 BEGIN_EVENT_TABLE(PoeditFrame, wxFrame)
-// macOS and GNOME apps should open new documents in a new window. On Windows,
-// however, the usual thing to do is to open the new document in the already
-// open window and replace the current document.
-   EVT_BUTTON         (XRCID("button_new_from_this_pot"),PoeditFrame::OnNew)
-#ifdef __WXMSW__
-   EVT_MENU           (wxID_NEW,                  PoeditFrame::OnNew)
-   EVT_MENU           (XRCID("menu_new_from_pot"),PoeditFrame::OnNew)
-   EVT_MENU           (wxID_OPEN,                 PoeditFrame::OnOpen)
-  #ifdef HAVE_HTTP_CLIENT
-   EVT_MENU           (XRCID("menu_open_crowdin"),PoeditFrame::OnOpenFromCrowdin)
-  #endif
-#endif // __WXMSW__
+   EVT_MENU           (XRCID("button_new_from_this_pot"),PoeditFrame::OnTranslationFromThisPot)
 #ifndef __WXOSX__
-   EVT_MENU_RANGE     (wxID_FILE1, wxID_FILE9,    PoeditFrame::OnOpenHist)
    EVT_MENU           (wxID_CLOSE,                PoeditFrame::OnCloseCmd)
 #endif
    EVT_MENU           (wxID_SAVE,                 PoeditFrame::OnSave)
@@ -519,6 +488,7 @@ PoeditFrame::PoeditFrame() :
     m_contentType(Content::Invalid),
     m_contentView(nullptr),
     m_catalog(nullptr),
+    m_fileMonitor(new FileMonitor),
     m_fileExistsOnDisk(false),
     m_list(nullptr),
     m_modified(false),
@@ -543,39 +513,14 @@ PoeditFrame::PoeditFrame() :
     m_displayIDs = (bool)cfg->Read("display_lines", (long)false);
     g_focusToText = (bool)cfg->Read("focus_to_text", (long)false);
 
-#if defined(__WXGTK__)
-    wxIconBundle appicons;
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(16,16)));
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(24,24)));
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(32,32)));
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(48,48)));
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(256,256)));
-    appicons.AddIcon(wxArtProvider::GetIcon("net.poedit.Poedit", wxART_FRAME_ICON, wxSize(512,512)));
-    SetIcons(appicons);
-#elif defined(__WXMSW__)
+#ifdef __WXMSW__
     SetIcons(wxIconBundle(wxStandardPaths::Get().GetResourcesDir() + "\\Resources\\Poedit.ico"));
 #endif
 
-    wxMenuBar *MenuBar = wxXmlResource::Get()->LoadMenuBar("mainmenu");
+    wxMenuBar *MenuBar = wxGetApp().CreateMenu(Menu::Editor);
     if (MenuBar)
     {
-#ifndef __WXOSX__
-        m_menuForHistory = MenuBar->GetMenu(MenuBar->FindMenu(_("&File")));
-        FileHistory().UseMenu(m_menuForHistory);
-        FileHistory().AddFilesToMenu(m_menuForHistory);
-#endif
         AddBookmarksMenu(MenuBar->GetMenu(MenuBar->FindMenu(_("&Go"))));
-#ifdef __WXOSX__
-        wxGetApp().TweakOSXMenuBar(MenuBar);
-#endif
-#ifndef HAVE_HTTP_CLIENT
-        wxMenu *menu;
-        wxMenuItem *item;
-        item = MenuBar->FindItem(XRCID("menu_update_from_crowdin"), &menu);
-        menu->Destroy(item);
-        item = MenuBar->FindItem(XRCID("menu_open_crowdin"), &menu);
-        menu->Destroy(item);
-#endif
         SetMenuBar(MenuBar);
     }
     else
@@ -646,10 +591,6 @@ void PoeditFrame::EnsureContentView(Content type)
         case Content::Invalid:
             m_contentType = Content::Invalid;
             return; // nothing to do
-
-        case Content::Welcome:
-            m_contentView = CreateContentViewWelcome();
-            break;
 
         case Content::Empty_PO:
             m_contentView = CreateContentViewEmptyPO();
@@ -804,12 +745,6 @@ wxWindow* PoeditFrame::CreateContentViewPO(Content type)
 }
 
 
-wxWindow* PoeditFrame::CreateContentViewWelcome()
-{
-    return new WelcomeScreenPanel(this);
-}
-
-
 wxWindow* PoeditFrame::CreateContentViewEmptyPO()
 {
     bool isGettext = m_catalog->GetFileType() == Catalog::Type::PO || m_catalog->GetFileType() == Catalog::Type::POT;
@@ -861,11 +796,6 @@ PoeditFrame::~PoeditFrame()
     cfg->Write("display_lines", m_displayIDs);
 
     SaveWindowState(this);
-
-#ifndef __WXOSX__
-    FileHistory().RemoveMenu(m_menuForHistory);
-    FileHistory().Save(*cfg);
-#endif
 
     // write all changes:
     cfg->Flush();
@@ -1034,13 +964,50 @@ void PoeditFrame::DoOpenFile(const wxString& filename, int lineno)
 }
 
 
+void PoeditFrame::ReloadFileIfChanged()
+{
+    if (!m_fileExistsOnDisk || !m_fileMonitor || !m_catalog)
+        return;
+
+    if (m_fileMonitor->ShouldRespondToFileChange())
+    {
+        if (NeedsToAskIfCanDiscardCurrentDoc())
+        {
+            auto filename = wxFileName(m_catalog->GetFileName()).GetFullName();
+            wxWindowPtr<wxMessageDialog> dlg(new wxMessageDialog
+                             (
+                                 this,
+                                 wxString::Format(_(L"The file “%s” has been changed by another application."), filename),
+                                 _("Reload file"),
+                                 wxYES_NO | wxNO_DEFAULT | wxICON_WARNING
+                             ));
+            dlg->SetExtendedMessage(_(L"Do you want to reload the file from disk? Your unsaved edits in Poedit will be lost if you do."));
+            dlg->SetYesNoLabels(MSW_OR_OTHER(_("Reload file"), _("Reload File")), _("Ignore"));
+            dlg->ShowWindowModalThenDo([this,dlg](int retval)
+            {
+                if (retval == wxID_YES)
+                    ReadCatalog(m_catalog->GetFileName());
+                m_fileMonitor->StopRespondingToEvent();
+            });
+        }
+        else
+        {
+            // file not modified in Poedit yet, so just reload it from the disk
+            ReadCatalog(m_catalog->GetFileName());
+            m_fileMonitor->StopRespondingToEvent();
+        }
+    }
+}
+
+
 bool PoeditFrame::NeedsToAskIfCanDiscardCurrentDoc() const
 {
     return m_catalog && m_modified;
 }
 
-template<typename TFunctor>
-void PoeditFrame::DoIfCanDiscardCurrentDoc(TFunctor completionHandler)
+template<typename TFunctor1, typename TFunctor2>
+void PoeditFrame::DoIfCanDiscardCurrentDoc(const TFunctor1& completionHandler, const TFunctor2
+& failureHandler)
 {
     if ( !NeedsToAskIfCanDiscardCurrentDoc() )
     {
@@ -1050,7 +1017,7 @@ void PoeditFrame::DoIfCanDiscardCurrentDoc(TFunctor completionHandler)
 
     wxWindowPtr<wxMessageDialog> dlg = CreateAskAboutSavingDialog();
 
-    dlg->ShowWindowModalThenDo([this,dlg,completionHandler](int retval) {
+    dlg->ShowWindowModalThenDo([this,dlg,completionHandler,failureHandler](int retval) {
         // hide the dialog asap, WriteCatalog() may show another modal sheet
         dlg->Hide();
 #ifdef __WXOSX__
@@ -1059,7 +1026,7 @@ void PoeditFrame::DoIfCanDiscardCurrentDoc(TFunctor completionHandler)
         // from event loop (and not this functions' caller) at an unspecified
         // time anyway, we can just as well defer it into the next idle time
         // iteration.
-        CallAfter([this,retval,completionHandler]() {
+        CallAfter([this,retval,completionHandler,failureHandler]() {
 #endif
 
         if (retval == wxID_YES)
@@ -1068,6 +1035,8 @@ void PoeditFrame::DoIfCanDiscardCurrentDoc(TFunctor completionHandler)
                 WriteCatalog(fn, [=](bool saved){
                     if (saved)
                         completionHandler();
+                    else
+                        failureHandler();
                 });
             };
             if (!m_fileExistsOnDisk || GetFileName().empty())
@@ -1083,6 +1052,7 @@ void PoeditFrame::DoIfCanDiscardCurrentDoc(TFunctor completionHandler)
         else if (retval == wxID_CANCEL)
         {
             // do not call -- not OK
+            failureHandler();
         }
 
 #ifdef __WXOSX__
@@ -1091,12 +1061,24 @@ void PoeditFrame::DoIfCanDiscardCurrentDoc(TFunctor completionHandler)
     });
 }
 
+#ifndef __WXOSX__
+bool PoeditFrame::AskIfCanDiscardCurrentDoc()
+{
+    // On non-Mac platforms, we can check synchronously, because all UI is modal, not window-modal
+    int status = -1;
+    DoIfCanDiscardCurrentDoc([&status]{ status = 1; }, [&status]{ status = 0; });
+    wxASSERT( status != -1 ); // i.e. was executed synchronously
+    return status != 0;
+}
+#endif
+
+
 wxWindowPtr<wxMessageDialog> PoeditFrame::CreateAskAboutSavingDialog()
 {
     wxWindowPtr<wxMessageDialog> dlg(new wxMessageDialog
                     (
                         this,
-                        _("Catalog modified. Do you want to save changes?"),
+                        _("The file has been modified. Do you want to save changes?"),
                         _("Save changes"),
                         wxYES_NO | wxCANCEL | wxICON_QUESTION
                     ));
@@ -1146,54 +1128,12 @@ void PoeditFrame::OnCloseWindow(wxCloseEvent& event)
 }
 
 
-void PoeditFrame::OnOpen(wxCommandEvent&)
-{
-    DoIfCanDiscardCurrentDoc([=]{
-
-        wxString path = wxPathOnly(GetFileName());
-        if (path.empty())
-            path = wxConfig::Get()->Read("last_file_path", wxEmptyString);
-
-        wxString name = wxFileSelector(MACOS_OR_OTHER("", _("Open catalog")),
-                        path, wxEmptyString, wxEmptyString,
-                        Catalog::GetAllTypesFileMask(),
-                        wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
-
-        if (!name.empty())
-        {
-            wxConfig::Get()->Write("last_file_path", wxPathOnly(name));
-
-            DoOpenFile(name);
-        }
-    });
-}
-
-
 #ifdef HAVE_HTTP_CLIENT
-void PoeditFrame::OnOpenFromCrowdin(wxCommandEvent&)
+void PoeditFrame::NewFromCrowdin(const wxString& filename)
 {
-    DoIfCanDiscardCurrentDoc([=]{
-        CrowdinOpenFile(this, [=](wxString name){
-            DoOpenFile(name);
-        });
-    });
+    DoOpenFile(filename);
 }
 #endif
-
-
-#ifndef __WXOSX__
-void PoeditFrame::OnOpenHist(wxCommandEvent& event)
-{
-    wxString f(FileHistory().GetHistoryFile(event.GetId() - wxID_FILE1));
-    if ( !wxFileExists(f) )
-    {
-        wxLogError(_(L"File “%s” doesn’t exist."), f.c_str());
-        return;
-    }
-
-    OpenFile(f);
-}
-#endif // !__WXOSX__
 
 
 void PoeditFrame::OnSave(wxCommandEvent& event)
@@ -1201,9 +1141,34 @@ void PoeditFrame::OnSave(wxCommandEvent& event)
     try
     {
         if (!m_fileExistsOnDisk || GetFileName().empty())
+        {
             OnSaveAs(event);
+        }
         else
-            WriteCatalog(GetFileName());
+        {
+            if (m_fileMonitor && m_fileMonitor->WasModifiedOnDisk())
+            {
+                auto filename = wxFileName(m_catalog->GetFileName()).GetFullName();
+                wxWindowPtr<wxMessageDialog> dlg(new wxMessageDialog
+                                 (
+                                     this,
+                                     wxString::Format(_(L"The file “%s” has been changed by another application."), filename),
+                                     _("Save"),
+                                     wxYES_NO | wxYES_DEFAULT | wxICON_WARNING
+                                 ));
+                dlg->SetExtendedMessage(_("The changes made by the other application will be lost if you save."));
+                dlg->SetYesNoLabels(MSW_OR_OTHER(_("Save anyway"), _("Save Anyway")), _("Cancel"));
+                dlg->ShowWindowModalThenDo([this,dlg](int retval)
+                {
+                    if (retval == wxID_YES)
+                        WriteCatalog(GetFileName());
+                });
+            }
+            else
+            {
+                WriteCatalog(GetFileName());
+            }
+        }
     }
     catch (Exception& e)
     {
@@ -1371,61 +1336,20 @@ bool PoeditFrame::ExportCatalog(const wxString& filename)
 }
 
 
-
-void PoeditFrame::OnNew(wxCommandEvent& event)
+void PoeditFrame::OnTranslationFromThisPot(wxCommandEvent&)
 {
     DoIfCanDiscardCurrentDoc([=]{
-        if (event.GetId() == XRCID("menu_new_from_pot"))
-        {
-            NewFromPOT();
-        }
-        else if (event.GetId() == XRCID("button_new_from_this_pot"))
-        {
-            wxWindowPtr<LanguageDialog> dlg(new LanguageDialog(this));
-            dlg->ShowWindowModalThenDo([=](int retcode){
-                if (retcode != wxID_OK)
-                    return;
-                auto cat = std::dynamic_pointer_cast<POCatalog>(m_catalog);
-                wxASSERT_MSG(cat, "unexpected file type / catalog class for POT");
-                NewFromPOT(cat, dlg->GetLang());
-            });
-        }
-        else
-        {
-            NewFromScratch();
-        }
+        wxWindowPtr<LanguageDialog> dlg(new LanguageDialog(this));
+        dlg->ShowWindowModalThenDo([=](int retcode){
+            if (retcode != wxID_OK)
+                return;
+            auto cat = std::dynamic_pointer_cast<POCatalog>(m_catalog);
+            wxASSERT_MSG(cat, "unexpected file type / catalog class for POT");
+            NewFromPOT(cat, dlg->GetLang());
+        });
     });
 }
 
-
-void PoeditFrame::NewFromPOT()
-{
-    wxString path = wxPathOnly(GetFileName());
-    if (path.empty())
-        path = wxConfig::Get()->Read("last_file_path", wxEmptyString);
-    wxString pot_file =
-        wxFileSelector(_("Open catalog template"),
-             path, wxEmptyString, wxEmptyString,
-             Catalog::GetTypesFileMask({Catalog::Type::POT, Catalog::Type::PO}),
-             wxFD_OPEN | wxFD_FILE_MUST_EXIST, this);
-    if (!pot_file.empty())
-    {
-        wxConfig::Get()->Write("last_file_path", wxPathOnly(pot_file));
-
-        auto pot = std::make_shared<POCatalog>(pot_file, Catalog::CreationFlag_IgnoreTranslations);
-        if (!pot->IsOk())
-        {
-            wxLogError(_(L"“%s” is not a valid POT file."), pot_file.c_str());
-            return;
-        }
-
-        // Silently fix duplicates because they are common in WP world:
-        if (pot->HasDuplicateItems())
-            pot->FixDuplicateItems();
-
-        NewFromPOT(pot);
-    }
-}
 
 void PoeditFrame::NewFromPOT(POCatalogPtr pot, Language language)
 {
@@ -1659,14 +1583,14 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
         locker.reset(new wxWindowUpdateLocker(m_list));
 
 
-    UpdateResultReason reason = UpdateResultReason::Unspecified;
+    UpdateResultReason reason;
     bool succ;
 
     if (pot_file.empty())
     {
         if (cat->HasSourcesAvailable())
         {
-            succ = PerformUpdateFromSources(this, cat, reason);
+            succ = PerformUpdateFromSourcesWithUI(this, cat, reason);
 
             locker.reset();
             EnsureAppropriateContentView();
@@ -1680,7 +1604,7 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
     }
     else
     {
-        succ = PerformUpdateFromPOT(this, cat, pot_file, reason);
+        succ = PerformUpdateFromPOTWithUI(this, cat, pot_file, reason);
 
         locker.reset();
         EnsureAppropriateContentView();
@@ -1692,7 +1616,12 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
 
     if (!succ)
     {
-        switch (reason)
+        // FIXME: nicer UI than this
+        wxString msgSuffix;
+        if (!reason.file.empty() && reason.file != ".")
+            msgSuffix += "\n\n" + wxString::Format(_("In: %s"), reason.file);
+
+        switch (reason.code)
         {
             case UpdateResultReason::NoSourcesFound:
             {
@@ -1703,7 +1632,9 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
                         MSW_OR_OTHER(_("Updating failed"), ""),
                         wxOK | wxICON_ERROR
                     ));
-                dlg->SetExtendedMessage(_(L"Translations couldn’t be updated from the source code, because no code was found in the location specified in the catalog’s Properties."));
+                wxString expl = _(L"Translations couldn’t be updated from the source code, because no code was found in the location specified in the file’s Properties.");
+                expl += msgSuffix;
+                dlg->SetExtendedMessage(expl);
                 dlg->ShowWindowModalThenDo([dlg](int){});
                 break;
             }
@@ -1716,7 +1647,7 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
                         MSW_OR_OTHER(_("Updating failed"), ""),
                         wxOK | wxICON_ERROR
                     ));
-                wxString expl = _(L"You don’t have permission to read source code files from the location specified in the catalog’s Properties.");
+                wxString expl = _(L"You don’t have permission to read source code files from the location specified in the file’s Properties.");
             #ifdef __WXOSX__
                 if (@available(macOS 10.15, *))
                 {
@@ -1724,15 +1655,16 @@ bool PoeditFrame::UpdateCatalog(const wxString& pot_file)
                     expl += "\n\n" + _("If you previously denied access to your files, you can allow it in System Preferences > Security & Privacy > Privacy > Files & Folders.");
                 }
             #endif
+                expl += msgSuffix;
                 dlg->SetExtendedMessage(expl);
                 dlg->ShowWindowModalThenDo([dlg](int){});
                 break;
             }
             case UpdateResultReason::Unspecified:
             {
-                wxLogWarning(_("Entries in the catalog are probably incorrect."));
+                wxLogWarning(_("Translation entries in the file are probably incorrect."));
                 wxLogError(
-                   _("Updating the catalog failed. Click on 'Details >>' for details."));
+                   _("Updating the file failed. Click on 'Details >>' for details."));
                 break;
             }
             case UpdateResultReason::CancelledByUser:
@@ -1752,7 +1684,7 @@ void PoeditFrame::OnUpdateFromSources(wxCommandEvent&)
             {
                 if (Config::UseTM() && Config::MergeBehavior() == Merge_UseTM)
                 {
-                    if (PreTranslateCatalog(this, m_catalog, PreTranslate_OnlyGoodQuality, nullptr))
+                    if (PreTranslateCatalog(this, m_catalog, PreTranslate_OnlyGoodQuality))
                     {
                         if (!m_modified)
                         {
@@ -1789,7 +1721,7 @@ void PoeditFrame::OnUpdateFromPOT(wxCommandEvent&)
 
         wxWindowPtr<wxFileDialog> dlg(
             new wxFileDialog(this,
-                             _("Open catalog template"),
+                             _("Open translation template"),
                              path,
                              wxEmptyString,
                              Catalog::GetTypesFileMask({Catalog::Type::POT, Catalog::Type::PO}),
@@ -1806,7 +1738,7 @@ void PoeditFrame::OnUpdateFromPOT(wxCommandEvent&)
                 {
                     if (Config::UseTM() && Config::MergeBehavior() == Merge_UseTM)
                     {
-                        if (PreTranslateCatalog(this, m_catalog, PreTranslate_OnlyGoodQuality, nullptr))
+                        if (PreTranslateCatalog(this, m_catalog, PreTranslate_OnlyGoodQuality))
                         {
                             if (!m_modified)
                             {
@@ -2160,24 +2092,6 @@ void PoeditFrame::OnToggleWarnings(wxCommandEvent& e)
         if (m_list && m_list->sortOrder().errorsFirst)
             m_list->Sort();
     }
-
-    if (!enable)
-    {
-        wxWindowPtr<wxMessageDialog> err(new wxMessageDialog
-        (
-                this,
-                _("Warnings have been disabled."),
-                "Poedit",
-                wxYES|wxNO
-            ));
-        err->SetExtendedMessage(_("If you disabled the warnings because of excessive false positives, please consider sending a sample file to help@poedit.net to help improve them."));
-        // TRANSLATORS: This is a button to send email with feedback when clicked
-        err->SetYesNoLabels(wxID_OK, MSW_OR_OTHER(_("Send feedback"), _("Send Feedback")));
-        err->ShowWindowModalThenDo([err](int retcode){
-            if (retcode == wxID_NO) // "Send feedback"
-                wxLaunchDefaultBrowser("mailto:help@poedit.net?subject=Warnings");
-        });
-    }
 }
 
 void PoeditFrame::OnCopyFromSingular(wxCommandEvent&)
@@ -2374,6 +2288,7 @@ void PoeditFrame::ReadCatalog(const CatalogPtr& cat)
         }
 
         m_catalog = cat;
+        m_fileMonitor->SetFile(m_catalog->GetFileName());
         m_pendingHumanEditedItem.reset();
 
         if (m_catalog->empty())
@@ -2503,11 +2418,11 @@ void PoeditFrame::WarnAboutLanguageIssues()
 
         if ( m_catalog->Header().GetHeader("Plural-Forms").empty() )
         {
-            err = _(L"This catalog has entries with plural forms, but doesn’t have Plural-Forms header configured.");
+            err = _(L"This file has entries with plural forms, but doesn’t have Plural-Forms header configured.");
         }
         else if ( m_catalog->HasWrongPluralFormsCount() )
         {
-            err = _(L"Entries in this catalog have different plural forms count from what catalog’s Plural-Forms header says");
+            err = _(L"Entries in this file have different plural forms count from what the file’s Plural-Forms header says");
         }
 
         // FIXME: make this part of global error checking
@@ -2550,11 +2465,11 @@ void PoeditFrame::WarnAboutLanguageIssues()
                             // TRANSLATORS: %s is language name in its basic form (as you
                             // would see e.g. in a list of supported languages). You may need
                             // to rephrase it, e.g. to an equivalent of "for language %s".
-                            _("Plural forms expression used by the catalog is unusual for %s."),
+                            _("Plural forms expression used by the file is unusual for %s."),
                             lang.DisplayName()
                         )
                     );
-                // TRANSLATORS: A verb, shown as action button with ""Plural forms expression used by the catalog is unusual for %s.")"
+                // TRANSLATORS: A verb, shown as action button with ""Plural forms expression used by the file is unusual for %s.")"
                 msg.AddAction(_("Review"), [=]{ EditCatalogProperties(); });
                 msg.AddDontShowAgain();
 
@@ -2571,13 +2486,7 @@ void PoeditFrame::NoteAsRecentFile()
     if (!filename)
         return;
 
-    wxFileName fn(filename);
-    fn.Normalize(wxPATH_NORM_DOTS | wxPATH_NORM_ABSOLUTE);
-#ifdef __WXOSX__
-    [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:[NSURL fileURLWithPath:str::to_NS(fn.GetFullPath())]];
-#else
-    FileHistory().AddFileToHistory(fn.GetFullPath());
-#endif
+    RecentFiles::Get().NoteRecentFile(filename);
 }
 
 
@@ -2596,7 +2505,7 @@ void PoeditFrame::RefreshControls(int flags)
     m_hasObsoleteItems = false;
     if (!m_catalog->IsOk())
     {
-        wxLogError(_(L"Error loading message catalog file “%s”."), m_catalog->GetFileName());
+        wxLogError(_(L"Error loading translation file “%s”."), m_catalog->GetFileName());
         m_fileExistsOnDisk = false;
         UpdateMenu();
         UpdateTitle();
@@ -2677,45 +2586,47 @@ void PoeditFrame::UpdateTitle()
 
     m_fileNamePartOfTitle.clear();
 
-    wxString title;
     auto fileName = GetFileName();
-    if ( !fileName.empty() )
+    
+    if (fileName.empty())
     {
-        wxFileName fn(GetFileName());
-        wxString fpath = fn.GetFullName();
+        SetTitle("Poedit");
+        return;
+    }
 
-        if (m_fileExistsOnDisk)
-            SetRepresentedFilename(fileName);
-        else
-            fpath += _(" (unsaved)");
+    wxString fpath = wxFileName(fileName).GetFullName();
 
-        if ( !m_catalog->Header().Project.empty() )
-        {
-            title.Printf(
+    if (m_fileExistsOnDisk)
+        SetRepresentedFilename(fileName);
+    else
+        fpath += _(" (unsaved)");
+
+    wxString title = fpath;
+    wxString subtitle = m_catalog->Header().Project;
+
 #ifdef __WXOSX__
-                L"%s — %s",
-#else
-                L"%s • %s",
-#endif
-                fpath, m_catalog->Header().Project);
-        }
-        else
-        {
-            title = fn.GetFullName();
-        }
-
-        m_fileNamePartOfTitle = title;
-
-#ifndef __WXOSX__
-        if ( IsModified() )
-            title += _(" (modified)");
-        title += " - Poedit";
-#endif
+  #if __MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_16
+    if (@available(macOS 11.0, *))
+    {
+        NSWindow *win = GetWXWindow();
+        win.subtitle = subtitle.empty() ? @"" : str::to_NS(subtitle);
     }
     else
+  #endif
+    if (!subtitle.empty())
     {
-        title = "Poedit";
+        title << MACOS_OR_OTHER(L" — ", L" • ");
+        title << subtitle;
     }
+#endif // __WXOSX__
+
+    m_fileNamePartOfTitle = title;
+
+#ifndef __WXOSX__
+    if ( IsModified() )
+        title += _(" (modified)");
+    title += " - Poedit";
+#endif
 
     SetTitle(title);
 }
@@ -2804,6 +2715,8 @@ void PoeditFrame::WriteCatalog(const wxString& catalog, TFunctor completionHandl
         dt.TranslatorEmail = wxConfig::Get()->Read("translator_email", dt.TranslatorEmail);
     }
 
+    FileMonitor::WritingGuard guard(*m_fileMonitor);
+
     Catalog::ValidationResults validation_results;
     Catalog::CompilationStatus mo_compilation_status = Catalog::CompilationStatus::NotDone;
     if ( !m_catalog->Save(catalog, true, validation_results, mo_compilation_status) )
@@ -2817,10 +2730,7 @@ void PoeditFrame::WriteCatalog(const wxString& catalog, TFunctor completionHandl
     m_catalog->SetFileName(catalog);
     m_modified = false;
     m_fileExistsOnDisk = true;
-
-#ifndef __WXOSX__
-    FileHistory().AddFileToHistory(GetFileName());
-#endif
+    m_fileMonitor->SetFile(m_catalog->GetFileName());
 
     UpdateTitle();
 
@@ -2964,7 +2874,7 @@ void PoeditFrame::OnPreTranslateAll(wxCommandEvent&)
 }
 
 
-wxMenu *PoeditFrame::GetPopupMenu(int item)
+wxMenu *PoeditFrame::CreatePopupMenu(int item)
 {
     if (!m_catalog) return NULL;
     if (item < 0 || item >= (int)m_list->GetItemCount()) return NULL;
@@ -3000,8 +2910,8 @@ wxMenu *PoeditFrame::GetPopupMenu(int item)
     if ( !refs.empty() )
     {
         menu->AppendSeparator();
-
-        wxMenuItem *it1 = new wxMenuItem(menu, ID_POPUP_DUMMY+0, _("References:"));
+        // TRANSLATORS: Meaning occurrences of the string in source code
+        wxMenuItem *it1 = new wxMenuItem(menu, ID_POPUP_DUMMY+0, MSW_OR_OTHER(_("Code occurrences"), _("Code Occurrences")));
 #ifdef __WXMSW__
         it1->SetFont(it1->GetFont().Bold());
         menu->Append(it1);
@@ -3120,11 +3030,10 @@ void PoeditFrame::OnListRightClick(wxDataViewEvent& event)
 
     m_list->SelectAndFocus(item);
 
-    wxMenu *menu = GetPopupMenu(m_list->ListItemToCatalogIndex(item));
+    std::shared_ptr<wxMenu> menu(CreatePopupMenu(m_list->ListItemToCatalogIndex(item)));
     if (menu)
     {
-        m_list->PopupMenu(menu, event.GetPosition());
-        delete menu;
+        m_list->PopupMenu(menu.get(), event.GetPosition());
     }
     else
     {
@@ -3542,7 +3451,7 @@ void PoeditFrame::OnDoneAndNext(wxCommandEvent&)
     if (!Navigate(+1, Pred_UnfinishedItem, /*wrap=*/true))
     {
         // This was the last such item. Since the selection didn't change, we need to explicitly
-        // redraw the list & editing area to refect item changes made above:
+        // redraw the list & editing area to reflect item changes made above:
         UpdateToTextCtrl(EditingArea::UndoableEdit | EditingArea::DontTouchText);
         m_list->RefreshItem(m_list->GetCurrentItem());
     }

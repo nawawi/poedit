@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 1999-2020 Vaclav Slavik
+ *  Copyright (C) 1999-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -42,10 +42,11 @@ class WXDLLIMPEXP_FWD_CORE wxSplitterEvent;
 #include "gexecute.h"
 #include "edlistctrl.h"
 #include "edapp.h"
+#include "filemonitor.h"
 
 #ifdef __WXMSW__
   #include "windows/win10_menubar.h"
-  typedef wxFrameWithWindows10Menubar PoeditFrameBase;
+  typedef WithWindows10Menubar<wxFrame> PoeditFrameBase;
 #else
   typedef wxFrame PoeditFrameBase;
   #define FindFocusNoMenu() wxWindow::FindFocus()
@@ -78,25 +79,20 @@ class PoeditFrame : public PoeditFrameBase
          */
         static PoeditFrame *CreateEmpty();
 
-        /** Public constructor functions. Creates and shows frame
-            without catalog, just a welcome screen.
-         */
-        static PoeditFrame *CreateWelcome();
-
         /// Opens given file in this frame. Asks user for permission first
         /// if there's unsaved document.
         void OpenFile(const wxString& filename, int lineno = 0);
+
+        // Opens given file in this frame, without asking user
+        void DoOpenFile(const wxString& filename, int lineno = 0);
+
+        // Re-read the file from disk if it changed externally
+        void ReloadFileIfChanged();
 
         /** Returns pointer to existing instance of PoeditFrame that currently
             exists and edits \a catalog. If no such frame exists, returns NULL.
          */
         static PoeditFrame *Find(const wxString& catalog);
-
-        /// Returns active PoeditFrame, if it is unused (i.e. not showing
-        /// content, not having catalog loaded); NULL otherwise.
-        static PoeditFrame *UnusedActiveWindow() { return UnusedWindow(true); }
-        /// Ditto, but not required to be active
-        static PoeditFrame *UnusedWindow(bool active);
 
         /// Returns true if at least one one window has unsaved changes
         static bool AnyWindowIsModified();
@@ -151,6 +147,17 @@ class PoeditFrame : public PoeditFrameBase
         wxString GetFileNamePartOfTitle() const
             { return m_fileNamePartOfTitle; }
 
+#ifndef __WXOSX__
+        // synchronous version of DoIfCanDiscardCurrentDoc<T> for public use:
+        bool AskIfCanDiscardCurrentDoc();
+#endif
+
+        void NewFromScratch();
+        void NewFromPOT(POCatalogPtr pot, Language language = Language());
+#ifdef HAVE_HTTP_CLIENT
+        void NewFromCrowdin(const wxString& filename);
+#endif
+
     protected:
         // Don't show help in status bar, it's not common to do these days:
         void DoGiveHelp(const wxString& /*help*/, bool /*show*/) override {}
@@ -166,7 +173,6 @@ class PoeditFrame : public PoeditFrameBase
         enum class Content
         {
             Invalid, // no content whatsoever
-            Welcome,
             PO,
             POT,
             Empty_PO
@@ -181,7 +187,6 @@ class PoeditFrame : public PoeditFrameBase
         void EnsureContentView(Content type);
         void EnsureAppropriateContentView();
         wxWindow* CreateContentViewPO(Content type);
-        wxWindow* CreateContentViewWelcome();
         wxWindow* CreateContentViewEmptyPO();
         void DestroyContentView();
 
@@ -202,13 +207,13 @@ class PoeditFrame : public PoeditFrameBase
 
         // if there's modified catalog, ask user to save it; return true
         // if it's save to discard m_catalog and load new data
-        template<typename TFunctor>
-        void DoIfCanDiscardCurrentDoc(TFunctor completionHandler);
+        template<typename TFunctor1, typename TFunctor2>
+        void DoIfCanDiscardCurrentDoc(const TFunctor1& completionHandler, const TFunctor2& failureHandler);
+        template<typename TFunctor1>
+        void DoIfCanDiscardCurrentDoc(const TFunctor1& completionHandler)
+            { DoIfCanDiscardCurrentDoc(completionHandler, []{}); }
         bool NeedsToAskIfCanDiscardCurrentDoc() const;
         wxWindowPtr<wxMessageDialog> CreateAskAboutSavingDialog();
-
-        // implements opening of files, without asking user
-        void DoOpenFile(const wxString& filename, int lineno = 0);
 
         /// Updates statistics in statusbar.
         void UpdateStatusBar();
@@ -221,7 +226,7 @@ class PoeditFrame : public PoeditFrameBase
         void UpdateTextLanguage();
 
         /// Returns popup menu for given catalog entry.
-        wxMenu *GetPopupMenu(int item);
+        wxMenu *CreatePopupMenu(int item);
 
         // (Re)initializes spellchecker, if needed
         void InitSpellchecker();
@@ -241,16 +246,8 @@ class PoeditFrame : public PoeditFrameBase
         void OnNextPluralForm(wxCommandEvent&);
 
         // Message handlers:
-public: // for PoeditApp
-        void OnNew(wxCommandEvent& event);
-        void NewFromScratch();
-        void NewFromPOT();
-        void NewFromPOT(POCatalogPtr pot, Language language = Language());
-
-        void OnOpen(wxCommandEvent& event);
-        void OnOpenFromCrowdin(wxCommandEvent& event);
+        void OnTranslationFromThisPot(wxCommandEvent& event);
 #ifndef __WXOSX__
-        void OnOpenHist(wxCommandEvent& event);
         void OnCloseCmd(wxCommandEvent& event);
 #endif
 private:
@@ -343,9 +340,6 @@ private:
                                     bool from_save, bool other_file_saved,
                                     TFunctor completionHandler);
 
-#ifndef __WXOSX__
-        wxFileHistory& FileHistory() { return wxGetApp().FileHistory(); }
-#endif
         void NoteAsRecentFile();
 
         void OnNewTranslationEntered(const CatalogItemPtr& item);
@@ -354,7 +348,7 @@ private:
 
     private:
         CatalogPtr m_catalog;
-
+        std::unique_ptr<FileMonitor> m_fileMonitor;
         bool m_fileExistsOnDisk;
 
         wxString m_fileNamePartOfTitle;
@@ -367,9 +361,6 @@ private:
         wxSplitterWindow *m_splitter;
         wxSplitterWindow *m_sidebarSplitter;
         PoeditListCtrl *m_list;
-#ifndef __WXOSX__
-        wxMenu *m_menuForHistory;
-#endif
 
         AttentionBar *m_attentionBar;
         Sidebar *m_sidebar;

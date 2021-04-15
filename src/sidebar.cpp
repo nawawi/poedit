@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2014-2020 Vaclav Slavik
+ *  Copyright (C) 2014-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -95,7 +95,7 @@ SidebarBlock::SidebarBlock(Sidebar *parent, const wxString& label, int flags)
         if (!(flags & NoUpperMargin))
         {
             m_sizer->Add(new SidebarSeparator(parent),
-                         wxSizerFlags().Expand().Border(wxBOTTOM|wxLEFT|wxRIGHT, PX(4)));
+                         wxSizerFlags().Expand().Border(wxBOTTOM|wxLEFT|wxRIGHT, PX(5)));
         }
         m_headerSizer = new wxBoxSizer(wxHORIZONTAL);
         m_headerSizer->Add(new HeadingLabel(parent, label), wxSizerFlags().Center());
@@ -130,7 +130,7 @@ class OldMsgidSidebarBlock : public SidebarBlock
 public:
     OldMsgidSidebarBlock(Sidebar *parent)
           /// TRANSLATORS: "Previous" as in used in the past, now replaced with newer.
-        : SidebarBlock(parent, _("Previous source text:"))
+        : SidebarBlock(parent, _("Previous source text"))
     {
         m_innerSizer->AddSpacer(PX(2));
         m_innerSizer->Add(new ExplanationLabel(parent, _("The old source text (before it changed during an update) that the now-inaccurate translation corresponds to.")),
@@ -159,7 +159,7 @@ class ExtractedCommentSidebarBlock : public SidebarBlock
 {
 public:
     ExtractedCommentSidebarBlock(Sidebar *parent)
-        : SidebarBlock(parent, _("Notes for translators:"))
+        : SidebarBlock(parent, _("Notes for translators"))
     {
         m_innerSizer->AddSpacer(PX(5));
         m_comment = new SelectableAutoWrappingText(parent, "");
@@ -192,7 +192,7 @@ class CommentSidebarBlock : public SidebarBlock
 {
 public:
     CommentSidebarBlock(Sidebar *parent)
-        : SidebarBlock(parent, _("Comment:"))
+        : SidebarBlock(parent, _("Comment"))
     {
         m_innerSizer->AddSpacer(PX(5));
         m_comment = new SelectableAutoWrappingText(parent, "");
@@ -276,7 +276,7 @@ public:
 
         auto top = new wxBoxSizer(wxHORIZONTAL);
         auto right = new wxBoxSizer(wxVERTICAL);
-        top->AddSpacer(PX(2));
+        top->AddSpacer(PX(6));
         top->Add(m_icon, wxSizerFlags().Top().Border(wxTOP|wxBOTTOM, PX(6)));
         top->Add(right, wxSizerFlags(1).Expand().PXBorder(wxLEFT));
         right->Add(m_text, wxSizerFlags().Expand().Border(wxTOP, PX(4)));
@@ -295,15 +295,16 @@ public:
         ColorScheme::SetupWindowColors(this, [=]
         {
             // setup mouse hover highlighting:
-            m_bg = parent->GetBackgroundColour();
+            auto bg = parent->GetBackgroundColour();
+            SetBackgroundColour(bg);
+#ifndef __WXOSX__
+            m_bg = bg;
             m_bgHighlight = ColorScheme::GetWindowMode(parent) == ColorScheme::Dark
                             ? m_bg.ChangeLightness(110)
                             : m_bg.ChangeLightness(95);
-            SetBackgroundColour(m_isHighlighted ? m_bgHighlight : m_bg);
-            #ifndef __WXOSX__
             for (auto c: GetChildren())
                 c->SetBackgroundColour(m_isHighlighted ? m_bgHighlight : m_bg);
-            #endif
+#endif
         });
 
         wxWindow* parts [] = { this, m_icon, m_text, m_info, m_moreActions };
@@ -360,14 +361,16 @@ public:
 #endif
         (void)tooltip;
 
+#ifndef __WXOSX__
         SetBackgroundColour(m_bg);
+#endif
 
         Layout();
         InvalidateBestSize();
         SetMinSize(wxDefaultSize);
         SetMinSize(GetBestSize());
     }
-    
+
     bool AcceptsFocus() const override { return false; }
 
 private:
@@ -395,14 +398,33 @@ private:
         wxPaintDC dc(this);
         if (m_isHighlighted)
         {
+#ifdef __WXOSX__
+            auto winbg = GetBackgroundColour();
+            wxColour highlight;
+            if (@available(macOS 10.14, *))
+            {
+                NSColor *bg = winbg.OSXGetNSColor();
+                NSColor *osHighlight = [bg colorWithSystemEffect:NSColorSystemEffectRollover];
+                // use only lighter version of the highlight by blending with the background
+                highlight = wxColour([bg blendedColorWithFraction:0.2 ofColor:osHighlight]);
+            }
+            else
+            {
+                highlight = winbg.ChangeLightness(95);
+            }
+#else
+            auto highlight = m_bgHighlight;
+#endif
             std::unique_ptr<wxGraphicsContext> gc(wxGraphicsContext::Create(dc));
-            gc->SetBrush(m_bgHighlight);
+            gc->SetBrush(highlight);
             gc->SetPen(*wxTRANSPARENT_PEN);
 
             auto rect = GetClientRect();
             if (!rect.IsEmpty())
             {
-#if wxCHECK_VERSION(3,1,1)
+#if defined(__WXOSX__)
+                gc->DrawRoundedRectangle(rect.x, rect.y, rect.width, rect.height, PX(5));
+#elif wxCHECK_VERSION(3,1,1)
                 gc->DrawRoundedRectangle(rect.x, rect.y, rect.width, rect.height, PX(2));
 #else
                 gc->DrawRectangle(rect.x, rect.y, rect.width, rect.height);
@@ -442,18 +464,18 @@ private:
         auto suggestion = m_value;
         static const auto idDelete = wxNewId();
 
-        wxMenu *menu = new wxMenu();
+        wxMenu menu;
 #ifdef __WXOSX__
-        [menu->GetHMenu() setFont:[NSFont systemFontOfSize:13]];
+        [menu.GetHMenu() setFont:[NSFont systemFontOfSize:13]];
 #endif
-        menu->Append(idDelete, MSW_OR_OTHER(_("Delete from translation memory"), _("Delete From Translation Memory")));
-        menu->Bind(wxEVT_MENU, [sidebar,suggestion](wxCommandEvent&)
+        menu.Append(idDelete, MSW_OR_OTHER(_("Delete from translation memory"), _("Delete From Translation Memory")));
+        menu.Bind(wxEVT_MENU, [sidebar,suggestion](wxCommandEvent&)
         {
             SuggestionsProvider::Delete(suggestion);
             sidebar->RefreshContent();
         }, idDelete);
 
-        PopupMenu(menu);
+        PopupMenu(&menu);
     }
 
     void Highlight(bool highlight)
@@ -490,12 +512,20 @@ private:
     wxStaticText *m_info;
     wxStaticBitmap *m_isPerfect;
     ImageButton *m_moreActions;
+#ifndef __WXOSX__
     wxColour m_bg, m_bgHighlight;
+#endif
 };
 
 
 SuggestionsSidebarBlock::SuggestionsSidebarBlock(Sidebar *parent, wxMenu *menu)
-    : SidebarBlock(parent, _("Translation suggestions:"), NoUpperMargin),
+    : SidebarBlock(parent,
+                   // TRANSLATORS: as in: translation suggestions, suggested translations; should be similarly short
+                   _("Suggestions"),
+                   #if 0
+                   _("Translation suggestions"),
+                   #endif
+                   NoUpperMargin),
       m_suggestionsMenu(menu),
       m_msgPresent(false),
       m_suggestionsSeparator(nullptr),
@@ -640,7 +670,7 @@ void SuggestionsSidebarBlock::UpdateSuggestions(const SuggestionsList& hits)
                 if (!m_suggestionsSeparator)
                     m_suggestionsSeparator = new SidebarSeparator(m_parent);
                 m_suggestionsSeparator->Show();
-                m_suggestionsSizer->Insert(i, m_suggestionsSeparator, wxSizerFlags().Expand().Border(wxBOTTOM, MSW_OR_OTHER(PX(2), PX(4))));
+                m_suggestionsSizer->Insert(i, m_suggestionsSeparator, wxSizerFlags().Expand().Border(wxTOP|wxBOTTOM, MSW_OR_OTHER(PX(2), PX(4))));
             }
             perfectMatches = 0;
         }

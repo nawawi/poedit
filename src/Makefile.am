@@ -44,7 +44,8 @@ poedit_SOURCES = \
                  extractors/extractor.cpp extractors/extractor.h \
                  extractors/extractor_gettext.cpp \
                  extractors/extractor_legacy.cpp extractors/extractor_legacy.h \
-                 fileviewer.cpp fileviewer.h \
+                 filemonitor.cpp filemonitor.h \
+                 fileviewer.cpp fileviewer.extensions.h fileviewer.h \
                  findframe.cpp findframe.h \
                  gexecute.h gexecute.cpp \
                  hidpi.cpp hidpi.h \
@@ -55,17 +56,20 @@ poedit_SOURCES = \
                  logcapture.h \
                  main_toolbar.h wx/main_toolbar.cpp \
                  manager.h manager.cpp \
+                 menus.h menus.cpp \
                  pluralforms/pl_evaluate.cpp pluralforms/pl_evaluate.h \
                  prefsdlg.cpp prefsdlg.h \
                  pretranslate.cpp pretranslate.h \
                  progressinfo.h progressinfo.cpp \
                  propertiesdlg.cpp propertiesdlg.h \
                  qa_checks.cpp qa_checks.h \
+                 recent_files.cpp recent_files.h \
                  sidebar.cpp sidebar.h \
                  spellchecking.h spellchecking.cpp \
                  str_helpers.h \
                  syntaxhighlighter.cpp syntaxhighlighter.h \
                  text_control.h text_control.cpp \
+                 titleless_window.h titleless_window.cpp \
                  tm/suggestions.cpp tm/suggestions.h \
                  tm/transmem.cpp tm/transmem.h \
                  tm/tmx_io.cpp tm/tmx_io.h \
@@ -86,7 +90,6 @@ XRC_RESOURCES = \
         $(srcdir)/resources/manager.xrc \
         $(srcdir)/resources/menus.xrc \
         $(srcdir)/resources/prefs.xrc \
-        $(srcdir)/resources/progress.xrc \
         $(srcdir)/resources/properties.xrc \
         $(srcdir)/resources/summary.xrc \
         $(srcdir)/resources/toolbar.xrc

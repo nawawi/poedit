@@ -1,7 +1,7 @@
 /*
  *  This file is part of Poedit (https://poedit.net)
  *
- *  Copyright (C) 2000-2020 Vaclav Slavik
+ *  Copyright (C) 2000-2021 Vaclav Slavik
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -31,6 +31,7 @@
 
 #include <wx/dir.h>
 #include <wx/filename.h>
+#include <wx/textfile.h>
 
 #include <algorithm>
 
@@ -179,7 +180,7 @@ Extractor::FilesList Extractor::CollectAllFiles(const SourceCodeSpec& sources)
         }
         else
         {
-            throw ExtractionException(ExtractionError::NoSourcesFound);
+            throw ExtractionException(ExtractionError::NoSourcesFound, path);
         }
     }
 
@@ -324,11 +325,29 @@ wxString Extractor::ConcatCatalogs(TempDirectory& tmpdir, const std::vector<wxSt
 
     auto outfile = tmpdir.CreateFileName("concatenated.pot");
 
-    wxString list;
-    for (auto& f: files)
-        list += wxString::Format(" %s", QuoteCmdlineArg(f));
+    wxTextFile filelist;
+    filelist.Create(tmpdir.CreateFileName("gettext_filelist.txt"));
+    for (auto fn: files)
+    {
+#ifdef __WXMSW__
+        // Gettext tools can't handle Unicode filenames well (due to using
+        // char* arguments), so work around this by using the short names.
+        if (!fn.IsAscii())
+        {
+            fn = CliSafeFileName(fn);
+            fn.Replace("\\", "/");
+        }
+#endif
+        filelist.AddLine(fn);
+    }
+    filelist.Write(wxTextFileType_Unix, wxConvFile);
 
-    auto cmd = wxString::Format("msgcat --force-po -o %s %s", QuoteCmdlineArg(outfile), list);
+    auto cmd = wxString::Format
+               (
+                   "msgcat --force-po -o %s --files-from=%s",
+                   QuoteCmdlineArg(outfile),
+                   QuoteCmdlineArg(filelist.GetName())
+               );
     bool succ = ExecuteGettext(cmd);
 
     if (!succ)

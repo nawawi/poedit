@@ -318,16 +318,14 @@ rule gettext_build
       && echo $
       'note: ⋯  $
       $top_srcdir/../macos/fixup-dylib-deps.sh $
-      //lib $
-      @executable_path/../lib $
+      /lib @rpath $
       $destdir/lib $
       $destdir/bin/*' $
       && $
       tmp=`mktemp` $
       && $
       $top_srcdir/../macos/fixup-dylib-deps.sh $
-      //lib $
-      @executable_path/../lib $
+      /lib @rpath $
       $destdir/lib $
       $destdir/bin/* $
       >$$tmp 2>&1 $
@@ -426,9 +424,9 @@ build $
   srcdir = $
       $top_srcdir/gettext
   destdir = $
-      $builddir/gettext
+      $builddir/gettext.$arch
   workdir = $
-      $intdir/gettext
+      $intdir/gettext.$arch
 build gettext: $
     phony $
     $intdir/gettext.done
@@ -2248,9 +2246,9 @@ build $
   srcdir = $
       $top_srcdir/icu4c
   destdir = $
-      $builddir/icu
+      $builddir/icu.$arch
   workdir = $
-      $intdir/icu
+      $intdir/icu.$arch
 build icu: phony $
     $intdir/icu.done
 default $
